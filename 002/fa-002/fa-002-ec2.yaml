@@ -19,9 +19,6 @@ Parameters:
   PrivateSubnet2:
     Type: String
     
-  #UserData:
-  #  Type: String
-    
 
 Resources:
   Instance1:
@@ -35,7 +32,6 @@ Resources:
           SubnetId: !Ref PrivateSubnet1
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Ref UserData
             
   Instance2:
     Type: AWS::EC2::Instance
@@ -48,7 +44,6 @@ Resources:
           SubnetId: !Ref PrivateSubnet2
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Ref UserData
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
