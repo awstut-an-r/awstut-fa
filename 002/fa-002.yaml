@@ -38,7 +38,6 @@ Resources:
       Parameters:
         EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
         Prefix: !Ref Prefix
-        #PrivateRouteTable1: !GetAtt VPCStack.Outputs.PrivateRouteTable1
         PrivateRouteTable2: !GetAtt VPCStack.Outputs.PrivateRouteTable2
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
