@@ -132,11 +132,6 @@ Resources:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: tcp
-      #    FromPort: !Ref HTTPPort
-      #    ToPort: !Ref HTTPPort
-      #    SourceSecurityGroupId: !Ref ALBSecurityGroup
           
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -171,11 +166,6 @@ Outputs:
     Value: !Ref PrivateSubnet2
     Export:
       Name: !Sub ${Prefix}-PrivateSubnet2
-      
-  #PrivateRouteTable1:
-  #  Value: !Ref PrivateRouteTable
-  #  Export:
-  #    Name: !Sub ${Prefix}-PrivateRouteTable1
       
   PrivateRouteTable2:
     Value: !Ref PrivateRouteTable2
