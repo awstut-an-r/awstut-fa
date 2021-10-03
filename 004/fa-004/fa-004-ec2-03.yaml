@@ -47,6 +47,36 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
             
+  ApplyAnsiblePlaybooksAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub ${Prefix}-playbook-association
+      Name: AWS-ApplyAnsiblePlaybooks
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref PlaybookBucketName
+          OutputS3KeyPrefix: !Sub "${Prefix}/playbook-association-log"
+      Parameters:
+        Check:
+          - "False"
+        ExtraVariables:
+          - SSM=True
+        InstallDependencies:
+          - "True"
+        PlaybookFile:
+          - !Ref PlaybookFileName
+        SourceInfo:
+          - !Sub '{"path": "https://${PlaybookBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${PlaybookPackageName}"}'
+        SourceType:
+          - S3
+        Verbose:
+          - -v
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance3
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+            
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -82,34 +112,3 @@ Resources:
                   - !Sub "arn:aws:s3:::${PlaybookBucketName}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        
-        
-  ApplyAnsiblePlaybooksAssociation:
-    Type: AWS::SSM::Association
-    Properties:
-      AssociationName: !Sub ${Prefix}-playbook-association
-      Name: AWS-ApplyAnsiblePlaybooks
-      OutputLocation:
-        S3Location:
-          OutputS3BucketName: !Ref PlaybookBucketName
-          OutputS3KeyPrefix: !Sub "${Prefix}/playbook-association-log"
-      Parameters:
-        Check:
-          - "False"
-        ExtraVariables:
-          - SSM=True
-        InstallDependencies:
-          - "True"
-        PlaybookFile:
-          - !Ref PlaybookFileName
-        SourceInfo:
-          - !Sub '{"path": "https://${PlaybookBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${PlaybookPackageName}"}'
-        SourceType:
-          - S3
-        Verbose:
-          - -v
-      Targets:
-        - Key: InstanceIds
-          Values:
-            - !Ref Instance3
-      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
