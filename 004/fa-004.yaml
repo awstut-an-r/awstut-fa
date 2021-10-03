@@ -1,0 +1,103 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-004
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t3a.micro
+    #Default: t3a.nano
+    
+  KeyName:
+    Type: String
+    Default: MyKeyPair
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    Default: 300
+    
+    
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone: a
+        CidrIp: 10.0.1.0/24
+        HTTPPort: 80
+        Prefix: !Ref Prefix
+        SSHPort: 22
+        VPCCidrBlock: 10.0.0.0/16
+
+  EC2Stack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-01.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        Prefix: !Ref Prefix
+        PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
+        
+  EC2Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-02.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        Prefix: !Ref Prefix
+        PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
+        
+  EC2Stack3:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-03.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        PlaybookBucketName: !Ref TemplateBucketName
+        PlaybookFileName: playbook.yml
+        PlaybookPackageName: playbook.zip
+        Prefix: !Ref Prefix
+        PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+        
+  EC2Stack4:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-04.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        LogBucketName: !Ref TemplateBucketName
+        Prefix: !Ref Prefix
+        PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

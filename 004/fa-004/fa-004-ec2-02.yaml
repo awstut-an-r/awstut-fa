@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    
+  Prefix:
+    Type: String
+    
+  PublicSubnet:
+    Type: String
+    
+
+Resources:
+  Instance2:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              httpd: []
+          #files:
+          #  /var/www/html/index.html:
+          #    content: !Sub |
+          #      <p>Hello!</p>
+          #    mode: '000644'
+          #    owner: root
+          #    group: root
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+          commands:
+            001make-index.html:
+              command: ec2-metadata -i > /var/www/html/index.html
+    Properties:
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum install -y aws-cfn-bootstrap
+          
+          /opt/aws/bin/cfn-init -v \
+          --stack ${AWS::StackName} \
+          --resource Instance2 \
+          --region ${AWS::Region} \
