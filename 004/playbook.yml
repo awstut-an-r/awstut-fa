@@ -9,5 +9,5 @@
       yum: name=httpd state=latest
     - name: start and enable Apache
       service: name=httpd state=started enabled=yes
-    - name: make index.html for awstut.net
+    - name: make index.html
       shell: ec2-metadata -i > /var/www/html/index.html
