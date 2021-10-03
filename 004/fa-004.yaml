@@ -16,7 +16,6 @@ Parameters:
   InstanceType:
     Type: String
     Default: t3a.micro
-    #Default: t3a.nano
     
   KeyName:
     Type: String
