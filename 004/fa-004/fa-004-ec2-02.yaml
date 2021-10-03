@@ -29,13 +29,6 @@ Resources:
           packages:
             yum:
               httpd: []
-          #files:
-          #  /var/www/html/index.html:
-          #    content: !Sub |
-          #      <p>Hello!</p>
-          #    mode: '000644'
-          #    owner: root
-          #    group: root
           services:
             sysvinit:
               httpd:
