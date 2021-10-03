@@ -55,4 +55,4 @@ Resources:
           /opt/aws/bin/cfn-init -v \
           --stack ${AWS::StackName} \
           --resource Instance2 \
-          --region ${AWS::Region} \
+          --region ${AWS::Region}
