@@ -100,7 +100,6 @@ Resources:
           - SSM=True
         InstallDependencies:
           - "True"
-          #- "False"
         PlaybookFile:
           - !Ref PlaybookFileName
         SourceInfo:
