@@ -41,6 +41,28 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
             
+  RunShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub ${Prefix}-shellscript-association
+      Name: AWS-RunShellScript
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref LogBucketName
+          OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - "sudo yum update -y"
+          - "sudo yum install -y httpd"
+          - "sudo systemctl start httpd"
+          - "sudo systemctl enabled httpd"
+          - "ec2-metadata -i > /var/www/html/index.html"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance4
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+            
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -76,26 +98,3 @@ Resources:
                   - !Sub "arn:aws:s3:::${LogBucketName}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-
-
-  RunShellScriptAssociation:
-    Type: AWS::SSM::Association
-    Properties:
-      AssociationName: !Sub ${Prefix}-shellscript-association
-      Name: AWS-RunShellScript
-      OutputLocation:
-        S3Location:
-          OutputS3BucketName: !Ref LogBucketName
-          OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
-      Parameters:
-        commands:
-          - "sudo yum update -y"
-          - "sudo yum install -y httpd"
-          - "sudo systemctl start httpd"
-          - "sudo systemctl enabled httpd"
-          - "ec2-metadata -i > /var/www/html/index.html"
-      Targets:
-        - Key: InstanceIds
-          Values:
-            - !Ref Instance4
-      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
