@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          
+          def lambda_handler(event, context):
+            return {
+              'statusCode': 200,
+              'body': json.dumps('Hello form Awstut !')
+            }
+      FunctionName: !Sub ${Prefix}-function
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      
+      
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+    
+  FunctionName:
+    Value: !Ref Function
