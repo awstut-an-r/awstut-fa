@@ -1,7 +1,19 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  Architecture:
+    Type: String
+    
+  Handler:
+    Type: String
+  
   Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  ZipFile:
     Type: String
     
     
@@ -9,18 +21,13 @@ Resources:
   Function:
     Type: AWS::Lambda::Function
     Properties:
+      Architectures:
+        - !Ref Architecture
       Code:
-        ZipFile: |
-          import json
-          
-          def lambda_handler(event, context):
-            return {
-              'statusCode': 200,
-              'body': json.dumps('Hello form Awstut !')
-            }
+        ZipFile: !Ref ZipFile
       FunctionName: !Sub ${Prefix}-function
-      Handler: index.lambda_handler
-      Runtime: python3.8
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
       
   FunctionRole:
