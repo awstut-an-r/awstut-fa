@@ -19,7 +19,7 @@ Resources:
       Description: HttpApi.
       ProtocolType: HTTP
 
-  ProdStage:
+  Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref HttpApi
