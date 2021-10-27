@@ -8,14 +8,6 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-007
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-  #  
-  #RDPPort:
-  #  Type: Number
-  #  Default: 3389
 
 
 Resources:
