@@ -30,7 +30,6 @@ Resources:
   Instance1:
     Type: AWS::EC2::Instance
     Properties:
-      #IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
