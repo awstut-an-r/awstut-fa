@@ -80,7 +80,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup1
-      GroupDescription: Allow SSH.
+      GroupDescription: Allow RDP.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -99,7 +99,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup2.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
