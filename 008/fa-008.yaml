@@ -48,11 +48,9 @@ Resources:
       Parameters:
         ImageId1: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         ImageId2: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-        #ImageId2: /aws/service/ami-windows-latest/Windows_Server-2019-Japanese-Full-Base
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType1: t2.nano
         InstanceType2: t4g.nano
-        #KeyName: MyKeyPair
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         
