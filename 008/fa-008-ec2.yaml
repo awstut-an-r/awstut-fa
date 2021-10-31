@@ -2,10 +2,10 @@ AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
   ImageId1:
-    Type: AWS::SSM::Parameter::Value
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
   ImageId2:
-    Type: AWS::SSM::Parameter::Value
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
   InstanceSecurityGroup:
     Type: String
