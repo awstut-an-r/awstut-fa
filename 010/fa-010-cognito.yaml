@@ -18,18 +18,12 @@ Resources:
   UserPool:
     Type: AWS::Cognito::UserPool
     Properties:
-      #AliasAttributes:
-      #  - email
       AutoVerifiedAttributes:
         - email
       UsernameAttributes:
         - email
       UserPoolName: !Sub ${Prefix}-UserPool
       Schema:
-        #- AttributeDataType: String
-        #  Mutable: true
-        #  Name: email
-        #  Required: true
         - AttributeDataType: String
           Mutable: true
           Name: name
