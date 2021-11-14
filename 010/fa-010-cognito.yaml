@@ -33,7 +33,7 @@ Resources:
     Type: AWS::Cognito::UserPoolClient
     Properties:
       AccessTokenValidity: 60 # (minutes) default value.
-      AllowedOAuthFlowsUserPoolClient: false # default value.
+      AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
         - implicit
