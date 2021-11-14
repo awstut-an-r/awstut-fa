@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketWesSiteEndpointUrl:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  SigninHtml:
+    Type: String
+    
+  SignoutHtml:
+    Type: String
+    
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      #AliasAttributes:
+      #  - email
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      UserPoolName: !Sub ${Prefix}-UserPool
+      Schema:
+        #- AttributeDataType: String
+        #  Mutable: true
+        #  Name: email
+        #  Required: true
+        - AttributeDataType: String
+          Mutable: true
+          Name: name
+          Required: true
+          
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AccessTokenValidity: 60 # (minutes) default value.
+      AllowedOAuthFlowsUserPoolClient: false # default value.
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - aws.cognito.signin.user.admin
+        - email
+        - openid
+        - phone
+        - profile
+      CallbackURLs:
+        - !Sub "${BucketWesSiteEndpointUrl}/${SigninHtml}"
+      ClientName: !Sub ${Prefix}-UserPoolClient
+      EnableTokenRevocation: true # default value.
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      IdTokenValidity: 60 # (minutes) default value.
+      LogoutURLs:
+        - !Sub "${BucketWesSiteEndpointUrl}/${SignoutHtml}"
+      PreventUserExistenceErrors: ENABLED # default value.
+      RefreshTokenValidity: 30 # (days) default value.
+      SupportedIdentityProviders:
+        - COGNITO
+      TokenValidityUnits:
+        AccessToken: minutes
+        IdToken: minutes
+        RefreshToken: days
+      UserPoolId: !Ref UserPool
+      
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref Prefix
+      UserPoolId: !Ref UserPool
