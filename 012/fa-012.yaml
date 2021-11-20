@@ -30,7 +30,6 @@ Resources:
       Parameters:
         Prefix: !Ref Prefix
         IndexHtml: !Ref IndexHtml
-        #SigninHtml: !Ref SigninHtml
         SignoutHtml: !Ref SignoutHtml
         
   SSMStack:
@@ -46,7 +45,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cognito.yaml"
       Parameters:
         BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketAuthenticatedFolderName: authenticated
         BucketWesSiteEndpointUrl: !GetAtt S3Stack.Outputs.BucketWesSiteEndpointUrl
         Prefix: !Ref Prefix
         SigninHtml: !Ref SigninHtml
