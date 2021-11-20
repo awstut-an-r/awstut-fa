@@ -11,12 +11,8 @@
     <script type="text/javascript">
       var prefix = 'fa-012'
       var region = 'ap-northeast-1'
-      var userPoolId = 'ap-northeast-1_W8ZPnQYRK'
-      //var userPoolClientId = '2lp4695vpuo88ettvk78lmq694'
-      var identityPoolId = 'ap-northeast-1:6d117ebe-506b-4f0d-b7dc-a438a4dbd57b'
-      
-      //var name = '';
-      //var storedParameter = '';
+      var userPoolId = '[userpool-id]'
+      var identityPoolId = '[idpool-id]'
       
       try {
         // get id token.
@@ -38,7 +34,6 @@
         var name = tokensDecoded.name;
         //console.log(name);
         document.getElementById('name').innerText = `Name: ${name}`;
-        
         
         var ssmParams = {
           Name: `${prefix}-authenticated`
