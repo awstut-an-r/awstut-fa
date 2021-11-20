@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketArn:
+    Type: String
+    
+  #BucketAuthenticatedFolderName:
+  #  Type: String
+    
+  BucketWesSiteEndpointUrl:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  SigninHtml:
+    Type: String
+    
+  SignoutHtml:
+    Type: String
+    
+  AuthenticatedParameter:
+    Type: String
+    
+
+Resources:
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AutoVerifiedAttributes:
+        - email
+      UsernameAttributes:
+        - email
+      UserPoolName: !Sub ${Prefix}-UserPool
+      Schema:
+        - AttributeDataType: String
+          Mutable: true
+          Name: name
+          Required: true
+          
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      #AccessTokenValidity: 60 # (minutes) default value.
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - aws.cognito.signin.user.admin
+        - email
+        - openid
+        - phone
+        - profile
+      CallbackURLs:
+        #- !Sub "${BucketWesSiteEndpointUrl}/${BucketAuthenticatedFolderName}/${SigninHtml}"
+        - !Sub "${BucketWesSiteEndpointUrl}/${SigninHtml}"
+      ClientName: !Sub ${Prefix}-UserPoolClient
+      #EnableTokenRevocation: true # default value.
+      ExplicitAuthFlows:
+        - ALLOW_CUSTOM_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      #IdTokenValidity: 60 # (minutes) default value.
+      LogoutURLs:
+        - !Sub "${BucketWesSiteEndpointUrl}/${SignoutHtml}"
+      #PreventUserExistenceErrors: ENABLED # default value.
+      #RefreshTokenValidity: 30 # (days) default value.
+      SupportedIdentityProviders:
+        - COGNITO
+      #TokenValidityUnits:
+      #  AccessToken: minutes
+      #  IdToken: minutes
+      #  RefreshToken: days
+      UserPoolId: !Ref UserPool
+      
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref Prefix
+      UserPoolId: !Ref UserPool
+
+  IdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      #AllowClassicFlow: false # default value.
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !Ref UserPoolClient
+          ProviderName: !Sub "cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
+          #ServerSideTokenCheck: false # default value.
+      IdentityPoolName: !Sub ${Prefix}-IdentityPool
+      
+  IdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref IdentityPool
+      Roles:
+        authenticated: !GetAtt IdentityPoolAuthenticatedRole.Arn
+        
+  IdentityPoolAuthenticatedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Condition:
+              StringEquals:
+                "cognito-identity.amazonaws.com:aud": !Ref IdentityPool
+              "ForAnyValue:StringLike":
+                "cognito-identity.amazonaws.com:amr": authenticated
+      Policies:
+        - PolicyName: IdentityPoolAuthenticatedPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AuthenticatedParameter}"
