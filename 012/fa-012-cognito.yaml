@@ -4,9 +4,6 @@ Parameters:
   BucketArn:
     Type: String
     
-  #BucketAuthenticatedFolderName:
-  #  Type: String
-    
   BucketWesSiteEndpointUrl:
     Type: String
 
@@ -41,7 +38,6 @@ Resources:
   UserPoolClient:
     Type: AWS::Cognito::UserPoolClient
     Properties:
-      #AccessTokenValidity: 60 # (minutes) default value.
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
         - code
@@ -53,25 +49,16 @@ Resources:
         - phone
         - profile
       CallbackURLs:
-        #- !Sub "${BucketWesSiteEndpointUrl}/${BucketAuthenticatedFolderName}/${SigninHtml}"
         - !Sub "${BucketWesSiteEndpointUrl}/${SigninHtml}"
       ClientName: !Sub ${Prefix}-UserPoolClient
-      #EnableTokenRevocation: true # default value.
       ExplicitAuthFlows:
         - ALLOW_CUSTOM_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
         - ALLOW_USER_SRP_AUTH
-      #IdTokenValidity: 60 # (minutes) default value.
       LogoutURLs:
         - !Sub "${BucketWesSiteEndpointUrl}/${SignoutHtml}"
-      #PreventUserExistenceErrors: ENABLED # default value.
-      #RefreshTokenValidity: 30 # (days) default value.
       SupportedIdentityProviders:
         - COGNITO
-      #TokenValidityUnits:
-      #  AccessToken: minutes
-      #  IdToken: minutes
-      #  RefreshToken: days
       UserPoolId: !Ref UserPool
       
   UserPoolDomain:
@@ -83,12 +70,10 @@ Resources:
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      #AllowClassicFlow: false # default value.
       AllowUnauthenticatedIdentities: false
       CognitoIdentityProviders:
         - ClientId: !Ref UserPoolClient
           ProviderName: !Sub "cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
-          #ServerSideTokenCheck: false # default value.
       IdentityPoolName: !Sub ${Prefix}-IdentityPool
       
   IdentityPoolRoleAttachment:
