@@ -26,13 +26,10 @@
             [`cognito-idp.${region}.amazonaws.com/${userPoolId}`]: idToken
           }
         });
-        //console.log(AWS.config.credentials);
         
         var tokens = idToken.split('.');
         var tokensDecoded = JSON.parse(atob(tokens[1]));
-        //console.log(tokensDecoded);
         var name = tokensDecoded.name;
-        //console.log(name);
         document.getElementById('name').innerText = `Name: ${name}`;
         
         var ssmParams = {
@@ -42,9 +39,7 @@
         ssm.getParameter(ssmParams, function(err, data) {
           if (err) console.log(err, err.stack);
           else {
-            //console.log(data):
             var storedParameter = data.Parameter.Value;
-            //console.log(storedParameter);
             document.getElementById('parameter').innerText = `SSM Parameter Store: ${storedParameter}`;
           }
         });
