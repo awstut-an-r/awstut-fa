@@ -54,20 +54,12 @@ Resources:
 Outputs:
   VPC:
     Value: !Ref VPC
-    Export:
-      Name: !Sub ${Prefix}-VPC
       
   PrivateSubnet:
     Value: !Ref PrivateSubnet
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet
       
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-EndpointSecurityGroup
