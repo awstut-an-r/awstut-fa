@@ -20,8 +20,11 @@ Resources:
     DependsOn:
       - FlowLogBucket
     Properties:
+      #DeliverLogsPermissionArn: hogehoge # delivering CloudWatch Logs.
       LogDestination: !GetAtt FlowLogBucket.Arn
       LogDestinationType: s3
+      #LogFormat: hogehoge # default
+      #MaxAggregationInterval: 600 # default
       ResourceId: !Ref PrivateSubnet
       ResourceType: Subnet
       TrafficType: ALL
@@ -37,9 +40,12 @@ Resources:
     DependsOn:
       - FlowLogGroup
     Properties:
-      DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn
+      DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn # delivering CloudWatch Logs.
+      #LogDestination: !GetAtt FlowLogBucket.Arn
       LogDestinationType: cloud-watch-logs
+      #LogFormat: hogehoge # default
       LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      #MaxAggregationInterval: 600 # default
       ResourceId: !Ref PrivateSubnet
       ResourceType: Subnet
       TrafficType: ALL

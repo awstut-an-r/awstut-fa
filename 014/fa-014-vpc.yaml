@@ -35,7 +35,12 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup
-      GroupDescription: Deny All.
+      GroupDescription: Allow ICMP.
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: !Ref CidrIp
       VpcId: !Ref VPC
       
   EndpointSecurityGroup:
