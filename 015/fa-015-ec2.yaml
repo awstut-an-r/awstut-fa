@@ -51,7 +51,6 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
-                #- ssm.amazonaws.com
       Policies:
         - PolicyName: DeliverLogPolicy
           PolicyDocument:
@@ -68,7 +67,6 @@ Resources:
                   - !Sub "arn:aws:s3:::${SSMLogBucket}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        #- arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM
         - arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy
         
         
