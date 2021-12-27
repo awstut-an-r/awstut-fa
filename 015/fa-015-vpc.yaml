@@ -1,8 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #AvailabilityZone:
-  #  Type: String
-    
   CidrIp1:
     Type: String
     
@@ -58,7 +55,6 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
-      #AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone}
       
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -101,11 +97,6 @@ Resources:
     Properties:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup
       GroupDescription: Allow ICMP.
-      #SecurityGroupIngress:
-      #  - IpProtocol: icmp
-      #    FromPort: -1
-      #    ToPort: -1
-      #    CidrIp: !Ref CidrIp
       VpcId: !Ref VPC
       
   EndpointSecurityGroup:
@@ -128,9 +119,6 @@ Outputs:
   PrivateSubnet:
     Value: !Ref PrivateSubnet
     
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-      
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
       
