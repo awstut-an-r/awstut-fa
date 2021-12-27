@@ -96,7 +96,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup
-      GroupDescription: Allow ICMP.
+      GroupDescription: Deny All.
       VpcId: !Ref VPC
       
   EndpointSecurityGroup:
