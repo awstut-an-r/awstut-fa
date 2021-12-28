@@ -51,9 +51,7 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
         ImageId: "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
-        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType: t4g.small
         InstanceType: "t3a.small"
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
