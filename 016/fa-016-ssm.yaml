@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Instance:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  SSMLogBucket:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+
+Resources:
+  CloudWatchConfigParemeter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: AmazonCloudWatch-windows
+      Type: String
+      Value: !Sub |
+        {
+          "logs": {
+            "logs_collected": {
+              "windows_events": {
+                "collect_list": [
+                  {
+                    "event_format": "xml",
+                    "event_levels": [
+                      "VERBOSE",
+                      "INFORMATION",
+                      "WARNING",
+                      "ERROR",
+                      "CRITICAL"
+                    ],
+                    "event_name": "System",
+                    "log_group_name": "${Prefix}"
+                  }
+                ]
+              }
+            }
+          },
+          "metrics": {
+            "append_dimensions": {
+              "ImageId": "${!aws:ImageId}",
+              "InstanceId": "${!aws:InstanceId}",
+              "InstanceType": "${!aws:InstanceType}"
+            },
+            "metrics_collected": {
+              "Memory": {
+                "measurement": [
+                  "% Committed Bytes In Use"
+                ],
+                "metrics_collection_interval": 60
+              },
+              "Paging File": {
+                "measurement": [
+                  "% Usage"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                  "*"
+                ]
+              }
+            }
+          }
+        }
+        
+  AWSConfigureAWSPackageAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-aws-configure-aws-package-association"
+      Name: AWS-ConfigureAWSPackage
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref SSMLogBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/aws-configure-aws-package-association"
+      Parameters:
+        action:
+          - Install
+        installationType:
+          - Uninstall and reinstall
+        name:
+          - AmazonCloudWatchAgent
+        version:
+          - latest
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+  AmazonCloudWatchManageAgentAssociation:
+    Type: AWS::SSM::Association
+    DependsOn:
+      - CloudWatchConfigParemeter
+      - AWSConfigureAWSPackageAssociation
+    Properties:
+      AssociationName: !Sub "${Prefix}-amazon-cloudwatch-manage-agent"
+      Name: AmazonCloudWatch-ManageAgent
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref SSMLogBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/amazon-cloudwatch-manage-agent"
+      Parameters:
+        action:
+          - configure
+        mode:
+          - ec2
+        optionalConfigurationSource:
+          - ssm
+        optionalConfigurationLocation:
+          - !Ref CloudWatchConfigParemeter
+        optionalOpenTelemetryCollectorConfigurationSource:
+          - ssm
+        optionalRestart:
+          - "yes"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
