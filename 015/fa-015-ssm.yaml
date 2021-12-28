@@ -123,7 +123,7 @@ Resources:
         optionalConfigurationSource:
           - ssm
         optionalConfigurationLocation:
-          - AmazonCloudWatch-linux
+          - !Ref CloudWatchConfigParemeter
         optionalOpenTelemetryCollectorConfigurationSource:
           - ssm
         optionalRestart:
