@@ -7,7 +7,7 @@ Parameters:
     
   Prefix:
     Type: String
-    Default: fa-001
+    Default: [prefix]
     
   HTTPPort:
     Type: Number
