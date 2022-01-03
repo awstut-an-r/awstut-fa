@@ -79,17 +79,8 @@ Resources:
           
           
 Outputs:
-  #VPC:
-  #  Value: !Ref VPC
-  #  Export:
-  #    Name: !Sub ${Prefix}-VPC
-      
   PublicSubnet:
     Value: !Ref PublicSubnet
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet
       
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup
