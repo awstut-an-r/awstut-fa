@@ -46,7 +46,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-Japanese-Full-Base
+        ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType1: t2.nano
         InstanceType2: t3a.nano
