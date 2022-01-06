@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Prefix:
     Type: String
-    Default: fa-011
+    Default: [bucket-name]
     
 
 Resources:
