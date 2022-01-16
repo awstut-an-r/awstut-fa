@@ -33,18 +33,6 @@ Resources:
         Prefix: !Ref Prefix
         VPCCidrBlock: "10.0.0.0/16"
         
-  #EndpointStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
-  #    Parameters:
-  #      EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-  #      Prefix: !Ref Prefix
-  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      VPC: !GetAtt VPCStack.Outputs.VPC
-        
   MSADStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -63,16 +51,12 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
         ImageId: "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
-        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType: t4g.small
         InstanceType: "t3a.small"
-        #InstanceType: "t3a.medium"
         KeyName: "MyKeyPair"
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
@@ -86,12 +70,9 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
         Instance: !GetAtt EC2Stack.Outputs.Instance
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         MSAD: !GetAtt MSADStack.Outputs.MSAD
-        #MSADDnsIpAddresses: !GetAtt.Outputs.MSADDnsIpAddresses
         MSADDnsIpAddress1: !GetAtt MSADStack.Outputs.MSADDnsIpAddress1
         MSADDnsIpAddress2: !GetAtt MSADStack.Outputs.MSADDnsIpAddress2
         MSADName: !Ref DirectoryName
         Prefix: !Ref Prefix
-        #SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
         WaitForSuccessTimeoutSeconds: 3000
