@@ -3,16 +3,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Instance:
     Type: String
-    
-  #Instance2:
-  #  Type: String
-    
+
   MSAD:
     Type: String
-    
-  #MSADDnsIpAddresses:
-  #  #Type: CommaDelimitedList
-  #  Type: String
   
   MSADDnsIpAddress1:
     Type: String
@@ -25,9 +18,6 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  #SSMLogBucket:
-  #  Type: String
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
@@ -45,31 +35,13 @@ Resources:
         directoryName:
           - !Ref MSADName
         dnsIpAddresses:
-          #- !Ref MSADDnsIpAddresses
           - !Ref MSADDnsIpAddress1
           - !Ref MSADDnsIpAddress2
       Targets:
         - Key: InstanceIds
           Values:
             - !Ref Instance
-            #- !Ref Instance2
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-            
-  #AWSRunShellScriptAssociation:
-  #  Type: AWS::SSM::Association
-  #  DependsOn:
-  #    - AWSJoinDirectoryServiceDomainAssociation
-  #  Properties:
-  #    AssociationName: !Sub "${Prefix}-shellscript-association"
-  #    Name: AWS-RunShellScript
-  #    Parameters:
-  #      commands:
-  #        - "Install-WindowsFeature RSAT-ADDS"
-  #    Targets:
-  #      - Key: InstanceIds
-  #        Values:
-  #          - !Ref Instance
-  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
       
   AWSRunPowerShellScriptAssociation:
     Type: AWS::SSM::Association
