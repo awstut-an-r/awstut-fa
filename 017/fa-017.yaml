@@ -29,7 +29,6 @@ Resources:
         CidrIp1: "10.0.1.0/24"
         CidrIp2: "10.0.2.0/24"
         CidrIp3: "10.0.3.0/24"
-        HTTPSPort: 443
         Prefix: !Ref Prefix
         VPCCidrBlock: "10.0.0.0/16"
         
