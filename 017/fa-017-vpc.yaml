@@ -15,9 +15,6 @@ Parameters:
   CidrIp3:
     Type: String
     
-  HTTPSPort:
-    Type: Number
-    
   Prefix:
     Type: String
     
@@ -122,18 +119,6 @@ Resources:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      
-  EndpointSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Ref HTTPSPort
-          ToPort: !Ref HTTPSPort
-          SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
           
 Outputs:
