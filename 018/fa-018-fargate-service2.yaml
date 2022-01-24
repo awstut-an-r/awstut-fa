@@ -24,9 +24,6 @@ Parameters:
     
   ServiceSecurityGroup:
     Type: String
-    
-  #PrivateSubnet2:
-  #  Type: String
   
   PublicSubnet2:
     Type: String
@@ -46,23 +43,10 @@ Resources:
       ContainerDefinitions:
         - Name: !Sub "${Prefix}-${ServiceName}-container"
           Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
-          #Image: nginx:latest
-          #LogConfiguration:
-          #  LogDriver: awslogs
-          #  Options:
-          #    awslogs-group:
-          #      Fn::ImportValue: !Sub ${Prefix}-LogGroup1
-          #    awslogs-region: !Ref AWS::Region
-          #    awslogs-stream-prefix: app
-          #Environment:
-          #  - Name: QueueName
-          #    Value:
-          #      Fn::ImportValue: !Sub ${Prefix}-QueueName
                 
   Service2:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -75,7 +59,6 @@ Resources:
             - !Ref ServiceSecurityGroup
           Subnets:
             - !Ref PublicSubnet2
-            #- !Ref PrivateSubnet1
 
   TaskRole2:
     Type: AWS::IAM::Role
@@ -89,14 +72,3 @@ Resources:
                 - ecs-tasks.amazonaws.com
             Action:
               - sts:AssumeRole
-      #Policies:
-      #  - PolicyName: AllowSQSSendMessage
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - sqs:GetQueueUrl
-      #            - sqs:SendMessage
-      #          Resource:
-      #            - Fn::ImportValue: !Sub ${Prefix}-QueueArn
