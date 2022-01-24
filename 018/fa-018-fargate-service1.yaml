@@ -7,9 +7,6 @@ Parameters:
   FargateTaskExecutionRole:
     Type: String
     
-  #MyServiceRepository:
-  #  Type: String
-    
   Prefix:
     Type: String
     
@@ -24,9 +21,6 @@ Parameters:
     
   ServiceSecurityGroup:
     Type: String
-    
-  #PrivateSubnet1:
-  #  Type: String
   
   PublicSubnet1:
     Type: String
@@ -45,25 +39,11 @@ Resources:
       TaskRoleArn: !Ref TaskRole1
       ContainerDefinitions:
         - Name: !Sub "${Prefix}-${ServiceName}-container"
-          #Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
           Image: nginx:latest
-          #LogConfiguration:
-          #  LogDriver: awslogs
-          #  Options:
-          #    awslogs-group:
-          #      Fn::ImportValue: !Sub ${Prefix}-LogGroup1
-          #    awslogs-region: !Ref AWS::Region
-          #    awslogs-stream-prefix: app
-          #Environment:
-          #  - Name: QueueName
-          #    Value:
-          #      Fn::ImportValue: !Sub ${Prefix}-QueueName
                 
-  #MyService:
   Service1:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -76,7 +56,6 @@ Resources:
             - !Ref ServiceSecurityGroup
           Subnets:
             - !Ref PublicSubnet1
-            #- !Ref PrivateSubnet1
 
   TaskRole1:
     Type: AWS::IAM::Role
@@ -90,14 +69,3 @@ Resources:
                 - ecs-tasks.amazonaws.com
             Action:
               - sts:AssumeRole
-      #Policies:
-      #  - PolicyName: AllowSQSSendMessage
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - sqs:GetQueueUrl
-      #            - sqs:SendMessage
-      #          Resource:
-      #            - Fn::ImportValue: !Sub ${Prefix}-QueueArn
