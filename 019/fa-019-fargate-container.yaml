@@ -1,0 +1,174 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBTargetGroup:
+    Type: String
+    
+  Cluster:
+    Type: String
+    
+  FargateTaskExecutionRole:
+    Type: String
+    
+  HTTPPort:
+    Type: Number
+    
+  MyRepository:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+    
+  ServiceCpu:
+    Type: Number
+    
+  ServiceMemory:
+    Type: Number
+    
+  ServiceName:
+    Type: String
+    
+  ServiceSecurityGroup:
+    Type: String
+    
+  ServiceScalingTargetValue:
+    Type: Number
+    
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub ${Prefix}-LogGroup
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyRepository}:latest"
+          #Image: nginx:latest
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Ref Prefix
+          Name: !Sub "${Prefix}-${ServiceName}-container"
+          PortMappings:
+            - ContainerPort: !Ref HTTPPort
+              HostPort: !Ref HTTPPort
+          #Environment:
+          #  - Name: QueueName
+          #    Value:
+          #      Fn::ImportValue: !Sub ${Prefix}-QueueName
+      Cpu: !Ref ServiceCpu
+      ExecutionRoleArn: !Ref FargateTaskExecutionRole
+      Memory: !Ref ServiceMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref TaskRole
+                
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      #Cluster: !Ref Cluster1
+      Cluster: !Ref Cluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: !Sub "${Prefix}-${ServiceName}-container"
+          ContainerPort: !Ref HTTPPort
+          TargetGroupArn: !Ref ALBTargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          #AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ServiceSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+      ServiceName: !Sub "${Prefix}-${ServiceName}-service"
+      TaskDefinition: !Ref TaskDefinition
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      #Policies:
+      #  - PolicyName: AllowSQSSendMessage
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - sqs:GetQueueUrl
+      #            - sqs:SendMessage
+      #          Resource:
+      #            - Fn::ImportValue: !Sub ${Prefix}-QueueArn
+
+  ServiceScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn:
+      - Service
+    Properties:
+      MaxCapacity: 3
+      MinCapacity: 1
+      ResourceId: !Select [5, !Split [":", !Ref Service]]
+      #ResourceId: !GetAtt Service.Name
+      RoleARN: !GetAtt ServiceTaskScalingRole.Arn
+      ScalableDimension: ecs:service:DesiredCount
+      ServiceNamespace: ecs
+        
+  ServiceScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn:
+      - Service
+      - ServiceScalableTarget
+    Properties: 
+      PolicyName: ServiceScalingPolicy
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref ServiceScalableTarget
+      TargetTrackingScalingPolicyConfiguration: 
+        #CustomizedMetricSpecification: 
+        #  Dimensions: 
+        #    - Name: QueueName
+        #      Value:
+        #        Fn::ImportValue: !Sub ${Prefix}-QueueName
+        #  MetricName: ApproximateNumberOfMessagesVisible
+        #  Namespace: AWS/SQS
+        #  Statistic: Average
+        #  Unit: Count
+        DisableScaleIn: false
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ECSServiceAverageCPUUtilization
+        ScaleInCooldown: 0
+        ScaleOutCooldown: 0
+        TargetValue: !Ref ServiceScalingTargetValue
+      
+  ServiceTaskScalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      #RoleName: Service2TaskScalingRole
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceAutoscaleRole
