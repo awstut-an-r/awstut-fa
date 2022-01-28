@@ -7,12 +7,6 @@ Parameters:
   HTTPPort:
     Type: Number
     
-  #Instance1:
-  #  Type: String
-  #  
-  #Instance2:
-  #  Type: String
-    
   Prefix:
     Type: String
     
@@ -70,9 +64,6 @@ Resources:
       HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
       Matcher: 
         HttpCode: !Ref HttpCode
-      #Targets:
-      #  - Id: !Ref Instance1
-      #  - Id: !Ref Instance2
       TargetType: ip
         
   ALBListener:
