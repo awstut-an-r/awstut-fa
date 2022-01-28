@@ -61,12 +61,6 @@ Resources:
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         VPC: !GetAtt VPCStack.Outputs.VPC
         
-  #ECRStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
   ALBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -76,8 +70,6 @@ Resources:
       Parameters:
         ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
         HTTPPort: !Ref HTTPPort
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
         Prefix: !Ref Prefix
@@ -91,9 +83,6 @@ Resources:
         
   FargateStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - EndpointStack
-    #  - ECRStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate.yaml"
       Parameters:
@@ -103,7 +92,6 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - EndpointStack
-      #- ECRStack
       - FargateStack
       - VPCStack
       - ALBStack
@@ -124,28 +112,3 @@ Resources:
         ServiceName: container1
         ServiceScalingTargetValue: !Ref ServiceScalingTargetValue
         ServiceSecurityGroup: !GetAtt VPCStack.Outputs.ServiceSecurityGroup
-        
-  #FargateService2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    #- EndpointStack
-  #    #- ECRStack
-  #    - FargateStack
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate-service2.yaml"
-  #    Parameters:
-  #      Cluster: !GetAtt FargateStack.Outputs.Cluster
-  #      FargateTaskExecutionRole: !GetAtt FargateStack.Outputs.FargateTaskExecutionRole
-  #      #MyServiceRepository: !GetAtt ECRStack.Outputs.MyServiceRepository
-  #      MyServiceRepository:
-  #        Fn::ImportValue: !Sub "${Prefix}-MyServiceRepository"
-  #      Prefix: !Ref Prefix
-  #      ServiceCpu: !Ref ServiceCpu
-  #      ServiceMemory: !Ref ServiceMemory
-  #      ServiceName: service2
-  #      ServiceSecurityGroup: !GetAtt VPCStack.Outputs.ServiceSecurityGroup
-  #      #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      #PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-  #      PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
-  
