@@ -52,7 +52,6 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyRepository}:latest"
-          #Image: nginx:latest
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -63,10 +62,6 @@ Resources:
           PortMappings:
             - ContainerPort: !Ref HTTPPort
               HostPort: !Ref HTTPPort
-          #Environment:
-          #  - Name: QueueName
-          #    Value:
-          #      Fn::ImportValue: !Sub ${Prefix}-QueueName
       Cpu: !Ref ServiceCpu
       ExecutionRoleArn: !Ref FargateTaskExecutionRole
       Memory: !Ref ServiceMemory
@@ -78,7 +73,6 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       DesiredCount: 1
       LaunchType: FARGATE
@@ -88,7 +82,6 @@ Resources:
           TargetGroupArn: !Ref ALBTargetGroup
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ServiceSecurityGroup
           Subnets:
@@ -109,17 +102,6 @@ Resources:
                 - ecs-tasks.amazonaws.com
             Action:
               - sts:AssumeRole
-      #Policies:
-      #  - PolicyName: AllowSQSSendMessage
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - sqs:GetQueueUrl
-      #            - sqs:SendMessage
-      #          Resource:
-      #            - Fn::ImportValue: !Sub ${Prefix}-QueueArn
 
   ServiceScalableTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
@@ -129,7 +111,6 @@ Resources:
       MaxCapacity: 3
       MinCapacity: 1
       ResourceId: !Select [5, !Split [":", !Ref Service]]
-      #ResourceId: !GetAtt Service.Name
       RoleARN: !GetAtt ServiceTaskScalingRole.Arn
       ScalableDimension: ecs:service:DesiredCount
       ServiceNamespace: ecs
@@ -144,15 +125,6 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref ServiceScalableTarget
       TargetTrackingScalingPolicyConfiguration: 
-        #CustomizedMetricSpecification: 
-        #  Dimensions: 
-        #    - Name: QueueName
-        #      Value:
-        #        Fn::ImportValue: !Sub ${Prefix}-QueueName
-        #  MetricName: ApproximateNumberOfMessagesVisible
-        #  Namespace: AWS/SQS
-        #  Statistic: Average
-        #  Unit: Count
         DisableScaleIn: false
         PredefinedMetricSpecification:
           PredefinedMetricType: ECSServiceAverageCPUUtilization
@@ -163,7 +135,6 @@ Resources:
   ServiceTaskScalingRole:
     Type: AWS::IAM::Role
     Properties:
-      #RoleName: Service2TaskScalingRole
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
