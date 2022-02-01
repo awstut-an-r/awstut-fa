@@ -33,6 +33,3 @@ Resources:
 Outputs:
   LambdaRoleArn:
     Value: !GetAtt LambdaRole.Arn
-    
-  #FunctionName:
-  #  Value: !Ref Function
