@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Architecture:
-  #  Type: String
-    
   Handler:
     Type: String
     
@@ -28,16 +25,11 @@ Parameters:
   SSMParameter:
     Type: String
     
-  #ZipFile:
-  #  Type: String
-    
     
 Resources:
   Function1:
     Type: AWS::Lambda::Function
     Properties:
-      #Architectures:
-      #  - !Ref Architecture
       Code:
         S3Bucket: !Ref S3Bucket
         S3Key: !Ref S3Key
