@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Architecture:
-  #  Type: String
-    
   Handler:
     Type: String
     
@@ -22,16 +19,11 @@ Parameters:
   SSMParameter:
     Type: String
     
-  #ZipFile:
-  #  Type: String
-    
     
 Resources:
   Function2:
     Type: AWS::Lambda::Function
     Properties:
-      #Architectures:
-      #  - !Ref Architecture
       Code:
         ZipFile: |
           import boto3
@@ -59,5 +51,4 @@ Resources:
       MemorySize: !Ref MemorySize
       PackageType: Zip
       Runtime: !Ref Runtime
-      #Runtime: python3.8
       Role: !Ref LambdaRoleArn
