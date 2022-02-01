@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-020
+    
+  #Architecture:
+  #  Type: String
+  #  Default: arm64
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  MemorySize:
+    Type: Number
+    Default: 128
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+    
+Resources:
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Name: !Sub "${Prefix}-parameter"
+        Value: hello, awstut !
+        
+  #S3Stack:
+  #ECRStack:
+        
+  LambdaRoleStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-role.yaml"
+      Parameters:
+        SSMParameter: !GetAtt SSMStack.Outputs.SSMParameter
+        
+  Lambda1Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda1.yaml"
+      Parameters:
+        #Architecture: !Ref Architecture
+        Handler: !Ref Handler
+        LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
+        MemorySize: !Ref MemorySize
+        #PackageType: Zip
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        S3Bucket:
+          Fn::ImportValue: !Sub "${Prefix}-S3Bucket"
+        S3Key: deploy_package.zip
+        SSMParameter: !GetAtt SSMStack.Outputs.SSMParameter
+        
+  Lambda2Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda2.yaml"
+      Parameters:
+        #Architecture: !Ref Architecture
+        Handler: !Ref Handler
+        LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
+        MemorySize: !Ref MemorySize
+        #PackageType: Zip
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        SSMParameter: !GetAtt SSMStack.Outputs.SSMParameter
+        
+  Lambda3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda3.yaml"
+      Parameters:
+        #Architecture: !Ref Architecture
+        Handler: !Ref Handler
+        ImageUri: !Sub
+          - "${RepositoryUri}:latest"
+          - RepositoryUri:
+              Fn::ImportValue: !Sub "${Prefix}-ECRRepositoryUri"
+        LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
+        MemorySize: !Ref MemorySize
+        #PackageType: 
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        SSMParameter: !GetAtt SSMStack.Outputs.SSMParameter

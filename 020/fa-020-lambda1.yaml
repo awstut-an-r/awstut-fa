@@ -1,0 +1,53 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Architecture:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  LambdaRoleArn:
+    Type: String
+    
+  MemorySize:
+    Type: Number
+  
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  S3Bucket:
+    Type: String
+    
+  S3Key:
+    Type: String
+    
+  SSMParameter:
+    Type: String
+    
+  #ZipFile:
+  #  Type: String
+    
+    
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Code:
+        S3Bucket: !Ref S3Bucket
+        S3Key: !Ref S3Key
+      Environment:
+        Variables:
+          ssm_parameter_name: !Ref SSMParameter
+          region_name: !Ref AWS::Region
+      FunctionName: !Sub ${Prefix}-function1
+      Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      PackageType: Zip
+      Runtime: !Ref Runtime
+      Role: !Ref LambdaRoleArn

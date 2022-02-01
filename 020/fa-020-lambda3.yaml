@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Architecture:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  ImageUri:
+    Type: String
+    
+  LambdaRoleArn:
+    Type: String
+    
+  MemorySize:
+    Type: Number
+  
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  SSMParameter:
+    Type: String
+    
+  #ZipFile:
+  #  Type: String
+    
+    
+Resources:
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Code:
+        ImageUri: !Ref ImageUri
+      Environment:
+        Variables:
+          ssm_parameter_name: !Ref SSMParameter
+          region_name: !Ref AWS::Region
+      FunctionName: !Sub ${Prefix}-function3
+      #Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      PackageType: Image
+      #Runtime: !Ref Runtime
+      Role: !Ref LambdaRoleArn

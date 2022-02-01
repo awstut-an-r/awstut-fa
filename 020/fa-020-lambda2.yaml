@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Architecture:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  LambdaRoleArn:
+    Type: String
+    
+  MemorySize:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  SSMParameter:
+    Type: String
+    
+  #ZipFile:
+  #  Type: String
+    
+    
+Resources:
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          
+          def lambda_handler(event, context):
+            ssm_parameter_name = os.environ['ssm_parameter_name']
+            region_name = os.environ['region_name']
+            
+            ssm = boto3.client('ssm', region_name=region_name)
+            ssm_parameter = ssm.get_parameter(
+              Name=ssm_parameter_name)['Parameter']['Value']
+          
+            return {
+              'statusCode': 200,
+              'body': json.dumps(ssm_parameter)
+            }
+      Environment:
+        Variables:
+          ssm_parameter_name: !Ref SSMParameter
+          region_name: !Ref AWS::Region
+      FunctionName: !Sub ${Prefix}-function2
+      Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      PackageType: Zip
+      Runtime: !Ref Runtime
+      #Runtime: python3.8
+      Role: !Ref LambdaRoleArn

@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+    Name:
+      Type: String
+      
+    Value:
+      Type: String
+      
+
+Resources:
+  SSMParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Ref Name
+      Type: String
+      Value: !Ref Value
+      
+      
+Outputs:
+  SSMParameter:
+    Value: !Ref SSMParameter
