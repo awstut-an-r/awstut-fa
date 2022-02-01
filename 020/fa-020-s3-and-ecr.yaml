@@ -12,21 +12,6 @@ Resources:
     Properties:
       BucketName: !Sub "${Prefix}-bucket"
       AccessControl: Private
-      #WebsiteConfiguration:
-      #  IndexDocument: index.html
-      
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !Ref Prefix
-  #    PolicyDocument:
-  #      Statement:
-  #        Action:
-  #          - s3:GetObject
-  #        Effect: Allow
-  #        Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
-  #        Principal: "*"
-  
   
   ECRRepository:
     Type: AWS::ECR::Repository
