@@ -22,6 +22,9 @@ Parameters:
   Runtime:
     Type: String
     
+  Timeout:
+    Type: Number
+    
     
 Resources:
   Function2:
@@ -48,7 +51,6 @@ Resources:
             results = []
             for msg in messages:
               results.append(msg.body)
-              msg.delete()
           
             return {
               'statusCode': 200,
@@ -64,6 +66,7 @@ Resources:
       MemorySize: !Ref MemorySize
       Runtime: !Ref Runtime
       Role: !GetAtt LambdaRole2.Arn
+      Timeout: !Ref Timeout
 
   LambdaRole2:
     Type: AWS::IAM::Role
