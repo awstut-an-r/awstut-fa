@@ -47,7 +47,6 @@ Resources:
             messages = queue.receive_messages(
               MaxNumberOfMessages=int(max_number_of_messages))
               
-            #bodies = [msg.body for msg in messages]
             results = []
             for msg in messages:
               results.append(msg.body)
