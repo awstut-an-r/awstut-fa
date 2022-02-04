@@ -21,6 +21,10 @@ Parameters:
     Type: String
     Default: python3.8
     
+  Timeout:
+    Type: Number
+    Default: 20
+    
     
 Resources:
   SQSStack:
@@ -56,3 +60,18 @@ Resources:
         QueueArn: !GetAtt SQSStack.Outputs.QueueArn
         QueueName: !GetAtt SQSStack.Outputs.QueueName
         Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
+
+  Lambda3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda3.yaml"
+      Parameters:
+        Handler: !Ref Handler
+        MaxNumberOfMessages: !Ref MaxNumberOfMessages
+        MemorySize: !Ref MemorySize
+        Prefix: !Ref Prefix
+        QueueArn: !GetAtt SQSStack.Outputs.QueueArn
+        QueueName: !GetAtt SQSStack.Outputs.QueueName
+        Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
