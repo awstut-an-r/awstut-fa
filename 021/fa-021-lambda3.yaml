@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Architecture:
-  #  Type: String
-    
   Handler:
     Type: String
     
@@ -33,8 +30,6 @@ Resources:
   Function3:
     Type: AWS::Lambda::Function
     Properties:
-      #Architectures:
-      #  - !Ref Architecture
       Code:
         ZipFile: |
           import boto3
@@ -70,9 +65,7 @@ Resources:
       FunctionName: !Sub ${Prefix}-function3
       Handler: !Ref Handler
       MemorySize: !Ref MemorySize
-      #PackageType: Zip
       Runtime: !Ref Runtime
-      #Runtime: python3.8
       Role: !GetAtt LambdaRole2.Arn
       Timeout: !Ref Timeout
 
