@@ -37,31 +37,21 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda1.yaml"
       Parameters:
-        #Architecture: !Ref Architecture
         Handler: !Ref Handler
-        #LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
         MemorySize: !Ref MemorySize
-        #PackageType: Zip
         Prefix: !Ref Prefix
         QueueArn: !GetAtt SQSStack.Outputs.QueueArn
         QueueName: !GetAtt SQSStack.Outputs.QueueName
         Runtime: !Ref Runtime
-        #S3Bucket:
-        #  Fn::ImportValue: !Sub "${Prefix}-S3Bucket"
-        #S3Key: deploy_package.zip
-        #SSMParameter: !GetAtt SSMStack.Outputs.SSMParameter
         
   Lambda2Stack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda2.yaml"
       Parameters:
-        #Architecture: !Ref Architecture
         Handler: !Ref Handler
-        #LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
         MaxNumberOfMessages: 10
         MemorySize: !Ref MemorySize
-        #PackageType: Zip
         Prefix: !Ref Prefix
         QueueArn: !GetAtt SQSStack.Outputs.QueueArn
         QueueName: !GetAtt SQSStack.Outputs.QueueName
