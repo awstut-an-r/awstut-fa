@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Architecture:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  MemorySize:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  QueueArn:
+    Type: String
+    
+  QueueName:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+    
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Code:
+        ZipFile: |
+          import boto3
+          import datetime
+          import json
+          import os
+          
+          def lambda_handler(event, context):
+            queue_name = os.environ['queue_name']
+            region_name = os.environ['region_name']
+            
+            sqs = boto3.resource('sqs', region_name='ap-northeast-1')
+            queue = sqs.get_queue_by_name(QueueName=queue_name)
+            
+            now = datetime.datetime.now()
+            now_str = now.strftime('%Y%m%d%H%M%S%f')
+            
+            messages = [{
+              'Id': now_str,
+              'MessageBody': now_str
+            }]
+            
+            response = queue.send_messages(Entries=messages)
+          
+            return {
+              'statusCode': 200,
+              'body': json.dumps(response)
+            }
+      Environment:
+        Variables:
+          queue_name: !Ref QueueName
+          region_name: !Ref AWS::Region
+      FunctionName: !Sub ${Prefix}-function1
+      Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      #PackageType: Zip
+      Runtime: !Ref Runtime
+      #Runtime: python3.8
+      Role: !GetAtt LambdaRole1.Arn
+
+  LambdaRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      Policies:
+        - PolicyName: GetSSMParameter
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sqs:GetQueueUrl
+                  - sqs:SendMessage
+                Resource:
+                  - !Ref QueueArn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole

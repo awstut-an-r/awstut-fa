@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  ReceiveMessageWaitTimeSeconds:
+    Type: Number
+    
+  VisibilityTimeout:
+    Type: Number
+    
+
+Resources:
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub ${Prefix}-queue
+      ReceiveMessageWaitTimeSeconds: !Ref ReceiveMessageWaitTimeSeconds
+      VisibilityTimeout: !Ref VisibilityTimeout
+      
+      
+Outputs:
+  QueueName:
+    Value: !GetAtt Queue.QueueName
+      
+  QueueArn:
+    Value: !GetAtt Queue.Arn
