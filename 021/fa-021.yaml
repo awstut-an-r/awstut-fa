@@ -23,7 +23,7 @@ Parameters:
     
   Timeout:
     Type: Number
-    Default: 10
+    Default: 30
     
     
 Resources:
