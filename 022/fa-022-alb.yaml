@@ -88,5 +88,3 @@ Resources:
 Outputs:
   ALBDnsName:
     Value: !GetAtt ALB.DNSName
-    #Export:
-    #  Name: !Sub ${Prefix}-ALBDnsName
