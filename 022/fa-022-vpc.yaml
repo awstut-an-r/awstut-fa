@@ -159,45 +159,27 @@ Resources:
 Outputs:
   VPC:
     Value: !Ref VPC
-    Export:
-      Name: !Sub ${Prefix}-VPC
       
   PublicSubnet1:
     Value: !Ref PublicSubnet1
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet1
       
   PublicSubnet2:
     Value: !Ref PublicSubnet2
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet2
       
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet1
       
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet2
       
   PrivateRouteTable:
     Value: !Ref PrivateRouteTable
-    Export:
-      Name: !Sub ${Prefix}-PrivateRouteTable
       
   ALBSecurityGroup:
     Value: !Ref ALBSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-ALBSecurityGroup
   
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-EndpointSecurityGroup
