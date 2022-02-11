@@ -27,7 +27,6 @@ Resources:
   Instance1:
     Type: AWS::EC2::Instance
     Properties:
-      #IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
@@ -40,7 +39,6 @@ Resources:
   Instance2:
     Type: AWS::EC2::Instance
     Properties:
-      #IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
@@ -49,37 +47,11 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
       UserData: !Ref UserData
-      
-  #InstanceProfile:
-  #  Type: AWS::IAM::InstanceProfile
-  #  Properties:
-  #    Path: /
-  #    Roles:
-  #      - !Ref InstanceRole
-  
-  #InstanceRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - ec2.amazonaws.com
-  #              - ssm.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         
       
 Outputs:
   Instance1:
     Value: !Ref Instance1
-    Export:
-      Name: !Sub ${Prefix}-Instance1
       
   Instance2:
     Value: !Ref Instance2
-    Export:
-      Name: !Sub ${Prefix}-Instance2
