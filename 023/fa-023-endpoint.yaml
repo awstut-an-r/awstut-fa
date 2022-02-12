@@ -32,9 +32,9 @@ Resources:
             Action:
               - s3:GetObject
             Resource:
-              - !Sub arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*
-              - !Sub arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*
+              - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
+              - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
       RouteTableIds:
         - !Ref PrivateRouteTable
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.s3
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
       VpcId: !Ref VPC
