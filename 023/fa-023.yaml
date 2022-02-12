@@ -90,7 +90,6 @@ Resources:
       Parameters:
         DomainName: !Ref DomainName
         HostedZoneId: !Ref HostedZoneId
-        #Prefix: !Ref Prefix
           
   ALBStack:
     Type: AWS::CloudFormation::Stack
