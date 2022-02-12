@@ -51,7 +51,7 @@ Resources:
   ALB:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: !Sub ${Prefix}-ALB
+      Name: !Sub "${Prefix}-ALB"
       Scheme: internet-facing
       SecurityGroups:
         - !Ref ALBSecurityGroup
@@ -64,7 +64,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       VpcId: !Ref VPC
-      Name: !Sub ${Prefix}-ALBTargetGroup
+      Name: !Sub "${Prefix}-ALBTargetGroup"
       Protocol: HTTP
       Port: !Ref HTTPPort
       HealthCheckProtocol: HTTP
@@ -89,8 +89,6 @@ Resources:
         - TargetGroupArn: !Ref ALBTargetGroup
           Type: forward
       LoadBalancerArn: !Ref ALB
-      #Port: !Ref HTTPPort
-      #Protocol: HTTP
       Port: !Ref HTTPSPort
       Protocol: HTTPS
 
@@ -98,5 +96,3 @@ Resources:
 Outputs:
   ALBDnsName:
     Value: !GetAtt ALB.DNSName
-    #Export:
-    #  Name: !Sub ${Prefix}-ALBDnsName
