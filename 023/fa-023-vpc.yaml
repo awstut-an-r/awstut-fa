@@ -52,28 +52,28 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp1
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone1}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
   PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone2}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp3
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone1}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp4
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone2}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       
       
   PublicRouteTable:
@@ -122,13 +122,11 @@ Resources:
   ALBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-ALBSecurityGroup
+      GroupName: !Sub "${Prefix}-ALBSecurityGroup"
       GroupDescription: Allow HTTPS Only.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          #FromPort: !Ref HTTPPort
-          #ToPort: !Ref HTTPPort
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
           CidrIp: 0.0.0.0/0
@@ -136,7 +134,7 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Allow HTTP from ALBSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -148,7 +146,7 @@ Resources:
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
       GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -161,45 +159,27 @@ Resources:
 Outputs:
   VPC:
     Value: !Ref VPC
-    Export:
-      Name: !Sub ${Prefix}-VPC
       
   PublicSubnet1:
     Value: !Ref PublicSubnet1
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet1
       
   PublicSubnet2:
     Value: !Ref PublicSubnet2
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet2
       
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet1
       
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet2
       
   PrivateRouteTable:
     Value: !Ref PrivateRouteTable
-    Export:
-      Name: !Sub ${Prefix}-PrivateRouteTable
       
   ALBSecurityGroup:
     Value: !Ref ALBSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-ALBSecurityGroup
   
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-EndpointSecurityGroup
