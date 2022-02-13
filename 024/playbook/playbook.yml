@@ -1,0 +1,42 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  #become_user: ec2-user
+
+  tasks:
+    - name: update yum
+      yum: name=*
+    - name: install the latest version of Apache
+      yum: name=httpd state=latest
+    - name: install the latest version of openssl
+      yum: name=openssl state=latest
+    - name: install the latest version of mod_ssl
+      yum: name=mod_ssl state=latest
+    - name: copy openssl.cnf
+      copy:
+        src: ./openssl.cnf
+        dest: /etc/pki/tls/openssl.cnf
+        owner: root
+        group: root
+        mode: '0644'
+    - name: copy ssl.conf
+      copy:
+        src: ./ssl.conf
+        dest: /etc/httpd/conf.d/ssl.conf
+        owner: root
+        group: root
+        mode: '0644'
+    - name: generate private key
+      shell: openssl genrsa > server.key
+    - name: generate public key
+      shell: openssl req -new -batch -key server.key > server.csr
+    - name: generate crt
+      shell: openssl x509 -req -signkey server.key < server.csr > server.crt
+    - name: copy private key
+      shell: cp -a ./server.key /etc/pki/tls/private/
+    - name: copy crt
+      shell: cp -a ./server.crt /etc/pki/tls/certs/
+    - name: start and enable Apache
+      service: name=httpd state=started enabled=yes
+    - name: make index.html
+      shell: ec2-metadata -i > /var/www/html/index.html

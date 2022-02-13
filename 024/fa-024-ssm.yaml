@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  PlaybookBucket:
+    Type: String
+    
+  PlaybookFileName:
+    Type: String
+    #Default: playbook.yml
+    
+  PlaybookPackageName:
+    Type: String
+    #Default: playbook.zip
+
+  Prefix:
+    Type: String
+    #Default: soa-04-002
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    #Default: 60
+    
+    
+Resources:
+  RunShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub ${Prefix}-run-shellscript-association
+      Name: AWS-RunShellScript
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref PlaybookBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - "sudo amazon-linux-extras install ansible2 -y"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance1
+            - !Ref Instance2
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+        
+  ApplyAnsiblePlaybooksAssociation:
+    Type: AWS::SSM::Association
+    DependsOn:
+      - RunShellScriptAssociation
+    Properties:
+      AssociationName: !Sub ${Prefix}-apply-ansible-playbook-association
+      Name: AWS-ApplyAnsiblePlaybooks
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref PlaybookBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/playbook-association-log"
+      Parameters:
+        Check:
+          - "False"
+        ExtraVariables:
+          - SSM=True
+        InstallDependencies:
+          #- "True"
+          - "False"
+        PlaybookFile:
+          - !Ref PlaybookFileName
+        SourceInfo:
+          - !Sub '{"path": "https://${PlaybookBucket}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${PlaybookPackageName}"}'
+        SourceType:
+          - S3
+        Verbose:
+          - -v
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance1
+            - !Ref Instance2
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
