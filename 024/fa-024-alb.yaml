@@ -7,9 +7,6 @@ Parameters:
   Certificate:
     Type: String
     
-  #HTTPPort:
-  #  Type: Number
-    
   HTTPSPort:
     Type: Number
     
@@ -65,11 +62,8 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       Name: !Sub ${Prefix}-ALBTargetGroup
-      #Protocol: HTTP
       Protocol: HTTPS
-      #Port: !Ref HTTPPort
       Port: !Ref HTTPSPort
-      #HealthCheckProtocol: HTTP
       HealthCheckProtocol: HTTPS
       HealthCheckPath: /
       HealthCheckPort: traffic-port
@@ -92,8 +86,6 @@ Resources:
         - TargetGroupArn: !Ref ALBTargetGroup
           Type: forward
       LoadBalancerArn: !Ref ALB
-      #Port: !Ref HTTPPort
-      #Protocol: HTTP
       Port: !Ref HTTPSPort
       Protocol: HTTPS
 
@@ -101,5 +93,3 @@ Resources:
 Outputs:
   ALBDnsName:
     Value: !GetAtt ALB.DNSName
-    #Export:
-    #  Name: !Sub ${Prefix}-ALBDnsName
