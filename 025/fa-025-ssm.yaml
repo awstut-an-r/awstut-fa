@@ -26,8 +26,6 @@ Parameters:
 Resources:
   ApplyAnsiblePlaybooksAssociation1:
     Type: AWS::SSM::Association
-    DependsOn:
-      - RunShellScriptAssociation
     Properties:
       AssociationName: !Sub ${Prefix}-apply-ansible-playbook-association1
       Name: AWS-ApplyAnsiblePlaybooks
