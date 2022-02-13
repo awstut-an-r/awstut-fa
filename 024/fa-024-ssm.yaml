@@ -12,26 +12,22 @@ Parameters:
     
   PlaybookFileName:
     Type: String
-    #Default: playbook.yml
     
   PlaybookPackageName:
     Type: String
-    #Default: playbook.zip
 
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
-    #Default: 60
     
     
 Resources:
   RunShellScriptAssociation:
     Type: AWS::SSM::Association
     Properties:
-      AssociationName: !Sub ${Prefix}-run-shellscript-association
+      AssociationName: !Sub "${Prefix}-run-shellscript-association"
       Name: AWS-RunShellScript
       OutputLocation:
         S3Location:
@@ -52,7 +48,7 @@ Resources:
     DependsOn:
       - RunShellScriptAssociation
     Properties:
-      AssociationName: !Sub ${Prefix}-apply-ansible-playbook-association
+      AssociationName: !Sub "${Prefix}-apply-ansible-playbook-association"
       Name: AWS-ApplyAnsiblePlaybooks
       OutputLocation:
         S3Location:
