@@ -12,19 +12,15 @@ Parameters:
     
   PlaybookFileName:
     Type: String
-    #Default: playbook.yml
     
   PlaybookPackageName:
     Type: String
-    #Default: playbook.zip
 
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
-    #Default: 60
     
     
 Resources:
@@ -46,7 +42,6 @@ Resources:
           - SSM=True
         InstallDependencies:
           - "True"
-          #- "False"
         PlaybookFile:
           - !Ref PlaybookFileName
         SourceInfo:
@@ -59,7 +54,6 @@ Resources:
         - Key: InstanceIds
           Values:
             - !Ref Instance1
-            #- !Ref Instance2
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
 
 
@@ -79,7 +73,6 @@ Resources:
       Targets:
         - Key: InstanceIds
           Values:
-            #- !Ref Instance1
             - !Ref Instance2
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
         
@@ -113,6 +106,5 @@ Resources:
       Targets:
         - Key: InstanceIds
           Values:
-            #- !Ref Instance1
             - !Ref Instance2
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
