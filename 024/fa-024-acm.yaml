@@ -6,9 +6,6 @@ Parameters:
     
   HostedZoneId:
     Type: String
-    
-  #Prefix:
-  #  Type: String
 
 
 Resources:
