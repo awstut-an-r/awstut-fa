@@ -1,7 +1,6 @@
 - hosts: all
   gather_facts: no
   become: yes
-  #become_user: ec2-user
 
   tasks:
     - name: update yum
