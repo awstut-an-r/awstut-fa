@@ -9,22 +9,6 @@ Parameters:
     Type: String
     Default: fa-025
     
-  #ALBHostedZoneId:
-  #  Type: String
-  #  Default: Z14GRHDCWA56QT
-  #  
-  #DomainName:
-  #  Type: String
-  #  Default: awstut.net
-  #  
-  #HostedZoneId:
-  #  Type: String
-  #  Default: Z023054218FS37XTCMMPY
-    
-  #HTTPPort:
-  #  Type: Number
-  #  Default: 80
-    
   HTTPSPort:
     Type: Number
     Default: 443
@@ -41,8 +25,6 @@ Resources:
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
         CidrIp3: 10.0.3.0/24
-        #CidrIp4: 10.0.4.0/24
-        #HTTPPort: !Ref HTTPPort
         HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
@@ -57,7 +39,6 @@ Resources:
         EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
         Prefix: !Ref Prefix
         PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable2
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet2
         VPC: !GetAtt VPCStack.Outputs.VPC
   
@@ -65,31 +46,20 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
         BucketName: !Ref TemplateBucketName
         ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType: t3a.micro
         InstanceType: t3a.small
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        #PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-        #UserData: !Base64 |
-        #  #!/bin/bash -xe
-        #  yum update -y
-        #  yum install -y httpd
-        #  systemctl start httpd
-        #  systemctl enable httpd
-        #  ec2-metadata -i > /var/www/html/index.html
           
   SSMStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- VPCStack
       - EC2Stack
       - EndpointStack
     Properties:
