@@ -21,12 +21,6 @@ Parameters:
     
   PrivateSubnet2:
     Type: String
-  
-  #PublicSubnet1:
-  #  Type: String
-    
-  #UserData:
-  #  Type: String
     
 
 Resources:
@@ -37,13 +31,10 @@ Resources:
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
-        #- AssociatePublicIpAddress: true
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet1
-          #SubnetId: !Ref PublicSubnet1
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Ref UserData
             
   Instance2:
     Type: AWS::EC2::Instance
@@ -56,7 +47,6 @@ Resources:
           SubnetId: !Ref PrivateSubnet2
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Ref UserData
       
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -76,7 +66,6 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
-                #- ssm.amazonaws.com
       Policies:
         - PolicyName: SSMStateManagerPolicy
           PolicyDocument:
@@ -104,10 +93,6 @@ Resources:
 Outputs:
   Instance1:
     Value: !Ref Instance1
-    #Export:
-    #  Name: !Sub ${Prefix}-Instance1
       
   Instance2:
     Value: !Ref Instance2
-  #  Export:
-  #    Name: !Sub ${Prefix}-Instance2
