@@ -109,14 +109,3 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
                   - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:GetObject
-              #    - s3:PutObject
-              #    - s3:PutObjectAcl
-              #    - s3:ListBucket
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${PlaybookBucket}"
-              #    - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
