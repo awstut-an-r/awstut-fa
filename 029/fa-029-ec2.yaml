@@ -96,8 +96,6 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
                   - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         
         
 Outputs:
