@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBSecurityGroup:
+    Type: String
+    
+  HTTPPort:
+    Type: Number
+    
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PublicSubnet1:
+    Type: String
+    
+  PublicSubnet2:
+    Type: String
+    
+  VPC:
+    Type: String
+    
+  HealthyThresholdCount:
+    Type: Number
+    
+  UnhealthyThresholdCount:
+    Type: Number
+    
+  HealthCheckTimeoutSeconds:
+    Type: Number
+    
+  HealthCheckIntervalSeconds:
+    Type: Number
+    
+  HttpCode:
+    Type: Number
+
+    
+    
+Resources:
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "${Prefix}-ALB"
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      Type: application
+      
+  ALBTargetGroup1:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      Name: !Sub "${Prefix}-ALBTargetGroup1"
+      Protocol: HTTP
+      Port: !Ref HTTPPort
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: !Ref HealthyThresholdCount
+      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
+      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+      Matcher: 
+        HttpCode: !Ref HttpCode
+      Targets:
+        - Id: !Ref Instance1
+      TargetType: instance
+      
+  ALBTargetGroup2:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+      Name: !Sub "${Prefix}-ALBTargetGroup2"
+      Protocol: HTTP
+      Port: !Ref HTTPPort
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /instance2/
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: !Ref HealthyThresholdCount
+      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
+      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+      Matcher: 
+        HttpCode: !Ref HttpCode
+      Targets:
+        - Id: !Ref Instance2
+      TargetType: instance
+      
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - TargetGroupArn: !Ref ALBTargetGroup1
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      Port: !Ref HTTPPort
+      Protocol: HTTP
+      
+  ALBListenerRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref ALBTargetGroup1
+          Type: forward
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /instance1/*
+      ListenerArn: !Ref ALBListener
+      Priority: 1
+      
+  ALBListenerRule2:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - TargetGroupArn: !Ref ALBTargetGroup2
+          Type: forward
+      Conditions:
+        - Field: path-pattern
+          PathPatternConfig:
+            Values:
+              - /instance2/*
+      ListenerArn: !Ref ALBListener
+      Priority: 2
