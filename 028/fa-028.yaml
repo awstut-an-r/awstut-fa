@@ -25,26 +25,6 @@ Parameters:
     Type: Number
     Default: 443
     
-  HealthyThresholdCount:
-    Type: Number
-    Default: 5
-    
-  UnhealthyThresholdCount:
-    Type: Number
-    Default: 2
-    
-  HealthCheckTimeoutSeconds:
-    Type: Number
-    Default: 5
-    
-  HealthCheckIntervalSeconds:
-    Type: Number
-    Default: 30
-    
-  HttpCode:
-    Type: Number
-    Default: 200
-    
 
 Resources:
   VPCStack:
@@ -126,15 +106,14 @@ Resources:
         HTTPPort: !Ref HTTPPort
         Instance1: !GetAtt TargetEC2Stack1.Outputs.Instance1
         Instance2PrivateIp: !GetAtt TargetEC2Stack2.Outputs.Instance2PrivateIp
+        Path1: /instance/
+        Path2: /autoscaling/
+        Path3: /ip/
+        Path4: /lambda/
         Prefix: !Ref Prefix
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
         VPC: !GetAtt VPCStack.Outputs.VPC
-        HealthyThresholdCount: !Ref HealthyThresholdCount
-        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-        HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-        HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-        HttpCode: !Ref HttpCode
         
   TargetAutoScalingStack:
     Type: AWS::CloudFormation::Stack
