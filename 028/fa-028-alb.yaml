@@ -19,6 +19,18 @@ Parameters:
   Instance2PrivateIp:
     Type: String
     
+  Path1:
+    Type: String
+    
+  Path2:
+    Type: String
+    
+  Path3:
+    Type: String
+    
+  Path4:
+    Type: String
+    
   Prefix:
     Type: String
     
@@ -30,22 +42,6 @@ Parameters:
     
   VPC:
     Type: String
-    
-  HealthyThresholdCount:
-    Type: Number
-    
-  UnhealthyThresholdCount:
-    Type: Number
-    
-  HealthCheckTimeoutSeconds:
-    Type: Number
-    
-  HealthCheckIntervalSeconds:
-    Type: Number
-    
-  HttpCode:
-    Type: Number
-
     
     
 Resources:
@@ -64,60 +60,43 @@ Resources:
   ALBTargetGroup1:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      VpcId: !Ref VPC
-      Name: !Sub "${Prefix}-ALBTargetGroup1"
-      Protocol: HTTP
-      Port: !Ref HTTPPort
-      HealthCheckProtocol: HTTP
-      HealthCheckPath: /
+      HealthCheckPath: !Ref Path1
       HealthCheckPort: traffic-port
-      HealthyThresholdCount: !Ref HealthyThresholdCount
-      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      Matcher: 
-        HttpCode: !Ref HttpCode
+      HealthCheckProtocol: HTTP
+      Name: !Sub "${Prefix}-ALBTargetGroup1"
+      Port: !Ref HTTPPort
+      Protocol: HTTP
       Targets:
         - Id: !Ref Instance1
       TargetType: instance
+      VpcId: !Ref VPC
       
   ALBTargetGroup2:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      VpcId: !Ref VPC
-      Name: !Sub "${Prefix}-ALBTargetGroup2"
-      Protocol: HTTP
-      Port: !Ref HTTPPort
-      HealthCheckProtocol: HTTP
-      HealthCheckPath: /
+      HealthCheckPath: !Ref Path2
       HealthCheckPort: traffic-port
-      HealthyThresholdCount: !Ref HealthyThresholdCount
-      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      Matcher: 
-        HttpCode: !Ref HttpCode
+      HealthCheckProtocol: HTTP
+      Name: !Sub "${Prefix}-ALBTargetGroup2"
+      Port: !Ref HTTPPort
+      Protocol: HTTP
+      #Targets:
       TargetType: instance
+      VpcId: !Ref VPC
       
   ALBTargetGroup3:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      VpcId: !Ref VPC
-      Name: !Sub "${Prefix}-ALBTargetGroup3"
-      Protocol: HTTP
-      Port: !Ref HTTPPort
-      HealthCheckProtocol: HTTP
-      HealthCheckPath: /
+      HealthCheckPath: !Ref Path3
       HealthCheckPort: traffic-port
-      HealthyThresholdCount: !Ref HealthyThresholdCount
-      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      Matcher: 
-        HttpCode: !Ref HttpCode
+      HealthCheckProtocol: HTTP
+      Name: !Sub "${Prefix}-ALBTargetGroup3"
+      Port: !Ref HTTPPort
+      Protocol: HTTP
       Targets:
         - Id: !Ref Instance2PrivateIp
       TargetType: ip
+      VpcId: !Ref VPC
       
   ALBTargetGroup4:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -151,7 +130,7 @@ Resources:
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - /instance/*
+              - !Sub "${Path1}*"
       ListenerArn: !Ref ALBListener
       Priority: 1
       
@@ -165,7 +144,7 @@ Resources:
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - /autoscaling/*
+              - !Sub "${Path2}*"
       ListenerArn: !Ref ALBListener
       Priority: 2
       
@@ -179,7 +158,7 @@ Resources:
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - /ip/*
+              - !Sub "${Path3}*"
       ListenerArn: !Ref ALBListener
       Priority: 3
       
@@ -193,7 +172,7 @@ Resources:
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - /lambda/*
+              - !Sub "${Path4}*"
       ListenerArn: !Ref ALBListener
       Priority: 4
       
