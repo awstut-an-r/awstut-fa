@@ -44,38 +44,6 @@ Resources:
         mkdir /var/www/html/instance
         echo 'path: "/isntace/"' >> /var/www/html/instance/index.html
         ec2-metadata -i >> /var/www/html/instance/index.html
-            
-  #InstanceProfile:
-  #  Type: AWS::IAM::InstanceProfile
-  #  Properties:
-  #    Path: /
-  #    Roles:
-  #      - !Ref InstanceRole
-#
-  #InstanceRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - ec2.amazonaws.com
-  #    Policies:
-  #      - PolicyName: AllowAccessToYumRepositoryInS3Policy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - s3:GetObject
-  #              Resource:
-  #                - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
-  #                - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-  #    #ManagedPolicyArns:
-  #    #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         
         
 Outputs:
