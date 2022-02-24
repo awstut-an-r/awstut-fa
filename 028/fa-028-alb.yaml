@@ -4,9 +4,6 @@ Parameters:
   ALBSecurityGroup:
     Type: String
     
-  #ALB2:
-  #  Type: String
-    
   FunctionArn:
     Type: String
     
@@ -81,7 +78,6 @@ Resources:
       Matcher: 
         HttpCode: !Ref HttpCode
       Targets:
-        #- Id: !Ref Instance1PrivateIp
         - Id: !Ref Instance1
       TargetType: instance
       
@@ -101,8 +97,6 @@ Resources:
       HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
       Matcher: 
         HttpCode: !Ref HttpCode
-      #Targets:
-      #  - Id: !Ref Instance
       TargetType: instance
       
   ALBTargetGroup3:
@@ -124,27 +118,6 @@ Resources:
       Targets:
         - Id: !Ref Instance2PrivateIp
       TargetType: ip
-        
-      
-  #ALBTargetGroup4:
-  #  Type: AWS::ElasticLoadBalancingV2::TargetGroup
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    Name: !Sub "${Prefix}-ALBTargetGroup4"
-  #    Protocol: HTTP
-  #    Port: !Ref HTTPPort
-  #    HealthCheckProtocol: HTTP
-  #    HealthCheckPath: /
-  #    HealthCheckPort: traffic-port
-  #    HealthyThresholdCount: !Ref HealthyThresholdCount
-  #    UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-  #    HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-  #    HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-  #    Matcher: 
-  #      HttpCode: !Ref HttpCode
-  #    Targets:
-  #      - Id: !Ref ALB2
-  #    TargetType: alb
       
   ALBTargetGroup4:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
@@ -152,19 +125,7 @@ Resources:
       - Permission
     Properties:
       HealthCheckEnabled: false
-      #VpcId: !Ref VPC
       Name: !Sub "${Prefix}-ALBTargetGroup4"
-      #Protocol: HTTP
-      #Port: !Ref HTTPPort
-      #HealthCheckProtocol: HTTP
-      #HealthCheckPath: /
-      #HealthCheckPort: traffic-port
-      #HealthyThresholdCount: !Ref HealthyThresholdCount
-      #UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-      #HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-      #HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      #Matcher: 
-      #  HttpCode: !Ref HttpCode
       Targets:
         - Id: !Ref FunctionArn
       TargetType: lambda
@@ -222,20 +183,6 @@ Resources:
       ListenerArn: !Ref ALBListener
       Priority: 3
       
-  #ALBListenerRule4:
-  #  Type: AWS::ElasticLoadBalancingV2::ListenerRule
-  #  Properties:
-  #    Actions:
-  #      - TargetGroupArn: !Ref ALBTargetGroup4
-  #        Type: forward
-  #    Conditions:
-  #      - Field: path-pattern
-  #        PathPatternConfig:
-  #          Values:
-  #            - /alb/*
-  #    ListenerArn: !Ref ALBListener1
-  #    Priority: 4
-      
   ALBListenerRule4:
     Type: AWS::ElasticLoadBalancingV2::ListenerRule
     Properties:
@@ -256,7 +203,6 @@ Resources:
       FunctionName: !Ref FunctionName
       Action: lambda:InvokeFunction
       Principal: elasticloadbalancing.amazonaws.com
-      #SourceArn: !Ref ALBTargetGroup5
   
       
 Outputs:
