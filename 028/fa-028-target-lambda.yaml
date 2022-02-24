@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  Handler:
+    Type: String
+  
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  #ZipFile:
+  #  Type: String
+    
+    
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Code:
+        #ZipFile: !Ref ZipFile
+        ZipFile: |
+          import json
+          
+          def lambda_handler(event, context):
+            return {
+              'statusCode': 200,
+              'isBase64Encoded': False,
+              'headers': {
+                'Content-Type': 'text/html; charset=utf-8'
+              },
+              'body': json.dumps('path: /lambda, Lambda Function.')
+            }
+      FunctionName: !Sub ${Prefix}-function
+      Handler: !Ref Handler
+      #Handler: index.lambda_handler
+      Runtime: !Ref Runtime
+      #Runtime: python3.8
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        
+  
+        
+      
+      
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+    
+  FunctionName:
+    Value: !Ref Function

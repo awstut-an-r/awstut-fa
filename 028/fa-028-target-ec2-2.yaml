@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+  
+  InstanceProfile:
+    Type: String
+    
+  InstanceSecurityGroup:
+    Type: String
+
+  InstanceType:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PrivateSubnet:
+    Type: String
+    
+
+Resources:
+  Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PrivateSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+      UserData: !Base64 |
+        #!/bin/bash -xe
+        yum update -y
+        yum install -y httpd
+        systemctl start httpd
+        systemctl enable httpd
+        
+        mkdir /var/www/html/ip
+        echo 'path: "/ip/"' >> /var/www/html/ip/index.html
+        ec2-metadata -i >> /var/www/html/ip/index.html
+            
+  #InstanceProfile:
+  #  Type: AWS::IAM::InstanceProfile
+  #  Properties:
+  #    Path: /
+  #    Roles:
+  #      - !Ref InstanceRole
+#
+  #InstanceRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - ec2.amazonaws.com
+  #    Policies:
+  #      - PolicyName: AllowAccessToYumRepositoryInS3Policy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - s3:GetObject
+  #              Resource:
+  #                - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
+  #                - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
+  #    #ManagedPolicyArns:
+  #    #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        
+        
+Outputs:
+  Instance2PrivateIp:
+    Value: !GetAtt Instance2.PrivateIp

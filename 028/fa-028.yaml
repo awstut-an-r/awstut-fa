@@ -1,0 +1,216 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-028
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  HealthyThresholdCount:
+    Type: Number
+    Default: 5
+    
+  UnhealthyThresholdCount:
+    Type: Number
+    Default: 2
+    
+  HealthCheckTimeoutSeconds:
+    Type: Number
+    Default: 5
+    
+  HealthCheckIntervalSeconds:
+    Type: Number
+    Default: 30
+    
+  HttpCode:
+    Type: Number
+    Default: 200
+    
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        CidrIp4: 10.0.4.0/24
+        HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        Prefix: !Ref Prefix
+        PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  TargetEC2Stack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-target-ec2-1.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceProfile: !Ref InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        
+  TargetEC2Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-target-ec2-2.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceProfile: !Ref InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        
+  #TargetALBStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-target-alb.yaml"
+  #    Parameters:
+  #      ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
+  #      HTTPPort: !Ref HTTPPort
+  #      ImageId: !Ref ImageId
+  #      InstanceProfile: !Ref InstanceProfile
+  #      InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+  #      InstanceType: !Ref InstanceType
+  #      Prefix: !Ref Prefix
+  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+  #      PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+  #      #PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
+  #      #PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
+  #      VPC: !GetAtt VPCStack.Outputs.VPC
+  #      HealthyThresholdCount: !Ref HealthyThresholdCount
+  #      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+  #      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
+  #      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+  #      HttpCode: !Ref HttpCode
+        
+  TargetLambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-target-lambda.yaml"
+      Parameters:
+        Architecture: arm64
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
+      Parameters:
+        ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
+        #ALB2: !GetAtt TargetALBStack.Outputs.ALB2
+        FunctionArn: !GetAtt TargetLambdaStack.Outputs.FunctionArn
+        FunctionName: !GetAtt TargetLambdaStack.Outputs.FunctionName
+        HTTPPort: !Ref HTTPPort
+        Instance1: !GetAtt TargetEC2Stack1.Outputs.Instance1
+        Instance2PrivateIp: !GetAtt TargetEC2Stack2.Outputs.Instance2PrivateIp
+        Prefix: !Ref Prefix
+        PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        HealthyThresholdCount: !Ref HealthyThresholdCount
+        UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+        HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
+        HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+        HttpCode: !Ref HttpCode
+        
+  TargetAutoScalingStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-target-autoscaling.yaml"
+      Parameters:
+        ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup2
+        DesiredCapacity: 1
+        ImageId: !Ref ImageId
+        InstanceProfile: !Ref InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        MaxSize: 2
+        MinSize: 1
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        TargetTrackingConfigurationTargetValue: 10.0
+        
+        
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      Policies:
+        - PolicyName: AllowAccessToYumRepositoryInS3Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
+                  - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
