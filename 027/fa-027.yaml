@@ -74,8 +74,6 @@ Resources:
         EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
         Prefix: !Ref Prefix
         PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         VPC: !GetAtt VPCStack.Outputs.VPC
 
   ALBStack:
@@ -187,7 +185,6 @@ Resources:
         MaxSize: 2
         MinSize: 1
         Path: !Ref Path4
-        #PredefinedMetricType: ALBRequestCountPerTarget
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
