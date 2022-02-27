@@ -1,0 +1,143 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBResourceLabel:
+    Type: String
+    
+  ALBTargetGroup:
+    Type: String
+    
+  AutoScalingGroupName:
+    Type: String
+    
+  DesiredCapacity:
+    Type: Number
+    
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceProfile:
+    Type: String
+    
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  LaunchConfigurationName:
+    Type: String
+    
+  MaxSize:
+    Type: Number
+    
+  MinSize:
+    Type: Number
+    
+  Path:
+    Type: String
+    
+  #PredefinedMetricType:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+    
+  TargetTrackingConfigurationTargetValue:
+    Type: Number
+    
+
+Resources:
+  LaunchConfiguration:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      LaunchConfigurationName: !Ref LaunchConfigurationName
+      SecurityGroups: 
+        - !Ref InstanceSecurityGroup
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          
+          mkdir /var/www/html${Path}
+          echo 'path: "${Path}"' >> /var/www/html${Path}index.html
+          ec2-metadata -i >> /var/www/html${Path}index.html
+        
+        
+  AutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroupName
+      DesiredCapacity: !Ref DesiredCapacity
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      MaxSize: !Ref MaxSize
+      MinSize: !Ref MinSize
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      TargetGroupARNs:
+        - !Ref ALBTargetGroup
+        
+  ScalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoScalingGroup
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ALBRequestCountPerTarget
+          ResourceLabel: !Ref ALBResourceLabel
+        TargetValue: !Ref TargetTrackingConfigurationTargetValue
+        
+  #InstanceProfile:
+  #  Type: AWS::IAM::InstanceProfile
+  #  Properties:
+  #    Path: /
+  #    Roles:
+  #      - !Ref InstanceRole
+#
+  #InstanceRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - ec2.amazonaws.com
+  #    Policies:
+  #      - PolicyName: SSMStateManagerPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - s3:GetObject
+  #              Resource:
+  #                - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
+  #                - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - s3:GetObject
+  #            #    - s3:PutObject
+  #            #    - s3:PutObjectAcl
+  #            #    - s3:ListBucket
+  #            #  Resource:
+  #            #    - !Sub "arn:aws:s3:::${PlaybookBucket}"
+  #            #    - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
+  #    #ManagedPolicyArns:
+  #    #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore

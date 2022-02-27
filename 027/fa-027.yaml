@@ -1,0 +1,194 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-027
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  Path1:
+    Type: String
+    Default: /cpu/
+    
+  Path2:
+    Type: String
+    Default: /network-in/
+    
+  Path3:
+    Type: String
+    Default: /network-out/
+    
+  Path4:
+    Type: String
+    Default: /alb/
+    
+
+Resources:
+  IamStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
+
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        CidrIp4: 10.0.4.0/24
+        HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        Prefix: !Ref Prefix
+        PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
+      Parameters:
+        ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
+        HTTPPort: !Ref HTTPPort
+        Path1: !Ref Path1
+        Path2: !Ref Path2
+        Path3: !Ref Path3
+        Path4: !Ref Path4
+        Prefix: !Ref Prefix
+        PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  AutoScalingStack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
+      Parameters:
+        ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup1
+        AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup1"
+        DesiredCapacity: 1
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt IamStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration1"
+        MaxSize: 2
+        MinSize: 1
+        Path: !Ref Path1
+        PredefinedMetricType: ASGAverageCPUUtilization
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        TargetTrackingConfigurationTargetValue: 5.0
+        
+  AutoScalingStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
+      Parameters:
+        ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup2
+        AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup2"
+        DesiredCapacity: 1
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt IamStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration2"
+        MaxSize: 2
+        MinSize: 1
+        Path: !Ref Path2
+        PredefinedMetricType: ASGAverageNetworkIn
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        TargetTrackingConfigurationTargetValue: 1000
+        
+  AutoScalingStack3:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
+      Parameters:
+        ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup3
+        AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup3"
+        DesiredCapacity: 1
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt IamStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration3"
+        MaxSize: 2
+        MinSize: 1
+        Path: !Ref Path3
+        PredefinedMetricType: ASGAverageNetworkOut
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        TargetTrackingConfigurationTargetValue: 1000
+        
+  AutoScalingStack4:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling-alb.yaml"
+      Parameters:
+        ALBResourceLabel: !GetAtt ALBStack.Outputs.ALBResourceLabel
+        ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup4
+        AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup4"
+        DesiredCapacity: 1
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt IamStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration4"
+        MaxSize: 2
+        MinSize: 1
+        Path: !Ref Path4
+        #PredefinedMetricType: ALBRequestCountPerTarget
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        TargetTrackingConfigurationTargetValue: 10
