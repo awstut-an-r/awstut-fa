@@ -164,7 +164,7 @@ Resources:
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        TargetTrackingConfigurationTargetValue: 1000
+        TargetTrackingConfigurationTargetValue: 10000
         
   AutoScalingStack4:
     Type: AWS::CloudFormation::Stack
