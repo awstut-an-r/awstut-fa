@@ -48,20 +48,10 @@ Resources:
       LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
       SecurityGroups: 
         - !Ref InstanceSecurityGroup
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  yum update -y
-      #  yum install -y httpd
-      #  systemctl start httpd
-      #  systemctl enable httpd
-      #  ec2-metadata -i > /var/www/html/index.html
-      #  
-      #  yes > /dev/null
         
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      #AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup"
       AutoScalingGroupName: !Ref AutoScalingGroupName
       DesiredCapacity: !Ref DesiredCapacity
       LaunchConfigurationName: !Ref LaunchConfiguration
@@ -79,8 +69,6 @@ Resources:
       AutoScalingGroupName: !Ref AutoScalingGroup
       PolicyType: TargetTrackingScaling
       TargetTrackingConfiguration:
-        #PredefinedMetricSpecification:
-        #  PredefinedMetricType: ASGAverageCPUUtilization
         CustomizedMetricSpecification: 
           Dimensions: 
             - Name: AutoScalingGroupName
