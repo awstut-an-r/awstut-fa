@@ -19,21 +19,6 @@ Parameters:
   VPC:
     Type: String
     
-  #HealthyThresholdCount:
-  #  Type: Number
-  #  
-  #UnhealthyThresholdCount:
-  #  Type: Number
-  #  
-  #HealthCheckTimeoutSeconds:
-  #  Type: Number
-  #  
-  #HealthCheckIntervalSeconds:
-  #  Type: Number
-  #  
-  #HttpCode:
-  #  Type: Number
-    
     
 Resources:
   ALB:
@@ -58,12 +43,6 @@ Resources:
       HealthCheckProtocol: HTTP
       HealthCheckPath: /
       HealthCheckPort: traffic-port
-      #HealthyThresholdCount: !Ref HealthyThresholdCount
-      #UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-      #HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-      #HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      #Matcher: 
-      #  HttpCode: !Ref HttpCode
         
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
