@@ -90,21 +90,7 @@ Resources:
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         TargetTrackingConfigurationTargetValue: 20.0
-        
-  #EC2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - EndpointStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
-  #    Parameters:
-  #      ImageId: !Ref ImageId
-  #      InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-  #      InstanceType: !Ref InstanceType
-  #      Prefix: !Ref Prefix
-  #      PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      
+           
   SSMStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -112,9 +98,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
-        #Instance: !GetAtt EC2Stack.Outputs.Instance
         Prefix: !Ref Prefix
-        #SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
         TargetsKey: tag:aws:autoscaling:groupName
         TargetsValue: !GetAtt AutoScalingStack.Outputs.AutoScalingGroupName
         WaitForSuccessTimeoutSeconds: 300
