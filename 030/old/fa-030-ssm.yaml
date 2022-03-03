@@ -1,0 +1,135 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Instance:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  #SSMLogBucket:
+  #  Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+
+Resources:
+  CloudWatchConfigParemeter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: AmazonCloudWatch-linux
+      Type: String
+      Value: !Sub |
+        {
+          "agent": {
+            "metrics_collection_interval": 60,
+            "run_as_user": "root"
+          },
+          "logs": {
+            "logs_collected": {
+              "files": {
+                "collect_list": [
+                  {
+                    "file_path": "/var/log/messages",
+                    "log_group_name": "${Prefix}",
+                    "log_stream_name": "${Instance}"
+                  }
+                ]
+              }
+            }
+          },
+          "metrics": {
+            "append_dimensions": {
+              "ImageId": "${!aws:ImageId}",
+              "InstanceId": "${!aws:InstanceId}",
+              "InstanceType": "${!aws:InstanceType}"
+            },
+            "metrics_collected": {
+              "cpu": {
+                "measurement": [
+                  "cpu_usage_idle",
+                  "cpu_usage_iowait",
+                  "cpu_usage_user",
+                  "cpu_usage_system"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                  "*"
+                ],
+                "totalcpu": false
+              },
+              "disk": {
+                "measurement": [
+                  "used_percent",
+                  "inodes_free"
+                ],
+                "metrics_collection_interval": 60,
+                "resources": [
+                  "*"
+                ]
+              },
+              "mem": {
+                "measurement": [
+                  "mem_used_percent"
+                ],
+                "metrics_collection_interval": 60
+              }
+            }
+          }
+        }
+        
+  AWSConfigureAWSPackageAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-aws-configure-aws-package-association"
+      Name: AWS-ConfigureAWSPackage
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref SSMLogBucket
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/aws-configure-aws-package-association"
+      Parameters:
+        action:
+          - Install
+        installationType:
+          - Uninstall and reinstall
+        name:
+          - AmazonCloudWatchAgent
+        version:
+          - latest
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+  AmazonCloudWatchManageAgentAssociation:
+    Type: AWS::SSM::Association
+    DependsOn:
+      - CloudWatchConfigParemeter
+      - AWSConfigureAWSPackageAssociation
+    Properties:
+      AssociationName: !Sub "${Prefix}-amazon-cloudwatch-manage-agent"
+      Name: AmazonCloudWatch-ManageAgent
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref SSMLogBucket
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/amazon-cloudwatch-manage-agent"
+      Parameters:
+        action:
+          - configure
+        mode:
+          - ec2
+        optionalConfigurationSource:
+          - ssm
+        optionalConfigurationLocation:
+          - !Ref CloudWatchConfigParemeter
+        optionalOpenTelemetryCollectorConfigurationSource:
+          - ssm
+        optionalRestart:
+          - "yes"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
