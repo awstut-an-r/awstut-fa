@@ -19,9 +19,6 @@ Parameters:
   PrivateSubnet:
     Type: String
     
-  #PrivateSubnet2:
-  #  Type: String
-    
 
 Resources:
   Instance:
@@ -31,25 +28,11 @@ Resources:
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup
-            
-  #Instance2:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    #KeyName: !Ref KeyName
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet2
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup
             
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -77,6 +60,3 @@ Resources:
 Outputs:
   Instance:
     Value: !Ref Instance
-    
-  #Instance2:
-  #  Value: !Ref Instance2
