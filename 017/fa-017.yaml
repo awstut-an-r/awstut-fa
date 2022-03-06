@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-017
+    
+  DirectoryName:
+    Type: String
+    Default: awstut.com
+    
+  MSADPassword:
+    Type: String
+    Default: P@ssw0rd
+
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        #HTTPSPort: 443
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  #EndpointStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  DependsOn:
+  #    - VPCStack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+  #    Parameters:
+  #      EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+  #      Prefix: !Ref Prefix
+  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+  #      VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  MSADStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-msad.yaml"
+      Parameters:
+        MSADName: !Ref DirectoryName
+        MSADPassword: !Ref MSADPassword
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: "/aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base"
+        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        #InstanceType: t4g.small
+        InstanceType: "t3a.small"
+        #InstanceType: "t3a.medium"
+        KeyName: "MyKeyPair"
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EC2Stack
+      - MSADStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Instance: !GetAtt EC2Stack.Outputs.Instance
+        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
+        MSAD: !GetAtt MSADStack.Outputs.MSAD
+        #MSADDnsIpAddresses: !GetAtt.Outputs.MSADDnsIpAddresses
+        MSADDnsIpAddress1: !GetAtt MSADStack.Outputs.MSADDnsIpAddress1
+        MSADDnsIpAddress2: !GetAtt MSADStack.Outputs.MSADDnsIpAddress2
+        MSADName: !Ref DirectoryName
+        Prefix: !Ref Prefix
+        #SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
+        WaitForSuccessTimeoutSeconds: 3000
