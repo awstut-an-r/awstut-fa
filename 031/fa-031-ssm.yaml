@@ -4,9 +4,6 @@ Parameters:
   Bucket:
     Type: String
     
-  #BucketWebsiteURL:
-  #  Type: String
-    
   Instance1:
     Type: String
     
@@ -32,10 +29,6 @@ Resources:
     Properties:
       AssociationName: !Sub "${Prefix}-runshellscript-association1"
       Name: AWS-RunShellScript
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref LogBucketName
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
       Parameters:
         commands:
           - "sudo yum update -y"
@@ -59,10 +52,6 @@ Resources:
     Properties:
       AssociationName: !Sub "${Prefix}-runshellscript-association2"
       Name: AWS-RunShellScript
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref LogBucketName
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
       Parameters:
         commands:
           - !Sub |
