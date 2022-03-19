@@ -37,10 +37,8 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc1/${Prefix}-vpc-01.yaml"
       Parameters:
         AvailabilityZone1: a
-        #AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        #HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         VPCName: !Ref VPCName1
@@ -49,17 +47,12 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack1
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc1/${Prefix}-ec2-01.yaml"
       Parameters:
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
         ImageId: !Ref ImageId
         InstanceSecurityGroup: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        #Prefix: !Ref Prefix
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         PrivateSubnet: !GetAtt VPCStack1.Outputs.PrivateSubnet
         
   VPCStack2:
@@ -68,9 +61,7 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc2/${Prefix}-vpc-02.yaml"
       Parameters:
         AvailabilityZone: d
-        #AvailabilityZone2: d
         CidrIp: 10.0.1.0/24
-        #CidrIp2: 10.0.2.0/24
         HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
@@ -84,34 +75,22 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc2/${Prefix}-endpoint.yaml"
       Parameters:
         EndpointSecurityGroup: !GetAtt VPCStack2.Outputs.EndpointSecurityGroup
-        #Prefix: !Ref Prefix
-        #PrivateRouteTable1: !GetAtt VPCStack.Outputs.PrivateRouteTable1
         PrivateRouteTable: !GetAtt VPCStack2.Outputs.PrivateRouteTable
-        #PrivateSubnet1: !GetAtt VPCStack2.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
         PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         VPC: !GetAtt VPCStack2.Outputs.VPC
         
   EC2Stack2:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- S3Stack
       - VPCStack2
       - EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc2/${Prefix}-ec2-02.yaml"
       Parameters:
-        #Bucket: !GetAtt S3Stack.Outputs.Bucket
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
         ImageId: !Ref ImageId
         InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        #Prefix: !Ref Prefix
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet
-        #VPC: !GetAtt VPCStack2.Outputs.VPC
         
   S3Stack:
     Type: AWS::CloudFormation::Stack
@@ -136,118 +115,6 @@ Resources:
         BucketWebsiteURL: !GetAtt S3Stack.Outputs.BucketWebsiteURL
         Instance1: !GetAtt EC2Stack1.Outputs.Instance
         Instance2: !GetAtt EC2Stack2.Outputs.Instance
-        #LogBucketName: !Ref TemplateBucketName
         Prefix: !Ref Prefix
         Repository: myrepo
         WaitForSuccessTimeoutSeconds: 300
-
-        
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !GetAtt S3Stack.Outputs.Bucket
-  #    PolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        #- Action:
-  #        #    - s3:*
-  #        #  Effect: Deny
-  #        #  Resource:
-  #        #    #- !Sub "arn:aws:s3:::${Bucket}"
-  #        #    #- !Sub "arn:aws:s3:::${Bucket}/*"
-  #        #    - !GetAtt S3Stack.Outputs.BucketArn
-  #        #    - !Sub
-  #        #        - "${BucketArn}/*"
-  #        #        - BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-  #        #  Condition:
-  #        #    NotIpAddress:
-  #        #      "aws:SourceIp":
-  #        #        - !GetAtt VPCStack1.Outputs.EIP
-  #        #    StringNotEquals:
-  #        #      "aws:SourceVpce":
-  #        #        #- !GetAtt VPCStack1.Outputs.VPC
-  #        #        - !GetAtt VPCStack2.Outputs.VPC
-  #        #  Principal: "*"
-  #        - Action:
-  #            - s3:*
-  #          Effect: Allow
-  #          Resource:
-  #            #- !Sub "arn:aws:s3:::${Bucket}"
-  #            #- !Sub "arn:aws:s3:::${Bucket}/*"
-  #            - !GetAtt S3Stack.Outputs.BucketArn
-  #            - !Sub
-  #                - "${BucketArn}/*"
-  #                - BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-  #          Condition:
-  #            IpAddress:
-  #              "aws:SourceIp":
-  #                - !GetAtt VPCStack1.Outputs.EIP
-  #            #StringEquals:
-  #            #  "aws:SourceVpce":
-  #            #    #- !GetAtt VPCStack1.Outputs.VPC
-  #            #    - !GetAtt VPCStack2.Outputs.VPC
-  #          Principal: "*"
-  #        - Action:
-  #            - s3:*
-  #          Effect: Allow
-  #          Resource:
-  #            #- !Sub "arn:aws:s3:::${Bucket}"
-  #            #- !Sub "arn:aws:s3:::${Bucket}/*"
-  #            - !GetAtt S3Stack.Outputs.BucketArn
-  #            - !Sub
-  #                - "${BucketArn}/*"
-  #                - BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-  #          Condition:
-  #            #IpAddress:
-  #            #  "aws:SourceIp":
-  #            #    - !GetAtt VPCStack1.Outputs.EIP
-  #            StringEquals:
-  #              "aws:SourceVpc":
-  #                #- !GetAtt VPCStack1.Outputs.VPC
-  #                - !GetAtt VPCStack2.Outputs.VPC
-  #          Principal: "*"
-        
-
-  #VPCStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
-  #    Parameters:
-  #      AvailabilityZone1: a
-  #      AvailabilityZone2: d
-  #      CidrIp1: 10.0.1.0/24
-  #      CidrIp2: 10.0.2.0/24
-  #      HTTPSPort: !Ref HTTPSPort
-  #      Prefix: !Ref Prefix
-  #      VPCCidrBlock: 10.0.0.0/16
-  #      
-  #EndpointStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
-  #    Parameters:
-  #      EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-  #      Prefix: !Ref Prefix
-  #      #PrivateRouteTable1: !GetAtt VPCStack.Outputs.PrivateRouteTable1
-  #      PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
-  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      VPC: !GetAtt VPCStack.Outputs.VPC
-  
-  #EC2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #    - EndpointStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
-  #    Parameters:
-  #      ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-  #      InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-  #      InstanceType: t4g.nano
-  #      Prefix: !Ref Prefix
-  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
