@@ -4,13 +4,13 @@ Parameters:
   Bucket:
     Type: String
     
+  BucketWebsiteURL:
+    Type: String
+    
   Instance1:
     Type: String
     
   Instance2:
-    Type: String
-    
-  LogBucketName:
     Type: String
     
   Prefix:
