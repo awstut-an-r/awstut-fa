@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Bucket:
+    Type: String
+    
+  #BucketWebsiteURL:
+  #  Type: String
+    
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  LogBucketName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Repository:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+    
+Resources:
+  RunShellScriptAssociation1:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-runshellscript-association1"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - "sudo yum update -y"
+          - "sudo yum localinstall -y https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm"
+          
+          - !Sub "mkdir ${Repository}"
+          - !Sub "sudo yum install -y --downloadonly --downloaddir=./${Repository} mysql-community-client"
+          
+          - "sudo yum -y install createrepo"
+          - !Sub "createrepo ./${Repository}"
+          
+          - !Sub "aws s3 cp ./${Repository} s3://${Bucket}/ --recursive"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance1
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+      
+  RunShellScriptAssociation2:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-runshellscript-association2"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - !Sub |
+              sudo cat << EOF > /etc/yum.repos.d/${Repository}.repo
+              [${Repository}]
+              name=${Repository}
+              baseurl=${BucketWebsiteURL}/
+              gpgcheck=0
+              enabled=1
+              EOF
+          - "sudo yum clean all"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance2
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
