@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Bucket:
-  #  Type: String
-    
-  #BucketArn:
-  #  Type: String
-    
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
@@ -16,24 +10,9 @@ Parameters:
   InstanceType:
     Type: String
     
-  #Prefix:
-  #  Type: String
-    
-  #PrivateSubnet1:
-  #  Type: String
-  #  
-  #PrivateSubnet2:
-  #  Type: String
-  
   PrivateSubnet:
     Type: String
-    
-  #UserData:
-  #  Type: String
-  
-  #VPC:
-  #  Type: String
-    
+
 
 Resources:
   Instance:
@@ -47,20 +26,6 @@ Resources:
           SubnetId: !Ref PrivateSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Ref UserData
-            
-  #Instance2:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet2
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup
-  #    #UserData: !Ref UserData
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -82,43 +47,6 @@ Resources:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      #Policies:
-      #  - PolicyName: AllowAccessToYumRepositoryInS3Policy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            #- s3:GetObject
-      #            - "s3:*"
-      #          Resource:
-      #            - !Ref BucketArn
-      #            - !Sub "${BucketArn}/*"
-      #            #- !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
-      #            #- !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-                  
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !Ref Bucket
-  #    PolicyDocument:
-  #      Statement:
-  #        #Action:
-  #        #  - s3:GetObject
-  #        #Effect: Allow
-  #        #Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
-  #        #Principal: "*"
-  #        Action:
-  #          - s3:*
-  #        Effect: Deny
-  #        Resource:
-  #          - !Sub "arn:aws:s3:::${Bucket}"
-  #          - !Sub "arn:aws:s3:::${Bucket}/*"
-  #        Condition:
-  #          StringNotEquals:
-  #            "aws:SourceVpce":
-  #              - !Ref VPC
-  #        Principal: "*"
   
   
 Outputs:
