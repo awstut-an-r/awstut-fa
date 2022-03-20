@@ -32,11 +32,19 @@ Resources:
       Parameters:
         commands:
           - "sudo yum update -y"
-          - "sudo yum localinstall -y https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm"
           
           - !Sub "mkdir ${Repository}"
-          - !Sub "sudo yum install -y --downloadonly --downloaddir=./${Repository} mysql-community-client"
           
+           # download oracle client
+          - !Sub "curl  https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-basic-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
+          - !Sub "curl  https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-sqlplus-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
+          
+          # download mssql-tools
+          - "curl -OL https://packages.microsoft.com/config/rhel/7/prod.repo"
+          - "sudo mv ./prod.repo /etc/yum.repos.d/msprod.repo"
+          - !Sub "sudo yum install -y --downloadonly --downloaddir=./${Repository} mssql-tools"
+          
+          # create repository
           - "sudo yum -y install createrepo"
           - !Sub "createrepo ./${Repository}"
           
