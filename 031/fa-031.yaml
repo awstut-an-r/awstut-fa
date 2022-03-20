@@ -15,11 +15,11 @@ Parameters:
     
   ImageId:
     Type: String
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
     
   InstanceType:
     Type: String
-    Default: t4g.nano
+    Default: t3a.nano
     
   VPCName1:
     Type: String
