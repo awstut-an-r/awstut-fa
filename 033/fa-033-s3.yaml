@@ -17,7 +17,6 @@ Resources:
     Properties:
       BucketName: !Ref Prefix
       AccessControl: Private
-      #AccessControl: PublicReadWrite
       WebsiteConfiguration:
         IndexDocument: index.html
       
@@ -32,7 +31,6 @@ Resources:
               - s3:*
             Effect: Allow
             Resource:
-              #- !Sub "arn:aws:s3:::${Bucket}"
               - !Sub "arn:aws:s3:::${Bucket}/*"
             Condition:
               IpAddress:
@@ -43,7 +41,6 @@ Resources:
               - s3:*
             Effect: Allow
             Resource:
-              #- !Sub "arn:aws:s3:::${Bucket}"
               - !Sub "arn:aws:s3:::${Bucket}/*"
             Condition:
               StringEquals:
