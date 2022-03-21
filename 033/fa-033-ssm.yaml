@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Bucket:
+    Type: String
+    
+  BucketWebsiteURL:
+    Type: String
+    
+  RepositoryInstance:
+    Type: String
+    
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  Instance3:
+    Type: String
+   
+  Instance4:
+    Type: String
+    
+  Instance5:
+    Type: String
+    
+  Instance6:
+    Type: String
+    
+  Instance7:
+    Type: String
+    
+  #LogBucketName:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Repository:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+    
+Resources:
+  RunShellScriptAssociation1:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-runshellscript-association1"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - "sudo yum update -y"
+          
+          - !Sub "mkdir ${Repository}"
+          
+          # download oracle client
+          - !Sub "curl  https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-basic-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
+          - !Sub "curl  https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-sqlplus-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
+          
+          # download mssql-tools
+          - "curl -OL https://packages.microsoft.com/config/rhel/7/prod.repo"
+          - "sudo mv ./prod.repo /etc/yum.repos.d/msprod.repo"
+          - !Sub "sudo yum install -y --downloadonly --downloaddir=./${Repository} mssql-tools"
+          
+          # create repository
+          - "sudo yum -y install createrepo"
+          - !Sub "createrepo ./${Repository}"
+          
+          - !Sub "aws s3 cp ./${Repository} s3://${Bucket}/ --recursive"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref RepositoryInstance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+      
+  RunShellScriptAssociation2:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-runshellscript-association2"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - !Sub |
+              sudo cat << EOF > /etc/yum.repos.d/${Repository}.repo
+              [${Repository}]
+              name=${Repository}
+              baseurl=${BucketWebsiteURL}/
+              gpgcheck=0
+              enabled=1
+              EOF
+          - "sudo yum clean all"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            #- !Ref Instance1
+            #- !Ref Instance2
+            #- !Ref Instance3
+            #- !Ref Instance4
+            #- !Ref Instance5
+            - !Ref Instance6
+            - !Ref Instance7
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

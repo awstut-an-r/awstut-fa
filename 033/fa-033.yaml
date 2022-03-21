@@ -1,0 +1,386 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-033
+    
+  AvailabilityZone1:
+    Type: String
+    Default: a
+    
+  AvailabilityZone2:
+    Type: String
+    Default: d
+    
+  DBInstanceClass1:
+    Type: String
+    Default: db.t4g.micro
+    
+  DBInstanceClass2:
+    Type: String
+    Default: db.t3.small
+    
+  DBInstanceClass3:
+    Type: String
+    Default: db.t4g.medium
+    
+  DBName:
+    Type: String
+    Default: testdb
+    
+  DBMasterUsername:
+    Type: String
+    Default: testuser
+    
+  DBMasterUserPassword:
+    Type: String
+    Default: Passw0rd
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    
+  InstanceType:
+    Type: String
+    #Default: t4g.nano
+    Default: t3a.nano
+    
+  VPCName1:
+    Type: String
+    Default: VPC1
+    
+  VPCName2:
+    Type: String
+    Default: VPC2
+    
+    
+Resources:
+  VPCStack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName1}/${Prefix}-vpc-01.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        #HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        VPCName: !Ref VPCName1
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack1
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName1}/${Prefix}-ec2-01.yaml"
+      Parameters:
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        #Prefix: !Ref Prefix
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PrivateSubnet: !GetAtt VPCStack1.Outputs.PrivateSubnet
+        
+  VPCStack2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-vpc-02.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        VPCName: !Ref VPCName2
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack2
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack2.Outputs.EndpointSecurityGroup
+        #Prefix: !Ref Prefix
+        #PrivateRouteTable1: !GetAtt VPCStack.Outputs.PrivateRouteTable1
+        PrivateRouteTable: !GetAtt VPCStack2.Outputs.PrivateRouteTable
+        #PrivateSubnet1: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  RDSCommonStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack2
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds-common.yaml"
+      Parameters:
+        PrivateSubnet1: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+  
+  RDSStack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds-01.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        DBAllocatedStorage: 20
+        DBEngine: postgres
+        DBEngineVersion: 13.5
+        DBInstanceClass: !Ref DBInstanceClass1
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance1" # add
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup1" # add
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LicenseModel: postgresql-license # add
+        Port: 5432
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+  
+  AuroraStack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-aurora-01.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-aurora.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        #DBAllocatedStorage: 20
+        DBClusterIdentifier: !Sub "${Prefix}-dbcluster1" # add
+        DBEngine: aurora-postgresql
+        DBEngineVersion: 13.4
+        DBInstanceClass: !Ref DBInstanceClass3
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance2" # add
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup2" # add
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Port: 5432
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  RDSStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        DBAllocatedStorage: 20
+        DBEngine: mysql
+        DBEngineVersion: 8.0.27
+        DBInstanceClass: !Ref DBInstanceClass1
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance3"
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup3"
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LicenseModel: general-public-license
+        Port: 3306
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  AuroraStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-aurora-02.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-aurora.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        #DBAllocatedStorage: 20
+        DBClusterIdentifier: !Sub "${Prefix}-dbcluster2"
+        DBEngine: aurora-mysql
+        DBEngineVersion: 8.0.mysql_aurora.3.01.0
+        DBInstanceClass: !Ref DBInstanceClass3
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance4"
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup4"
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Port: 3306
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  RDSStack3:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        DBAllocatedStorage: 20
+        DBEngine: mariadb
+        DBEngineVersion: 10.5.13
+        DBInstanceClass: !Ref DBInstanceClass1
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance5"
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup5"
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LicenseModel: general-public-license
+        Port: 3306
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  RDSStack4:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        DBAllocatedStorage: 20
+        DBEngine: oracle-se2
+        DBEngineVersion: 19.0.0.0.ru-2021-10.rur-2021-10.r1
+        DBInstanceClass: !Ref DBInstanceClass2
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance6"
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup6"
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LicenseModel: license-included
+        Port: 1521
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  RDSStack5:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - RDSCommonStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${VPCName2}/${Prefix}-rds-ms.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        DBAllocatedStorage: 20
+        DBEngine: sqlserver-ex
+        DBEngineVersion: 15.00.4153.1.v1
+        DBInstanceClass: !Ref DBInstanceClass2
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance7"
+        #DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroupName: !Sub "${Prefix}-DBSecurityGroup7"
+        DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        LicenseModel: license-included
+        Port: 1433
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack1
+      - VPCStack2
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        EIP: !GetAtt VPCStack1.Outputs.EIP
+        Prefix: !Ref Prefix
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+      - EC2Stack
+      - RDSStack1
+      - AuroraStack1
+      - RDSStack2
+      - AuroraStack2
+      - RDSStack3
+      - RDSStack4
+      - RDSStack5
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Bucket: !GetAtt S3Stack.Outputs.Bucket
+        BucketWebsiteURL: !GetAtt S3Stack.Outputs.BucketWebsiteURL
+        RepositoryInstance: !GetAtt EC2Stack.Outputs.Instance
+        Instance1: !GetAtt RDSStack1.Outputs.Instance
+        Instance2: !GetAtt AuroraStack1.Outputs.Instance
+        Instance3: !GetAtt RDSStack2.Outputs.Instance
+        Instance4: !GetAtt AuroraStack2.Outputs.Instance
+        Instance5: !GetAtt RDSStack3.Outputs.Instance
+        Instance6: !GetAtt RDSStack4.Outputs.Instance
+        Instance7: !GetAtt RDSStack5.Outputs.Instance
+        #LogBucketName: !Ref TemplateBucketName
+        Prefix: !Ref Prefix
+        Repository: myrepo
+        WaitForSuccessTimeoutSeconds: 300

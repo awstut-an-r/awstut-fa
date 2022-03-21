@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    
+  DBClusterIdentifier:
+    Type: String
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBInstanceClass:
+    Type: String
+    
+  DBInstanceIdentifier:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBSecurityGroupName:
+    Type: String
+    
+  DBSubnetGroup:
+    Type: String
+    
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceProfile:
+    Type: String
+    
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  Port:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  PrivateSubnet:
+    Type: String
+    
+  VPC:
+    Type: String
+    
+
+Resources:
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Ref DBSecurityGroupName
+      GroupDescription: DBSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref Port
+          ToPort: !Ref Port
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+  DBCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DatabaseName: !Ref DBName
+      DBClusterIdentifier: !Ref DBClusterIdentifier
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      StorageEncrypted: true
+      VpcSecurityGroupIds:
+        - !Ref DBSecurityGroup
+        
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      #DBParameterGroupName: !Ref DBParameterGroup
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: !Ref DBEngine
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      PubliclyAccessible: false
+      #PromotionTier: 1
+  
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PrivateSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+
+
+Outputs:
+  Instance:
+    Value: !Ref Instance
