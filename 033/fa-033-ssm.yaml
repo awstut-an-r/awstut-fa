@@ -54,8 +54,8 @@ Resources:
           - !Sub "mkdir ${Repository}"
           
           # download oracle client
-          - !Sub "curl  https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-basic-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
-          - !Sub "curl  https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-sqlplus-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
+          - !Sub "curl https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-basic-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
+          - !Sub "curl https://download.oracle.com/otn_software/linux/instantclient/1914000/{oracle-instantclient19.14-sqlplus-19.14.0.0.0-1.x86_64.rpm} --output ./${Repository}/#1"
           
           # download mssql-tools
           - "curl -OL https://packages.microsoft.com/config/rhel/7/prod.repo"
