@@ -91,13 +91,11 @@ Resources:
     Properties:
       DBClusterIdentifier: !Ref DBCluster
       DBSubnetGroupName: !Ref DBSubnetGroup
-      #DBParameterGroupName: !Ref DBParameterGroup
       DBInstanceIdentifier: !Ref DBInstanceIdentifier
       DBInstanceClass: !Ref DBInstanceClass
       Engine: !Ref DBEngine
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       PubliclyAccessible: false
-      #PromotionTier: 1
   
   Instance:
     Type: AWS::EC2::Instance
