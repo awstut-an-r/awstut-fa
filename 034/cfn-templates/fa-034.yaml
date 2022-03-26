@@ -17,13 +17,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
       Parameters:
         Prefix: !Ref Prefix
-
-  #SSMStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
   
   LambdaStack:
     Type: AWS::CloudFormation::Stack
@@ -39,13 +32,5 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cognito.yaml"
       Parameters:
-        #Bucket: !GetAtt S3Stack.Outputs.Bucket
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketAuthenticatedFolderName: authenticated
-        #BucketWesSiteEndpointUrl: !GetAtt S3Stack.Outputs.BucketWesSiteEndpointUrl
         FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
-        #Parameter: !GetAtt SSMStack.Outputs.Parameter
         Prefix: !Ref Prefix
-        #SigninHtml: !Ref SigninHtml
-        #SignoutHtml: !Ref SignoutHtml
-        #AuthenticatedParameter: !GetAtt SSMStack.Outputs.AuthenticatedParameter
