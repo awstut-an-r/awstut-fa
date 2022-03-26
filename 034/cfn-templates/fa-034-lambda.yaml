@@ -1,23 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Architecture:
-  #  Type: String
-    
-  #Bucket:
-  #  Type: String
-    
-  #Handler:
-  #  Type: String
-  
   Prefix:
     Type: String
-    
-  #Runtime:
-  #  Type: String
-  #  
-  #ZipFile:
-  #  Type: String
     
     
 Resources:
@@ -27,7 +12,6 @@ Resources:
       FunctionName: !Sub "${Prefix}-function"
       Runtime: python3.8
       Role: !GetAtt FunctionRole.Arn
-      #Timeout: 60
       Handler: index.lambda_handler
       Code:
         ZipFile: |
@@ -55,6 +39,3 @@ Resources:
 Outputs:
   FunctionArn:
     Value: !GetAtt Function.Arn
-    
-  #FunctionName:
-  #  Value: !Ref Function
