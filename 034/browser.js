@@ -1,20 +1,3 @@
-//const {
-//  CognitoIdentityClient
-//} = require("@aws-sdk/client-cognito-identity");
-//
-//const {
-//  fromCognitoIdentityPool
-//} = require("@aws-sdk/credential-provider-cognito-identity");
-//
-//const {
-//  LambdaClient,
-//  InvokeCommand,
-//} = require("@aws-sdk/client-lambda");
-//
-//const {
-//  toUtf8
-//} = require("@aws-sdk/util-utf8-browser");
-
 import {
   CognitoIdentityClient
 } from "@aws-sdk/client-cognito-identity";
@@ -35,9 +18,8 @@ import {
 
 // Set the parameter
 const REGION = "ap-northeast-1";
-const IDENTITY_POOL_ID = "ap-northeast-1:f78ed244-a960-481d-b20d-54649660f668";
-const FUNCTION_NAME = "fa-034-function";
-//const ACCOUNT_ID = "ACCOUNT_ID";
+const IDENTITY_POOL_ID = "[ID of Cognito ID Pool]";
+const FUNCTION_NAME = "[Lambda Function Name]";
 
 const lambdaClient = new LambdaClient({
   region: REGION,
@@ -52,8 +34,6 @@ const showLambdaResult = async () => {
     const response = await lambdaClient.send(
       new InvokeCommand({ FunctionName: FUNCTION_NAME })
     );
-    //console.log(response.Payload);
-    //console.log(toUtf8(response.Payload));
     document.getElementById("viewer").innerHTML = `<p>${toUtf8(response.Payload)}</p>`
   } catch (err) {
     console.log(err);
