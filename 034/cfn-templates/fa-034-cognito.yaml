@@ -1,47 +1,18 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Bucket:
-  #  Type: String
-    
-  #BucketArn:
-  #  Type: String
-  #  
-  ##BucketAuthenticatedFolderName:
-  ##  Type: String
-  #  
-  #BucketWesSiteEndpointUrl:
-  #  Type: String
-  
   FunctionArn:
     Type: String
-  
-  #Parameter:
-  #  Type: String
-  
+
   Prefix:
     Type: String
-    
-  #SigninHtml:
-  #  Type: String
-  #  
-  #SignoutHtml:
-  #  Type: String
-  #  
-  #AuthenticatedParameter:
-  #  Type: String
-    
+
 
 Resources:
   IdentityPool:
     Type: AWS::Cognito::IdentityPool
     Properties:
-      #AllowClassicFlow: false # default value.
       AllowUnauthenticatedIdentities: true
-      #CognitoIdentityProviders:
-      #  - ClientId: !Ref UserPoolClient
-      #    ProviderName: !Sub "cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
-      #    #ServerSideTokenCheck: false # default value.
       IdentityPoolName: !Sub "${Prefix}-IdentityPool"
       
   IdentityPoolRoleAttachment:
@@ -75,6 +46,4 @@ Resources:
                 Action:
                   - lambda:InvokeFunction
                 Resource:
-                  #- !Sub "arn:aws:s3:::${Bucket}"
-                  #- !Sub "arn:aws:s3:::${Bucket}/*"
                   - !Ref FunctionArn
