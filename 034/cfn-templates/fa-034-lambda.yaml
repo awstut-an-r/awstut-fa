@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Architecture:
+  #  Type: String
+    
+  #Bucket:
+  #  Type: String
+    
+  #Handler:
+  #  Type: String
+  
+  Prefix:
+    Type: String
+    
+  #Runtime:
+  #  Type: String
+  #  
+  #ZipFile:
+  #  Type: String
+    
+    
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${Prefix}-function"
+      Runtime: python3.8
+      Role: !GetAtt FunctionRole.Arn
+      #Timeout: 60
+      Handler: index.lambda_handler
+      Code:
+        ZipFile: |
+          import datetime
+          
+          def lambda_handler(event, context):
+            return str(datetime.date.today())
+    
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      
+      
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+    
+  #FunctionName:
+  #  Value: !Ref Function
