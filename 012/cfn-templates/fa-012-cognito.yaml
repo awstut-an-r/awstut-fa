@@ -4,9 +4,6 @@ Parameters:
   BucketArn:
     Type: String
     
-  #BucketAuthenticatedFolderName:
-  #  Type: String
-    
   BucketWesSiteEndpointUrl:
     Type: String
 
@@ -53,7 +50,6 @@ Resources:
         #- phone
         - profile
       CallbackURLs:
-        #- !Sub "${BucketWesSiteEndpointUrl}/${BucketAuthenticatedFolderName}/${SigninHtml}"
         - !Sub "${BucketWesSiteEndpointUrl}/${SigninHtml}"
       ClientName: !Sub ${Prefix}-UserPoolClient
       #EnableTokenRevocation: true # default value.
