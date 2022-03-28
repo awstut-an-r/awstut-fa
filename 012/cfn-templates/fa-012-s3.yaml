@@ -7,9 +7,6 @@ Parameters:
   IndexHtml:
     Type: String
     
-  #SigninHtml:
-  #  Type: String
-    
   SignoutHtml:
     Type: String
     
@@ -33,8 +30,6 @@ Resources:
             - s3:GetObject
           Effect: Allow
           Resource:
-            #- !Sub "arn:aws:s3:::${S3Bucket}/${IndexHtml}"
-            #- !Sub "arn:aws:s3:::${S3Bucket}/${SignoutHtml}"
             !Sub "arn:aws:s3:::${S3Bucket}/*"
           Principal: "*"
           
