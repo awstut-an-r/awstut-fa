@@ -14,9 +14,9 @@ import {
 
 // Set the parameter
 const REGION = "ap-northeast-1";
-const USER_POOL_ID = "ap-northeast-1_lFJAaM3qB";
-const IDENTITY_POOL_ID = "ap-northeast-1:fce198d4-3cfd-4c03-9a74-c8c1fb2ea464";
-const PARAMETER_NAME = "fa-012-authenticated";
+const USER_POOL_ID = "[cognito-user-pool-id]";
+const IDENTITY_POOL_ID = "[cognito-id-pool-id]";
+const PARAMETER_NAME = "[ssm-parameter-id]";
 
 const params = new URLSearchParams(location.hash.slice(1));
 const idToken = params.get("id_token");
