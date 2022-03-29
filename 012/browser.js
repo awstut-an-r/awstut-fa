@@ -13,7 +13,7 @@ import {
 
 
 // Set the parameter
-const REGION = "ap-northeast-1";
+const REGION = "[region]";
 const USER_POOL_ID = "[cognito-user-pool-id]";
 const IDENTITY_POOL_ID = "[cognito-id-pool-id]";
 const PARAMETER_NAME = "[ssm-parameter-id]";
