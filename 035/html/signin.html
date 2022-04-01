@@ -1,9 +1,5 @@
 <html>
   <head>
-    <!--
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1033.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/amazon-cognito-identity-js@5.2.3/dist/amazon-cognito-identity.min.js"></script>
-    -->
   </head>
   <body>
     <h1>signin.html</h1>
@@ -11,63 +7,7 @@
     <p id="parameter"></p>
     <script type="text/javascript" src="./main.js"></script>
     <script>
-      //getName();
-      //getParameter();
       main();
     </script>
-    
-    <!--
-    <script type="text/javascript">
-      var prefix = 'fa-012'
-      var region = 'ap-northeast-1'
-      var userPoolId = 'ap-northeast-1_W8ZPnQYRK'
-      //var userPoolClientId = '2lp4695vpuo88ettvk78lmq694'
-      var identityPoolId = 'ap-northeast-1:6d117ebe-506b-4f0d-b7dc-a438a4dbd57b'
-      
-      //var name = '';
-      //var storedParameter = '';
-      
-      try {
-        // get id token.
-        var params = new URLSearchParams(location.hash.slice(1));
-        var idToken = params.get("id_token");
-        
-        AWS.config.region = region;
-        AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-          IdentityPoolId: identityPoolId,
-          Logins: {
-            [`cognito-idp.${region}.amazonaws.com/${userPoolId}`]: idToken
-          }
-        });
-        //console.log(AWS.config.credentials);
-        
-        var tokens = idToken.split('.');
-        var tokensDecoded = JSON.parse(atob(tokens[1]));
-        //console.log(tokensDecoded);
-        var name = tokensDecoded.name;
-        //console.log(name);
-        document.getElementById('name').innerText = `Name: ${name}`;
-        
-        
-        var ssmParams = {
-          Name: `${prefix}-authenticated`
-        }
-        var ssm = new AWS.SSM();
-        ssm.getParameter(ssmParams, function(err, data) {
-          if (err) console.log(err, err.stack);
-          else {
-            //console.log(data):
-            var storedParameter = data.Parameter.Value;
-            //console.log(storedParameter);
-            document.getElementById('parameter').innerText = `SSM Parameter Store: ${storedParameter}`;
-          }
-        });
-        
-      } catch(e) {
-        document.getElementById('name').innerText = 'Name: Guest';
-        document.getElementById('parameter').innerText = 'Deny access to SSM Parameter Store.';
-      }
-    </script>
-    -->
   </body>
 </html>
