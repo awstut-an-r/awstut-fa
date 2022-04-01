@@ -18,7 +18,7 @@ const USER_POOL_ID = "[cognito-user-pool-id]";
 const IDENTITY_POOL_ID = "[cognito-id-pool-id]";
 const PARAMETER_NAME = "[ssm-parameter-id]";
 
-const params = new URLSearchParams(location.hash.slice(1));
+const params = new URLSearchParams(window.location.search);
 const idToken = params.get("id_token");
 
 const ssmClient = new SSMClient({
@@ -29,7 +29,7 @@ const ssmClient = new SSMClient({
     logins: {
       [`cognito-idp.${REGION}.amazonaws.com/${USER_POOL_ID}`]: idToken
     }
-  }),
+  })
 });
 
 const getParameter = async () => {
@@ -37,7 +37,6 @@ const getParameter = async () => {
     const response = await ssmClient.send(
       new GetParameterCommand({ Name: PARAMETER_NAME })
     );
-    //console.log(response);
     document.getElementById('parameter').innerText = `SSM Parameter Store: ${response.Parameter.Value}`;
   } catch (err) {
     console.log(err);
