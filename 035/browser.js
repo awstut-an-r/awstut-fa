@@ -24,10 +24,8 @@ const REDIRECT_URI = "https://s3-ap-northeast-1.amazonaws.com/fa-035/signin.html
 
 const params = new URLSearchParams(window.location.search);
 const code = params.get("code");
-//console.log(code);
 
 const tokenEndpoint = `https://${DOMAIN}.auth.${REGION}.amazoncognito.com/oauth2/token?grant_type=authorization_code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&code=${code}`;
-//console.log(tokenEndpoint);
 
 
 const main = async () => {
@@ -38,11 +36,9 @@ const main = async () => {
     }})
     .then(response => {
       return response.json();
-      //console.log(response.json());
     })
     .then(data => {
       const idToken = data.id_token;
-      //console.log(idToken);
       
       const ssmClient = new SSMClient({
         region: REGION,
@@ -54,7 +50,6 @@ const main = async () => {
           }
         })
       });
-      //console.log(ssmClient);
       
       getParameter(ssmClient);
       getName(idToken);
@@ -66,7 +61,6 @@ const getParameter = async (client) => {
     const response = await client.send(
       new GetParameterCommand({ Name: PARAMETER_NAME })
     );
-    //console.log(response);
     document.getElementById('parameter').innerText = `SSM Parameter Store: ${response.Parameter.Value}`;
   } catch (err) {
     console.log(err);
