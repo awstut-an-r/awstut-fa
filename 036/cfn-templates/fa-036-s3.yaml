@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  IndexHtml:
+    Type: String
+    
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Prefix
+      AccessControl: Private
+      WebsiteConfiguration:
+        IndexDocument: !Ref IndexHtml
+      
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Prefix
+      PolicyDocument:
+        Statement:
+          Action:
+            - s3:GetObject
+          Effect: Allow
+          Resource:
+            !Sub "arn:aws:s3:::${S3Bucket}/*"
+          Principal: "*"
+          
+          
+Outputs:
+  BucketArn:
+    Value: !GetAtt S3Bucket.Arn
+    
+  BucketWesSiteEndpointUrl:
+    Value: !Sub "https://s3-ap-northeast-1.amazonaws.com/${S3Bucket}" 

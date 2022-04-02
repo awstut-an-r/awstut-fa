@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketWesSiteEndpointUrl:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  Scopes:
+    Type: CommaDelimitedList
+    
+  SigninHtml:
+    Type: String
+    
+  SignoutHtml:
+    Type: String
+    
+  UserPool:
+    Type: String
+    
+
+Resources:
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        #- code
+        - implicit
+      AllowedOAuthScopes: !Ref Scopes
+      CallbackURLs:
+        - !Sub "${BucketWesSiteEndpointUrl}/${SigninHtml}"
+      ClientName: !Sub ${Prefix}-UserPoolClient
+      ExplicitAuthFlows:
+        - ALLOW_REFRESH_TOKEN_AUTH
+        - ALLOW_USER_SRP_AUTH
+      LogoutURLs:
+        - !Sub "${BucketWesSiteEndpointUrl}/${SignoutHtml}"
+      SupportedIdentityProviders:
+        - COGNITO
+      UserPoolId: !Ref UserPool

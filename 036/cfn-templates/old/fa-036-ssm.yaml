@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+
+Resources:
+  AuthenticatedParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${Prefix}-authenticated"
+      Type: String
+      Value: Authenticated
+      
+      
+Outputs:
+  AuthenticatedParameter:
+    Value: !Ref AuthenticatedParameter
