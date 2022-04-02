@@ -30,7 +30,6 @@ Resources:
       Parameters:
         Prefix: !Ref Prefix
         IndexHtml: !Ref IndexHtml
-        SignoutHtml: !Ref SignoutHtml
         
   SSMStack:
     Type: AWS::CloudFormation::Stack
