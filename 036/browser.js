@@ -9,7 +9,7 @@ const getPayloadFromJWT = (token) => {
 };
 
 
-const REGION = "ap-northeast-1";
+const REGION = "[region]";
 const USER_POOL_ID = "[user-pool-id]";
 
 const params = new URLSearchParams(location.hash.slice(1));
