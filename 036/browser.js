@@ -10,7 +10,7 @@ const getPayloadFromJWT = (token) => {
 
 
 const REGION = "ap-northeast-1";
-const USER_POOL_ID = "ap-northeast-1_nd984pe0j";
+const USER_POOL_ID = "[user-pool-id]";
 
 const params = new URLSearchParams(location.hash.slice(1));
 const accessToken = params.get("access_token");
