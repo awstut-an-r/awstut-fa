@@ -26,7 +26,6 @@ Resources:
     Properties:
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
-        #- code
         - implicit
       AllowedOAuthScopes: !Ref Scopes
       CallbackURLs:
