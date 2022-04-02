@@ -7,9 +7,6 @@ Parameters:
   IndexHtml:
     Type: String
     
-  SignoutHtml:
-    Type: String
-    
 
 Resources:
   S3Bucket:
