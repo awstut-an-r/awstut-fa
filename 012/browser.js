@@ -18,7 +18,7 @@ const USER_POOL_ID = "[cognito-user-pool-id]";
 const IDENTITY_POOL_ID = "[cognito-id-pool-id]";
 const PARAMETER_NAME = "[ssm-parameter-id]";
 
-const params = new URLSearchParams(window.location.search);
+const params = new URLSearchParams(location.hash.slice(1));
 const idToken = params.get("id_token");
 
 const ssmClient = new SSMClient({
