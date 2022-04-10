@@ -46,12 +46,8 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #ImageId1: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
-        #ImageId2: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
         ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
-        #ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-Japanese-Full-Base
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType1: t2.nano
         InstanceType: t3a.nano
         KeyName: MyKeyPair
         Prefix: !Ref Prefix
@@ -83,7 +79,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
         Instance: !GetAtt EC2Stack.Outputs.Instance4
-        #LogBucket: !Ref TemplateBucketName
         Prefix: !Ref Prefix
         VolumeLabel: D
         WaitForSuccessTimeoutSeconds: 300
