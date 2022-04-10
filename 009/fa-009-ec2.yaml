@@ -10,9 +10,6 @@ Parameters:
   InstanceType:
     Type: String
     
-  #InstanceType2:
-  #  Type: String
-    
   KeyName:
     Type: String
     
@@ -45,7 +42,6 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
@@ -59,7 +55,6 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
@@ -73,7 +68,6 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
