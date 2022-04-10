@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    
+  CidrIp:
+    Type: String
+    
+  HTTPSPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  VPCCidrBlock:
+    Type: String
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone}
+      
+      
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      #SecurityGroupIngress:
+      #  - IpProtocol: tcp
+      #    FromPort: !Ref RDPPort
+      #    ToPort: !Ref RDPPort
+      #    CidrIp: 0.0.0.0/0
+          
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+          
+Outputs:
+  VPC:
+    Value: !Ref VPC
+      
+  PrivateSubnet:
+    Value: !Ref PrivateSubnet
+    
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+      
+  EndpointSecurityGroup:
+    Value: !Ref EndpointSecurityGroup
+      

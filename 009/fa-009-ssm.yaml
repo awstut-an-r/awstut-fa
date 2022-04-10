@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Instance:
+    Type: String
+    
+  #LogBucket:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  VolumeLabel:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+
+
+Resources:
+  RunPowerShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-run-powershellscript-association"
+      Name: AWS-RunPowerShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucket
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/run-powershellscript-association"
+      Parameters:
+        commands:
+          - "Stop-Service -Name ShellHWDetection"
+          - !Sub "Get-Disk | Where PartitionStyle -eq 'raw' | Initialize-Disk -PartitionStyle MBR -PassThru | New-Partition -AssignDriveLetter -UseMaximumSize | Format-Volume -FileSystem NTFS -NewFileSystemLabel '${VolumeLabel}' -Confirm:$false"
+          - "Start-Service -Name ShellHWDetection"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
