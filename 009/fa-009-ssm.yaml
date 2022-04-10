@@ -4,9 +4,6 @@ Parameters:
   Instance:
     Type: String
     
-  #LogBucket:
-  #  Type: String
-    
   Prefix:
     Type: String
     
@@ -23,10 +20,6 @@ Resources:
     Properties:
       AssociationName: !Sub "${Prefix}-run-powershellscript-association"
       Name: AWS-RunPowerShellScript
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref LogBucket
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/run-powershellscript-association"
       Parameters:
         commands:
           - "Stop-Service -Name ShellHWDetection"
