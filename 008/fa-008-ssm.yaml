@@ -4,17 +4,11 @@ Parameters:
   Instance:
     Type: String
     
-  #LogBucket:
-  #  Type: String
-  
   MountPoint:
     Type: String
     
   Prefix:
     Type: String
-    
-  #VolumeLabel:
-  #  Type: String
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
@@ -26,10 +20,6 @@ Resources:
     Properties:
       AssociationName: !Sub "${Prefix}-run-shellscript-association"
       Name: AWS-RunShellScript
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref LogBucket
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/run-powershellscript-association"
       Parameters:
         commands:
           - !Sub |
