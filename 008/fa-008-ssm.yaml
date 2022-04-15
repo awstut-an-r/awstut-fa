@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Instance:
+    Type: String
+    
+  #LogBucket:
+  #  Type: String
+  
+  MountPoint:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  #VolumeLabel:
+  #  Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+
+
+Resources:
+  RunShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-run-shellscript-association"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucket
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/run-powershellscript-association"
+      Parameters:
+        commands:
+          - !Sub |
+            for d in $(lsblk -n -r -p | grep disk | awk '{ print $1 }' )
+            do
+              if  [ "$(sudo file -s -b $d)" == data ]; then
+                sudo mkfs -t xfs $d
+                sudo mkdir ${MountPoint}
+                sudo mount $d ${MountPoint}
+              fi
+            done
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
