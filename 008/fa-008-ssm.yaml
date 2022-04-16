@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  FileSystem:
+    Type: String
+    
   Instance:
     Type: String
     
@@ -26,9 +29,12 @@ Resources:
             for d in $(lsblk -n -r -p | grep disk | awk '{ print $1 }' )
             do
               if  [ "$(sudo file -s -b $d)" == data ]; then
-                sudo mkfs -t xfs $d
+                sudo mkfs -t ${FileSystem} $d
                 sudo mkdir ${MountPoint}
                 sudo mount $d ${MountPoint}
+                
+                uuid=$(sudo blkid $d -o export | grep ^UUID)
+                echo -e "$uuid\t/data\t${FileSystem}\tdefaults,nofail\t0\t2" >> /etc/fstab
               fi
             done
       Targets:
