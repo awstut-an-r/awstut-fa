@@ -78,6 +78,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
+        FileSystem: xfs
         Instance: !GetAtt EC2Stack.Outputs.Instance3
         MountPoint: /data
         Prefix: !Ref Prefix
