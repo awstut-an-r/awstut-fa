@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  CidrIp3:
+    Type: String
+    
+  HTTPSPort:
+    Type: Number
+    
+  MySQLPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  VPCCidrBlock:
+    Type: String
+    
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+
+  FunctionSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+
+  DBSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  DBSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp3
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+  FunctionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
+      GroupDescription: Allow HTTPS.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
+          CidrIp: 0.0.0.0/0
+          
+  DBProxySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-DBProxySecurityGroup"
+      GroupDescription: Security Group for DB Proxy.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref FunctionSecurityGroup
+
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-DBSecurityGroup"
+      GroupDescription: Allow MySQL Only.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref DBProxySecurityGroup
+
+
+Outputs:
+  VPC:
+    Value: !Ref VPC
+      
+  FunctionSubnet:
+    Value: !Ref FunctionSubnet
+      
+  DBSubnet1:
+    Value: !Ref DBSubnet1
+      
+  DBSubnet2:
+    Value: !Ref DBSubnet2
+  
+  #AZ1:
+  #  Value: !Ref AZ1
+      
+  FunctionSecurityGroup:
+    Value: !Ref FunctionSecurityGroup
+  
+  DBSecurityGroup:
+    Value: !Ref DBSecurityGroup
+      
+  DBProxySecurityGroup:
+    Value: !Ref DBProxySecurityGroup

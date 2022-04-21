@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    
+  DBAllocatedStorage:
+    Type: Number
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBInstanceClass:
+    Type: String
+  
+  DBInstanceIdentifier:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBSecurityGroup:
+    Type: String
+  
+  DBSubnet1:
+    Type: String
+    
+  DBSubnet2:
+    Type: String
+    
+  DBProxyEngineFamily:
+    Type: String
+    
+  DBProxySecurityGroup:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: !Sub "${Prefix}-DBSubnetGroup"
+      DBSubnetGroupDescription: Test DBSubnetGroup.
+      SubnetIds:
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+        
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: !Ref DBInstanceIdentifier
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+        
+  DBProxy:
+    Type: AWS::RDS::DBProxy
+    Properties:
+      Auth: 
+        - IAMAuth: DISABLED
+          AuthScheme: SECRETS
+          SecretArn: !Ref Secret
+      DBProxyName: !Sub "${Prefix}-DBProxy"
+      #DebugLogging: true
+      EngineFamily: !Ref DBProxyEngineFamily
+      IdleClientTimeout: 120
+      RequireTLS: false
+      RoleArn: !GetAtt DBProxyRole.Arn
+      VpcSecurityGroupIds: 
+        - !Ref DBProxySecurityGroup
+      VpcSubnetIds: 
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+        
+  DBProxyTargetGroup:
+    Type: AWS::RDS::DBProxyTargetGroup
+    Properties:
+      DBProxyName: !Ref DBProxy
+      DBInstanceIdentifiers:
+        - !Ref DBInstance
+      TargetGroupName: default
+      ConnectionPoolConfigurationInfo:
+        MaxConnectionsPercent: 100
+        MaxIdleConnectionsPercent: 50
+        ConnectionBorrowTimeout: 120
+        
+  DBProxyRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - rds.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DBProxyPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: kms:Decrypt
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetResourcePolicy
+                  - secretsmanager:GetSecretValue
+                  - secretsmanager:DescribeSecret
+                  - secretsmanager:ListSecretVersionIds
+                Resource: !Ref SecretAttachment
+        
+  Secret:
+    Type: AWS::SecretsManager::Secret
+    Properties: 
+      Name: !Sub "${Prefix}-Secret"
+      SecretString: !Sub '{"username":"${DBMasterUsername}","password":"${DBMasterUserPassword}"}'
+      
+  SecretAttachment:
+    Type: AWS::SecretsManager::SecretTargetAttachment
+    Properties:
+      SecretId: !Ref Secret
+      TargetId: !Ref DBInstance
+      TargetType: AWS::RDS::DBInstance
+
+Outputs:
+  #DBEndpointAddress:
+  #  Value: !GetAtt DBInstance.Endpoint.Address
+  #    
+  #DBEndpointPort:
+  #  Value: !GetAtt DBInstance.Endpoint.Port
+  #    
+  #DBUser:
+  #  Value: !Ref DBMasterUsername
+  #
+  #DBPassword:
+  #  Value: !Ref DBMasterUserPassword
+  #    
+  #DBName:
+  #  Value: !Ref DBName
+      
+  DBProxyEndpointAddress:
+    Value: !GetAtt DBProxy.Endpoint

@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  FunctionArn:
+    Type: String
+  
+  FunctionName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${Prefix}-HttpApi"
+      Description: HttpApi.
+      ProtocolType: HTTP
+      Target: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${FunctionName}/invocations"
+      
+  ApiGatewayLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref FunctionArn
+      Action: lambda:InvokeFunction
+      Principal: apigateway.amazonaws.com

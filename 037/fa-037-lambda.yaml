@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    
+  CodeS3Key:
+    Type: String
+    
+  DBTableName:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBProxyEndpointAddress:
+    Type: String
+    
+  FunctionSecurityGroup:
+    Type: String
+    
+  FunctionSubnet:
+    Type: String
+    
+  MySQLPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+
+
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          DB_ENDPOINT_PORT: !Ref MySQLPort
+          DB_NAME: !Ref DBName
+          DB_PASSWORD: !Ref DBMasterUserPassword
+          DB_PROXY_ENDPOINT_ADDRESS: !Ref DBProxyEndpointAddress
+          DB_TABLENAME: !Ref DBTableName
+          DB_USER: !Ref DBMasterUsername
+          REGION: !Ref AWS::Region
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: index.lambda_handler
+      Runtime: python3.8
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: 10
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref FunctionSecurityGroup
+        SubnetIds:
+          - !Ref FunctionSubnet
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+        
+        
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+    
+  FunctionName:
+    Value: !Ref Function
