@@ -81,7 +81,6 @@ Resources:
           AuthScheme: SECRETS
           SecretArn: !Ref Secret
       DBProxyName: !Sub "${Prefix}-DBProxy"
-      #DebugLogging: true
       EngineFamily: !Ref DBProxyEngineFamily
       IdleClientTimeout: 120
       RequireTLS: false
@@ -145,20 +144,5 @@ Resources:
       TargetType: AWS::RDS::DBInstance
 
 Outputs:
-  #DBEndpointAddress:
-  #  Value: !GetAtt DBInstance.Endpoint.Address
-  #    
-  #DBEndpointPort:
-  #  Value: !GetAtt DBInstance.Endpoint.Port
-  #    
-  #DBUser:
-  #  Value: !Ref DBMasterUsername
-  #
-  #DBPassword:
-  #  Value: !Ref DBMasterUserPassword
-  #    
-  #DBName:
-  #  Value: !Ref DBName
-      
   DBProxyEndpointAddress:
     Value: !GetAtt DBProxy.Endpoint
