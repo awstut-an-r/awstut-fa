@@ -47,13 +47,6 @@ Parameters:
     
 
 Resources:
-  #S3Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
-  
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -100,9 +93,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
         CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Ref LambdaPackage
         CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
         DBTableName: !Ref DBTableName
         DBMasterUsername: !Ref DBMasterUsername
