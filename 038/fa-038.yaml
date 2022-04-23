@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-038
+    
+  AvailabilityZone:
+    Type: String
+    Default: a
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+    
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone
+        CidrIp: 10.0.1.0/24
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        FunctionSubnet: !GetAtt VPCStack.Outputs.FunctionSubnet
+        FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8

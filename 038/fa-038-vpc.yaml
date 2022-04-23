@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    
+  CidrIp:
+    Type: String
+    
+  HTTPSPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  VPCCidrBlock:
+    Type: String
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+
+  FunctionSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      
+  FunctionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
+      GroupDescription: Allow HTTPS.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
+          CidrIp: 0.0.0.0/0
+          
+          
+Outputs:
+  #VPC:
+  #  Value: !Ref VPC
+      
+  FunctionSubnet:
+    Value: !Ref FunctionSubnet
+      
+  FunctionSecurityGroup:
+    Value: !Ref FunctionSecurityGroup
