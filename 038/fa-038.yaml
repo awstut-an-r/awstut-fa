@@ -9,14 +9,6 @@ Parameters:
     Type: String
     Default: fa-038
     
-  AvailabilityZone:
-    Type: String
-    Default: a
-    
-  HTTPSPort:
-    Type: Number
-    Default: 443
-    
     
 Resources:
   VPCStack:
@@ -24,9 +16,9 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
-        AvailabilityZone: !Ref AvailabilityZone
+        AvailabilityZone: a
         CidrIp: 10.0.1.0/24
-        HTTPSPort: !Ref HTTPSPort
+        HTTPSPort: 443
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         
