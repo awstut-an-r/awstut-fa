@@ -29,12 +29,6 @@ Resources:
       Handler: !Ref Handler
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
-      #Timeout: 10
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   Function2:
     Type: AWS::Lambda::Function
@@ -47,7 +41,6 @@ Resources:
       Handler: !Ref Handler
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      #Timeout: 10
       VpcConfig:
         SecurityGroupIds:
           - !Ref FunctionSecurityGroup
