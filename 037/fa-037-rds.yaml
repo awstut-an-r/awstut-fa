@@ -120,28 +120,18 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                Action: kms:Decrypt
-                Resource: '*'
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref Secret
               - Effect: Allow
-                Action:
-                  - secretsmanager:GetResourcePolicy
-                  - secretsmanager:GetSecretValue
-                  - secretsmanager:DescribeSecret
-                  - secretsmanager:ListSecretVersionIds
-                Resource: !Ref SecretAttachment
+                Action: kms:Decrypt
+                Resource: '*' # use default key.
         
   Secret:
     Type: AWS::SecretsManager::Secret
     Properties: 
       Name: !Sub "${Prefix}-Secret"
       SecretString: !Sub '{"username":"${DBMasterUsername}","password":"${DBMasterUserPassword}"}'
-      
-  SecretAttachment:
-    Type: AWS::SecretsManager::SecretTargetAttachment
-    Properties:
-      SecretId: !Ref Secret
-      TargetId: !Ref DBInstance
-      TargetType: AWS::RDS::DBInstance
+
 
 Outputs:
   DBProxyEndpointAddress:
