@@ -5,7 +5,6 @@ import mysql.connector
 import os
 
 
-db_endpoint_port = os.environ['DB_ENDPOINT_PORT']
 db_name = os.environ['DB_NAME']
 db_password = os.environ['DB_PASSWORD']
 db_proxy_endpoint_address = os.environ['DB_PROXY_ENDPOINT_ADDRESS']
