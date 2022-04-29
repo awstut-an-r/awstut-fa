@@ -24,8 +24,7 @@ Resources:
       Name: !Sub "${Prefix}-HttpApi"
       Description: HttpApi.
       ProtocolType: HTTP
-      #Target: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${FunctionName}/invocations"
-      
+
   Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
@@ -75,14 +74,7 @@ Resources:
       ApiId: !Ref HttpApi
       RouteKey: "GET /func2"
       Target: !Sub "integrations/${Integration2}"
-  
-  #ApiGatewayLambdaPermission:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    FunctionName: !Ref FunctionArn
-  #    Action: lambda:InvokeFunction
-  #    Principal: apigateway.amazonaws.com
-  
+
   ApiGatewayRole:
     Type: AWS::IAM::Role
     Properties:
