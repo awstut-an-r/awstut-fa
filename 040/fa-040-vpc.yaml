@@ -44,9 +44,6 @@ Resources:
           
           
 Outputs:
-  #VPC:
-  #  Value: !Ref VPC
-      
   FunctionSubnet:
     Value: !Ref FunctionSubnet
       
