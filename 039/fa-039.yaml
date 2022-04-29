@@ -40,11 +40,7 @@ Parameters:
   HTTPSPort:
     Type: Number
     Default: 443
-    
-  #LambdaPackage:
-  #  Type: String
-  #  Default: deploy.zip
-    
+
   MySQLPort:
     Type: Number
     Default: 3306
@@ -109,9 +105,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
         CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
         CodeS3Key1: !Sub "${Prefix}/deploy1.zip"
         CodeS3Key2: !Sub "${Prefix}/deploy2.zip"
         CodeS3Key3: !Sub "${Prefix}/layer.zip"
