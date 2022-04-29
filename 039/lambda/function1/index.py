@@ -1,24 +1,20 @@
-#import boto3
 import datetime
 import json
 import mysql.connector
 import os
 
 
-#db_endpoint_address = os.environ['DB_ENDPOINT_ADDRESS']
 db_endpoint_port = os.environ['DB_ENDPOINT_PORT']
 db_name = os.environ['DB_NAME']
 db_password = os.environ['DB_PASSWORD']
 db_proxy_endpoint_address = os.environ['DB_PROXY_ENDPOINT_ADDRESS']
 db_tablename = os.environ['DB_TABLENAME']
 db_user = os.environ['DB_USER']
-#region = 'ap-northeast-1'
 region = os.environ['REGION']
 
 
 def lambda_handler(event, context):
     conn = mysql.connector.connect(
-        #host=db_endpoint_address,
         host=db_proxy_endpoint_address,
         port=db_endpoint_port,
         user=db_user,
@@ -55,6 +51,5 @@ def lambda_handler(event, context):
     
     return {
         'statusCode': 200,
-        #'body': 'hello, world !'
         'body': json.dumps(content, indent=2)
     }
