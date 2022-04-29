@@ -92,11 +92,7 @@ Resources:
         - IAMAuth: DISABLED
           AuthScheme: SECRETS
           SecretArn: !Ref Secret
-        #- IAMAuth: REQUIRED
-        #  AuthScheme: SECRETS
-        #  SecretArn: !Ref Secret
       DBProxyName: !Sub "${Prefix}-DBProxy-01"
-      #DebugLogging: true
       EngineFamily: !Ref DBProxyEngineFamily
       IdleClientTimeout: !Ref IdleClientTimeout
       RequireTLS: false
@@ -111,14 +107,10 @@ Resources:
     Type: AWS::RDS::DBProxy
     Properties:
       Auth: 
-        #- IAMAuth: DISABLED
-        #  AuthScheme: SECRETS
-        #  SecretArn: !Ref Secret
         - IAMAuth: REQUIRED
           AuthScheme: SECRETS
           SecretArn: !Ref Secret
       DBProxyName: !Sub "${Prefix}-DBProxy-02"
-      #DebugLogging: true
       EngineFamily: !Ref DBProxyEngineFamily
       IdleClientTimeout: !Ref IdleClientTimeout
       RequireTLS: true
@@ -175,47 +167,15 @@ Resources:
               - Effect: Allow
                 Action: kms:Decrypt
                 Resource: '*' # use default key.
-              #- Effect: Allow
-              #  Action: kms:Decrypt
-              #  Resource: '*'
-              #- Effect: Allow
-              #  Action:
-              #    - secretsmanager:GetResourcePolicy
-              #    - secretsmanager:GetSecretValue
-              #    - secretsmanager:DescribeSecret
-              #    - secretsmanager:ListSecretVersionIds
-              #  Resource: !Ref SecretAttachment
         
   Secret:
     Type: AWS::SecretsManager::Secret
     Properties: 
       Name: !Sub "${Prefix}-Secret"
       SecretString: !Sub '{"username":"${DBMasterUsername}","password":"${DBMasterUserPassword}"}'
-      
-  #SecretAttachment:
-  #  Type: AWS::SecretsManager::SecretTargetAttachment
-  #  Properties:
-  #    SecretId: !Ref Secret
-  #    TargetId: !Ref DBInstance
-  #    TargetType: AWS::RDS::DBInstance
-      
+
 
 Outputs:
-  #DBEndpointAddress:
-  #  Value: !GetAtt DBInstance.Endpoint.Address
-  #    
-  #DBEndpointPort:
-  #  Value: !GetAtt DBInstance.Endpoint.Port
-  #    
-  #DBUser:
-  #  Value: !Ref DBMasterUsername
-  #
-  #DBPassword:
-  #  Value: !Ref DBMasterUserPassword
-  #    
-  #DBName:
-  #  Value: !Ref DBName
-  
   DBProxyEndpointAddress1:
     Value: !GetAtt DBProxy1.Endpoint
     
