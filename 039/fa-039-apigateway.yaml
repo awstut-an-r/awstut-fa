@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  FunctionArn1:
+    Type: String
+  
+  FunctionName1:
+    Type: String
+    
+  FunctionArn2:
+    Type: String
+  
+  FunctionName2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub "${Prefix}-HttpApi"
+      Description: HttpApi.
+      ProtocolType: HTTP
+      #Target: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${FunctionName}/invocations"
+      
+  Stage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref HttpApi
+      AutoDeploy: true
+      StageName: $default
+      
+  Integration1:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      ConnectionType: INTERNET
+      CredentialsArn: !GetAtt ApiGatewayRole.Arn
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Ref FunctionArn1
+      PayloadFormatVersion: "2.0"
+      
+  Integration2:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref HttpApi
+      ConnectionType: INTERNET
+      CredentialsArn: !GetAtt ApiGatewayRole.Arn
+      IntegrationMethod: POST
+      IntegrationType: AWS_PROXY
+      IntegrationUri: !Ref FunctionArn2
+      PayloadFormatVersion: "2.0"
+      
+  Route1:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "GET /"
+      Target: !Sub "integrations/${Integration1}"
+      
+  Route2:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "GET /func1"
+      Target: !Sub "integrations/${Integration1}"
+      
+  Route3:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref HttpApi
+      RouteKey: "GET /func2"
+      Target: !Sub "integrations/${Integration2}"
+  
+  #ApiGatewayLambdaPermission:
+  #  Type: AWS::Lambda::Permission
+  #  Properties:
+  #    FunctionName: !Ref FunctionArn
+  #    Action: lambda:InvokeFunction
+  #    Principal: apigateway.amazonaws.com
+  
+  ApiGatewayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-InvokeFunctionPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref FunctionArn1
+                  - !Ref FunctionArn2

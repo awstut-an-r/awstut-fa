@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-039
+    
+  AvailabilityZone1:
+    Type: String
+    Default: a
+    
+  AvailabilityZone2:
+    Type: String
+    Default: c
+    
+  DBMasterUsername:
+    Type: String
+    Default: testdb
+    
+  DBMasterUserPassword:
+    Type: String
+    Default: Passw0rd
+    
+  DBName:
+    Type: String
+    Default: testdb
+    
+  DBTableName:
+    Type: String
+    Default: testtable
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  #LambdaPackage:
+  #  Type: String
+  #  Default: deploy.zip
+    
+  MySQLPort:
+    Type: Number
+    Default: 3306
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+  Timeout:
+    Type: Number
+    Default: 10
+    
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        HTTPSPort: !Ref HTTPSPort
+        MySQLPort: !Ref MySQLPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+  
+  RDSStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone1
+        ConnectionBorrowTimeout: 120
+        DBAllocatedStorage: 20
+        DBEngine: mysql
+        DBEngineVersion: 8.0.27
+        DBInstanceClass: db.t4g.micro
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance"
+        DBName: !Ref DBName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
+        DBSubnet1: !GetAtt VPCStack.Outputs.DBSubnet1
+        DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
+        DBProxyEngineFamily: MYSQL
+        DBProxySecurityGroup: !GetAtt VPCStack.Outputs.DBProxySecurityGroup
+        IdleClientTimeout: 120
+        MaxConnectionsPercent: 100
+        MaxIdleConnectionsPercent: 50
+        Prefix: !Ref Prefix
+  
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+      - RDSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
+        CodeS3Bucket: !Ref TemplateBucketName
+        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
+        CodeS3Key1: !Sub "${Prefix}/deploy1.zip"
+        CodeS3Key2: !Sub "${Prefix}/deploy2.zip"
+        CodeS3Key3: !Sub "${Prefix}/layer.zip"
+        DBTableName: !Ref DBTableName
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBName: !Ref DBName
+        DBProxyEndpointAddress1: !GetAtt RDSStack.Outputs.DBProxyEndpointAddress1
+        DBProxyEndpointAddress2: !GetAtt RDSStack.Outputs.DBProxyEndpointAddress2
+        DBProxyId2: !GetAtt RDSStack.Outputs.DBProxyId2
+        FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
+        FunctionSubnet: !GetAtt VPCStack.Outputs.FunctionSubnet
+        Handler: !Ref Handler
+        MySQLPort: !Ref MySQLPort
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
+        
+  ApiGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-apigateway.yaml"
+      Parameters:
+        FunctionArn1: !GetAtt LambdaStack.Outputs.FunctionArn1
+        FunctionName1: !GetAtt LambdaStack.Outputs.FunctionName1
+        FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
+        FunctionName2: !GetAtt LambdaStack.Outputs.FunctionName2
+        Prefix: !Ref Prefix
