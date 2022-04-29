@@ -60,9 +60,6 @@ Resources:
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
-      #CompatibleArchitectures:
-      #  - arm64
-      #  - x86_64
       CompatibleRuntimes:
         - !Ref Runtime
       Content:
