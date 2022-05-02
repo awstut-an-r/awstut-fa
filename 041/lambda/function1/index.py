@@ -39,7 +39,6 @@ def lambda_handler(event, context):
   }
     
   result = client.execute(mutation, variable_values=params)
-  #print(result)
   
   return {
     'statusCode': 200,
