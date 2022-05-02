@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-041
+
+
+Resources:
+  DynamoDBStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-dynamodb.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  AppSyncStack:
+    DependsOn:
+      - DynamoDBStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-appsync.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        TableName: !GetAtt DynamoDBStack.Outputs.Table
+        
+  LambdaStack:
+    DependsOn:
+      - AppSyncStack
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        ApiKey: !GetAtt AppSyncStack.Outputs.ApiKey
+        CodeS3Bucket: !Ref TemplateBucketName
+        CodeS3Key1: !Sub "${Prefix}/deploy1.zip"
+        CodeS3Key2: !Sub "${Prefix}/deploy2.zip"
+        CodeS3Key3: !Sub "${Prefix}/deploy3.zip"
+        CodeS3Key4: !Sub "${Prefix}/layer.zip"
+        GraphQLUrl: !GetAtt AppSyncStack.Outputs.GraphQLUrl
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        Timeout: 10

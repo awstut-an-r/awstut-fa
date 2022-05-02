@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  TableName:
+    Type: String
+
+
+Resources:
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: API_KEY
+      Name: !Sub "${Prefix}-GraphQLApi"
+      
+  DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DynamoDBConfig:
+        AwsRegion: !Ref AWS::Region
+        TableName: !Ref TableName
+        UseCallerCredentials: false
+        Versioned: false
+      Name: DataSource
+      ServiceRoleArn: !GetAtt DataSourceRole.Arn
+      Type: AMAZON_DYNAMODB
+      
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: |
+        schema {
+          query: Query
+          mutation: Mutation
+        }
+        
+        type Query {
+          getDatetime(id: ID!): Datetime
+          listDatetimes: [Datetime]
+        }
+        
+        type Mutation {
+          addDatetime(input: AddDatetimeInput!): Datetime
+        }
+        
+        type Datetime {
+          id: ID!
+          datetime: String
+          epoch: Int
+        }
+        
+        input AddDatetimeInput {
+          datetime: String
+          epoch: Int
+        }
+      #DefinitionS3Location:
+      
+  AddDatetimeResolver:
+   Type: AWS::AppSync::Resolver
+   Properties:
+     ApiId: !GetAtt GraphQLApi.ApiId
+     DataSourceName: !GetAtt DataSource.Name
+     FieldName: addDatetime
+     Kind: UNIT
+     RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "PutItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($util.autoId()),
+          },
+          "attributeValues": $util.dynamodb.toMapValuesJson($ctx.args.input),
+          "condition": {
+            "expression": "attribute_not_exists(#id)",
+            "expressionNames": {
+              "#id": "id",
+            },
+          },
+        }
+     #RequestMappingTemplateS3Location: 
+     ResponseMappingTemplate: |
+       $util.toJson($context.result)
+     #ResponseMappingTemplateS3Location:
+     TypeName: Mutation
+     
+  GetDatetimeResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: getDatetime
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "GetItem",
+          "key": {
+            "id": $util.dynamodb.toDynamoDBJson($ctx.args.id),
+          },
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        $util.toJson($context.result)
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+  
+  ListDatetimesResolver:
+    Type: AWS::AppSync::Resolver
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: listDatetimes
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2017-02-28",
+          "operation": "Scan",
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        $util.toJson($context.result.items)
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+      
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+     ApiId: !GetAtt GraphQLApi.ApiId
+      
+  DataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: appsync.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DataSourcePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:DeleteItem
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:UpdateItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}"
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${TableName}/*"
+                  
+                  
+Outputs:
+  GraphQLUrl:
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+    
+  ApiKey:
+    Value: !GetAtt ApiKey.ApiKey

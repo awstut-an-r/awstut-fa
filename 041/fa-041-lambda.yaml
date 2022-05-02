@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ApiKey:
+    Type: String
+    
+  CodeS3Bucket:
+    Type: String
+    
+  CodeS3Key1:
+    Type: String
+    
+  CodeS3Key2:
+    Type: String
+    
+  CodeS3Key3:
+    Type: String
+  
+  CodeS3Key4:
+    Type: String
+    
+  GraphQLUrl:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          API_KEY: !Ref ApiKey
+          GRAPHQL_URL: !Ref GraphQLUrl
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key1
+      FunctionName: !Sub "${Prefix}-function-01"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          API_KEY: !Ref ApiKey
+          GRAPHQL_URL: !Ref GraphQLUrl
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key2
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          API_KEY: !Ref ApiKey
+          GRAPHQL_URL: !Ref GraphQLUrl
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key3
+      FunctionName: !Sub "${Prefix}-function-03"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      
+      
+  FunctionUrl1:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Function1.Arn
+      
+  FunctionUrl2:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Function2.Arn
+      
+  FunctionUrl3:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Function3.Arn
+      
+      
+  FunctionUrlPermission1:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt Function1.Arn
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+      
+  FunctionUrlPermission2:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt Function2.Arn
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+      
+  FunctionUrlPermission3:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt Function3.Arn
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+
+
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      #CompatibleArchitectures:
+      #  - arm64
+      #  - x86_64
+      CompatibleRuntimes:
+        - !Ref Runtime
+      Content:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key4
+      Description: !Ref Prefix
+      LayerName: !Ref Prefix
