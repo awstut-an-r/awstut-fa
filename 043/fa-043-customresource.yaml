@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  FunctionArn:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !Ref FunctionArn
+      #TestProperty: !Ref Prefix
+      TestProperty: !Sub "${Prefix}-Updated"
+      
+      
+Outputs:
+  CustomResourceReturnValue:
+    Value: !GetAtt CustomResource.message
