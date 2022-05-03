@@ -13,8 +13,8 @@ Resources:
     Type: Custom::CustomResource
     Properties:
       ServiceToken: !Ref FunctionArn
-      #TestProperty: !Ref Prefix
-      TestProperty: !Sub "${Prefix}-Updated"
+      TestProperty: !Ref Prefix
+      #TestProperty: !Sub "${Prefix}-Updated"
       
       
 Outputs:
