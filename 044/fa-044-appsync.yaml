@@ -19,14 +19,8 @@ Resources:
     Type: AWS::AppSync::DataSource
     Properties:
       ApiId: !GetAtt GraphQLApi.ApiId
-      #DynamoDBConfig:
-      #  AwsRegion: !Ref AWS::Region
-      #  TableName: !Ref TableName
-      #  UseCallerCredentials: false
-      #  Versioned: false
       LambdaConfig:
         LambdaFunctionArn: !Ref FunctionArn
-      #Name: !Sub "${Prefix}-DataSource"
       Name: DataSource
       ServiceRoleArn: !GetAtt DataSourceRole.Arn
       Type: AWS_LAMBDA
@@ -75,10 +69,8 @@ Resources:
             "field": "Put"
           }
         }
-      #RequestMappingTemplateS3Location: 
       ResponseMappingTemplate: |
         $context.result
-      #ResponseMappingTemplateS3Location:
       TypeName: Mutation
         
   ListS3ObjectsResolver:
@@ -98,10 +90,8 @@ Resources:
             "field": "List"
           }
         }
-      #RequestMappingTemplateS3Location: 
       ResponseMappingTemplate: |
         $context.result
-      #ResponseMappingTemplateS3Location:
       TypeName: Query
       
   DeleteS3ObjectResolver:
@@ -122,10 +112,8 @@ Resources:
             "arguments": $utils.toJson($context.arguments)
           }
         }
-      #RequestMappingTemplateS3Location: 
       ResponseMappingTemplate: |
         $context.result
-      #ResponseMappingTemplateS3Location:
       TypeName: Mutation
       
   ApiKey:
