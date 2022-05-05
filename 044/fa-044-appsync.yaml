@@ -48,7 +48,6 @@ Resources:
           Key: String!
           LastModified: String
           Size: Int
-          #StorageClass: String
           ETag: String
         }
         
