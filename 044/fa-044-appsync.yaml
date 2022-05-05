@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  FunctionArn:
+    Type: String
+
+
+Resources:
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: API_KEY
+      Name: !Sub "${Prefix}-GraphQLApi"
+
+  DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      #DynamoDBConfig:
+      #  AwsRegion: !Ref AWS::Region
+      #  TableName: !Ref TableName
+      #  UseCallerCredentials: false
+      #  Versioned: false
+      LambdaConfig:
+        LambdaFunctionArn: !Ref FunctionArn
+      #Name: !Sub "${Prefix}-DataSource"
+      Name: DataSource
+      ServiceRoleArn: !GetAtt DataSourceRole.Arn
+      Type: AWS_LAMBDA
+      
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: |
+        schema {
+          query: Query
+          mutation: Mutation
+        }
+        
+        type Query {
+          listS3Objects: [S3Object]
+        }
+        
+        type Mutation {
+          putS3Object: S3Object
+          deleteS3Object(Key: String!): S3Object
+        }
+        
+        type S3Object {
+          Key: String!
+          LastModified: String
+          Size: Int
+          #StorageClass: String
+          ETag: String
+        }
+        
+  PutS3ObjectResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: putS3Object
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "Put"
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        $context.result
+      #ResponseMappingTemplateS3Location:
+      TypeName: Mutation
+        
+  ListS3ObjectsResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: listS3Objects
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "List"
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        $context.result
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+      
+  DeleteS3ObjectResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: deleteS3Object
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "operation": "Invoke",
+          "payload": {
+            "field": "Delete",
+            "arguments": $utils.toJson($context.arguments)
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        $context.result
+      #ResponseMappingTemplateS3Location:
+      TypeName: Mutation
+      
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+     ApiId: !GetAtt GraphQLApi.ApiId
+  
+  DataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: appsync.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DataSourcePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref FunctionArn
+                  
+                  
+Outputs:
+  GraphQLUrl:
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+    
+  ApiKey:
+    Value: !GetAtt ApiKey.ApiKey

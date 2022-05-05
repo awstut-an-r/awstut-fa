@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketArn:
+    Type: String
+    
+  BucketName:
+    Type: String
+    
+  CodeS3Bucket:
+    Type: String
+    
+  CodeS3Key1:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BucketName
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key1
+      FunctionName: !Sub "${Prefix}-function-01"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole1.Arn
+      
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-S3Access"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:*
+                Resource:
+                  - !Ref BucketArn
+                  - !Sub "${BucketArn}/*"
+        
+      
+Outputs:
+  Function1Arn:
+    Value: !GetAtt Function1.Arn
