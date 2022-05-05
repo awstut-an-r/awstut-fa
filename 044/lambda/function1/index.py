@@ -35,7 +35,7 @@ def lambda_handler(event, context):
       'Key': key,
       'LastModified': get_response['LastModified'],
       'Size': get_response['ContentLength'],
-      'ETtag': get_response['ETag']
+      'ETag': get_response['ETag']
     }
     return json.dumps(object_, default=json_serial)
   
