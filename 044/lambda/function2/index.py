@@ -1,4 +1,3 @@
-#import datetime
 import json
 import os
 import time
@@ -60,8 +59,6 @@ def lambda_handler(event, context):
     
   elif field == DELETE:
     object_name = event['queryStringParameters']['object_name']
-    #print(key)
-    
     document = gql(
       """
       mutation DeleteS3ObjectsMutation($object_name: String!) {
@@ -75,9 +72,7 @@ def lambda_handler(event, context):
     params = {
       'object_name': object_name
     }
-    
     result = client.execute(document, variable_values=params)
-    #print(result)
   
   return {
     'statusCode': 200,
