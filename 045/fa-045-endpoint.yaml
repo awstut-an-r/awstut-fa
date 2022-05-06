@@ -10,9 +10,6 @@ Parameters:
   PrivateRouteTable:
     Type: String
     
-  #PrivateSubnet:
-  #  Type: String
-    
   VPC:
     Type: String
     
