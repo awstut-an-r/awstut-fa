@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBArn:
+    Type: String
+    
+  ManagedRuleName:
+    Type: String
+    
+  ManagedRuleVendor:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      DefaultAction:
+        Allow: {}
+      Name: !Ref Prefix
+      Rules:
+        - Name: !Sub "${ManagedRuleVendor}-${ManagedRuleName}"
+          OverrideAction:
+            None: {}
+          Priority: 0
+          Statement:
+            ManagedRuleGroupStatement:
+              Name: !Ref ManagedRuleName
+              VendorName: !Ref ManagedRuleVendor
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${ManagedRuleVendor}-${ManagedRuleName}"
+            SampledRequestsEnabled: true
+      Scope: REGIONAL
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: !Ref Prefix
+        SampledRequestsEnabled: true
+        
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties: 
+      ResourceArn: !Ref ALBArn
+      WebACLArn: !GetAtt WebACL.Arn
