@@ -8,10 +8,6 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-045
-  
-  #SubFolder:
-  #  Type: String
-  #  Default: server
     
   ImageId:
     Type: String
@@ -34,7 +30,6 @@ Resources:
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${SubFolder}/${Prefix}-vpc.yaml"
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
         AvailabilityZone1: a
@@ -53,7 +48,6 @@ Resources:
     DependsOn:
       - VPCStack
     Properties:
-      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${SubFolder}/${Prefix}-endpoint.yaml"
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
       Parameters:
         EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
@@ -66,7 +60,6 @@ Resources:
     DependsOn:
       - EndpointStack
     Properties:
-      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${SubFolder}/${Prefix}-ec2.yaml"
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
         ImageId: !Ref ImageId
@@ -80,7 +73,6 @@ Resources:
     DependsOn:
       - VPCStack
     Properties:
-      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${SubFolder}/${Prefix}-alb.yaml"
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
       Parameters:
         ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
@@ -96,7 +88,6 @@ Resources:
     DependsOn:
       - ALBStack
     Properties:
-      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${SubFolder}/${Prefix}-waf.yaml"
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-waf.yaml"
       Parameters:
         ALBArn: !GetAtt ALBStack.Outputs.ALBArn
