@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBArn:
+    Type: String
+    
+  #ManagedRuleName:
+  #  Type: String
+  #  
+  #ManagedRuleVendor:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  RuleGroup:
+    Type: AWS::WAFv2::RuleGroup
+    Properties:
+      Capacity: 1
+      Name: !Sub "${Prefix}-GeoRestrictionRuleGroup"
+      Rules:
+        - Action:
+            Block: {}
+          Name: !Sub "${Prefix}-GeoRestrictionRule"
+          Priority: 0
+          Statement:
+            GeoMatchStatement:
+              CountryCodes:
+                - JP
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-GeoRestrictionRule"
+            SampledRequestsEnabled: true
+      Scope: REGIONAL
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "${Prefix}-GeoRestrictionRuleGroup"
+        SampledRequestsEnabled: true
+
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      DefaultAction:
+        Allow: {}
+      Name: !Sub "${Prefix}-WebACL"
+      Rules:
+        - Name: !Sub "${Prefix}-WebACL-GeoRestriction"
+          OverrideAction:
+            None: {}
+          Priority: 0
+          Statement:
+            RuleGroupReferenceStatement:
+              Arn: !GetAtt RuleGroup.Arn
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-WebACL-GeoRestriction"
+            SampledRequestsEnabled: true
+      Scope: REGIONAL
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: !Ref Prefix
+        SampledRequestsEnabled: true
+        
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties: 
+      ResourceArn: !Ref ALBArn
+      WebACLArn: !GetAtt WebACL.Arn
