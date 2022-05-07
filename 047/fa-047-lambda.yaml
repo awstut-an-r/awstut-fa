@@ -27,7 +27,6 @@ Resources:
           import cfnresponse
           import os
           
-          prefix = os.environ['PREFIX']
           bucket_name = os.environ['BUCKET_NAME']
           s3_client = boto3.client('s3')
           
@@ -36,9 +35,9 @@ Resources:
             <head></head>
             <body>
               <h1>index.html</h1>
-              <p>{prefix}</p>
+              <p>{bucket_name}</p>
             </body>
-          </html>""".format(prefix=prefix)
+          </html>""".format(bucket_name=bucket_name)
           
           response_data = {}
           
@@ -68,7 +67,6 @@ Resources:
       Environment:
         Variables:
           BUCKET_NAME: !Ref BucketName
-          PREFIX: !Ref Prefix
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
