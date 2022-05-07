@@ -25,8 +25,6 @@ Resources:
       Parameters:
         BucketName: !GetAtt S3Stack.Outputs.BucketName
         BucketWebsiteURL: !GetAtt S3Stack.Outputs.BucketWebsiteURL
-        #BucketDomainName: !GetAtt S3Stack.Outputs.BucketDomainName
-        #Prefix: !Ref Prefix
         
   LambdaStack:
     Type: AWS::CloudFormation::Stack
@@ -49,4 +47,3 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
       Parameters:
         FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
-        #Prefix: !Ref Prefix
