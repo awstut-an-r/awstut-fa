@@ -5,12 +5,6 @@ Parameters:
 
   BucketWebsiteURL:
     Type: String
-  
-  #BucketDomainName:
-  #  Type: String
-    
-  #Prefix:
-  #  Type: String
     
 
 Resources:
@@ -32,12 +26,8 @@ Resources:
             QueryString: false
           TargetOriginId: !Ref BucketName
           ViewerProtocolPolicy: allow-all
-          #DefaultTTL: !Ref CacheTTL
-          #MaxTTL: !Ref CacheTTL
-          #MinTTL: !Ref CacheTTL
         Enabled: true
         Origins:
-          #- DomainName: !Ref BucketWebsiteURL
           - DomainName: !Select
               - 2
               - !Split
