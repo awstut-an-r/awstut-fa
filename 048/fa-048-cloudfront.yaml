@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  BucketName:
+    Type: String
+
+  BucketWebsiteURL:
+    Type: String
+  
+  #BucketDomainName:
+  #  Type: String
+    
+  #Prefix:
+  #  Type: String
+    
+
+Resources:
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: false
+          TargetOriginId: !Ref BucketName
+          ViewerProtocolPolicy: allow-all
+          #DefaultTTL: !Ref CacheTTL
+          #MaxTTL: !Ref CacheTTL
+          #MinTTL: !Ref CacheTTL
+        Enabled: true
+        Origins:
+          #- DomainName: !Ref BucketWebsiteURL
+          - DomainName: !Select
+              - 2
+              - !Split
+                  - /
+                  - !Ref BucketWebsiteURL
+            Id: !Ref BucketName
+            #S3OriginConfig:
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        PriceClass: PriceClass_All

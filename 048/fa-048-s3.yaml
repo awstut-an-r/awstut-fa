@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Prefix
+      AccessControl: Private
+      WebsiteConfiguration:
+        IndexDocument: index.html
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket
+      PolicyDocument:
+        Statement:
+          Action:
+            - s3:GetObject
+          Effect: Allow
+          Resource: !Sub "arn:aws:s3:::${Bucket}/*"
+          Principal: "*"
+          
+          
+Outputs:
+  BucketArn:
+    Value: !GetAtt Bucket.Arn
+    
+  #BucketDomainName:
+  #  Value: !GetAtt Bucket.DomainName
+  
+  BucketWebsiteURL:
+    Value: !GetAtt Bucket.WebsiteURL
+    
+  BucketName:
+    Value: !Ref Bucket
