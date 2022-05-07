@@ -29,8 +29,6 @@ Resources:
           
           bucket_name = os.environ['BUCKET_NAME']
           
-          s3_client = boto3.client('s3')
-          
           object_name = 'index.html'
           object_body = """<html>
             <head></head>
@@ -39,6 +37,10 @@ Resources:
               <p>{bucket_name}</p>
             </body>
           </html>""".format(bucket_name=bucket_name)
+          content_type = 'text/html'
+          char_code= 'utf-8'
+          
+          s3_client = boto3.client('s3')
            
           CREATE = 'Create'
           DELETE = 'Delete'
@@ -50,7 +52,9 @@ Resources:
                 put_response = s3_client.put_object(
                   Bucket=bucket_name,
                   Key=object_name,
-                  Body=object_body.encode())
+                  Body=object_body.encode(char_code),
+                  ContentEncoding=char_code,
+                  ContentType=content_type)
                 print(put_response)
               
               elif event['RequestType'] == DELETE:
