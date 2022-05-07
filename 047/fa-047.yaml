@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-047
+  
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        #Prefix: !Ref Prefix
