@@ -28,6 +28,7 @@ Resources:
           import os
           
           bucket_name = os.environ['BUCKET_NAME']
+          
           s3_client = boto3.client('s3')
           
           object_name = 'index.html'
@@ -38,19 +39,21 @@ Resources:
               <p>{bucket_name}</p>
             </body>
           </html>""".format(bucket_name=bucket_name)
-          
+           
+          CREATE = 'Create'
+          DELETE = 'Delete'
           response_data = {}
           
           def lambda_handler(event, context):
             try:
-              if event['RequestType'] == 'Create':
+              if event['RequestType'] == CREATE:
                 put_response = s3_client.put_object(
                   Bucket=bucket_name,
                   Key=object_name,
                   Body=object_body.encode())
                 print(put_response)
               
-              elif event['RequestType'] == 'Delete':
+              elif event['RequestType'] == DELETE:
                 list_response = s3_client.list_objects_v2(
                   Bucket=bucket_name)
                 for obj in list_response['Contents']:
