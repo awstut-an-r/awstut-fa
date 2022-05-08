@@ -27,7 +27,6 @@ Resources:
       Parameters:
         BucketName: !GetAtt S3Stack1.Outputs.BucketName
         BucketWebsiteURL: !GetAtt S3Stack1.Outputs.BucketWebsiteURL
-        #BucketDomainName: !GetAtt S3Stack.Outputs.BucketDomainName
         Prefix: !Ref Prefix
         
   S3Stack2:
@@ -62,4 +61,3 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
       Parameters:
         FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
-        #Prefix: !Ref Prefix
