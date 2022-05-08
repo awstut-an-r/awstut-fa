@@ -17,10 +17,7 @@ Resources:
 Outputs:
   BucketArn:
     Value: !GetAtt Bucket.Arn
-    
-  #BucketDomainName:
-  #  Value: !GetAtt Bucket.DomainName
-  
+
   BucketWebsiteURL:
     Value: !GetAtt Bucket.WebsiteURL
     
