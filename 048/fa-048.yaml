@@ -20,6 +20,8 @@ Resources:
         
   CloudFrontStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
       Parameters:
