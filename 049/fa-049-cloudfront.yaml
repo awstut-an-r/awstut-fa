@@ -43,8 +43,3 @@ Resources:
               - HeaderName: Referer
                 HeaderValue: !Ref Prefix
         PriceClass: PriceClass_All
-        
-        
-Outputs:
-  DistributionDomainName:
-    Value: !GetAtt Distribution.DomainName
