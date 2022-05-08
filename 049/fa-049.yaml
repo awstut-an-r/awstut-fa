@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-049
+  
+
+Resources:
+  S3Stack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        BucketWebsiteURL: !GetAtt S3Stack1.Outputs.BucketWebsiteURL
+        #BucketDomainName: !GetAtt S3Stack.Outputs.BucketDomainName
+        Prefix: !Ref Prefix
+        
+  S3Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CloudFrontStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-02.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
+        Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        BucketArn: !GetAtt S3Stack1.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        #Prefix: !Ref Prefix
