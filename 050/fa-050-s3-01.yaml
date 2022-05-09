@@ -13,22 +13,6 @@ Resources:
       AccessControl: Private
       #WebsiteConfiguration:
       #  IndexDocument: index.html
-        
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !Ref Bucket
-  #    PolicyDocument:
-  #      Statement:
-  #        Action:
-  #          - s3:GetObject
-  #        Effect: Allow
-  #        Resource: !Sub "arn:aws:s3:::${Bucket}/*"
-  #        Principal: "*"
-  #        Condition:
-  #          StringLike:
-  #            aws:Referer:
-  #              - !Ref Prefix
 
 
 Outputs:
@@ -36,11 +20,7 @@ Outputs:
     Value: !GetAtt Bucket.Arn
     
   BucketRegionalDomainName:
-    #Value: !GetAtt Bucket.DomainName
     Value: !GetAtt Bucket.RegionalDomainName
-  
-  #BucketWebsiteURL:
-  #  Value: !GetAtt Bucket.WebsiteURL
     
   BucketName:
     Value: !Ref Bucket
