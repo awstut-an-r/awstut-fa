@@ -4,17 +4,9 @@ Parameters:
   FunctionArn:
     Type: String
     
-  #Prefix:
-  #  Type: String
-    
     
 Resources:
   CustomResource:
     Type: Custom::CustomResource
     Properties:
       ServiceToken: !Ref FunctionArn
-      
-      
-#Outputs:
-#  CustomResourceReturnValue:
-#    Value: !GetAtt CustomResource.message
