@@ -3,9 +3,6 @@ Parameters:
   BucketName:
     Type: String
 
-  #BucketWebsiteURL:
-  #  Type: String
-  
   BucketRegionalDomainName:
     Type: String
     
@@ -38,26 +35,14 @@ Resources:
             QueryString: false
           TargetOriginId: !Ref BucketName
           ViewerProtocolPolicy: allow-all
-          #DefaultTTL: !Ref CacheTTL
-          #MaxTTL: !Ref CacheTTL
-          #MinTTL: !Ref CacheTTL
         DefaultRootObject: index.html
         Enabled: true
         Origins:
           - DomainName: !Ref BucketRegionalDomainName
-            #DomainName: !Select
-            #  - 2
-            #  - !Split
-            #      - /
-            #      - !Ref BucketWebsiteURL
             Id: !Ref BucketName
             S3OriginConfig:
               OriginAccessIdentity: !Sub "origin-access-identity/cloudfront/${OAI}"
             #CustomOriginConfig:
-            #  OriginProtocolPolicy: http-only
-            #OriginCustomHeaders:
-            #  - HeaderName: Referer
-            #    HeaderValue: !Ref Prefix
         PriceClass: PriceClass_All
         
         
