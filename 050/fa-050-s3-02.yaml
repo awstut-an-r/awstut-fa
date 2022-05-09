@@ -7,9 +7,6 @@ Parameters:
   OAI:
     Type: String
     
-  #Prefix:
-  #  Type: String
-    
 
 Resources:
   BucketPolicy:
