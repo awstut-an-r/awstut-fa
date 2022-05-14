@@ -1,15 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ALBArn:
-  #  Type: String
-    
-  #ManagedRuleName:
-  #  Type: String
-  #  
-  #ManagedRuleVendor:
-  #  Type: String
-
   Prefix:
     Type: String
     
@@ -62,12 +53,6 @@ Resources:
         CloudWatchMetricsEnabled: true
         MetricName: !Ref Prefix
         SampledRequestsEnabled: true
-        
-  #WebACLAssociation:
-  #  Type: AWS::WAFv2::WebACLAssociation
-  #  Properties: 
-  #    ResourceArn: !Ref ALBArn
-  #    WebACLArn: !GetAtt WebACL.Arn
   
   
 Outputs:
