@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-051
+    
+  Region:
+    Type: String
+    Default: ap-northeast-1
+  
+
+Resources:
+  WAFStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - ALBStack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${SubFolder}/${Prefix}-waf.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-waf.yaml"
+      Parameters:
+        #ALBArn: !GetAtt ALBStack.Outputs.ALBArn
+        Prefix: !Ref Prefix
+        
+  S3Stack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        #BucketWebsiteURL: !GetAtt S3Stack1.Outputs.BucketWebsiteURL
+        BucketRegionalDomainName: !GetAtt S3Stack1.Outputs.BucketRegionalDomainName
+        Prefix: !Ref Prefix
+        WebACLArn: !GetAtt WAFStack.Outputs.WebACLArn
+        
+  S3Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CloudFrontStack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-02.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-s3-02.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        #DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
+        OAI: !GetAtt CloudFrontStack.Outputs.OAI
+        #Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        BucketArn: !GetAtt S3Stack1.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        #Prefix: !Ref Prefix

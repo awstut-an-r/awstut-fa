@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketArn:
+    Type: String
+    
+  BucketName:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+    
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          bucket_name = os.environ['BUCKET_NAME']
+          
+          object_name = 'index.html'
+          object_body = """<html>
+            <head></head>
+            <body>
+              <h1>index.html</h1>
+              <p>{bucket_name}</p>
+            </body>
+          </html>""".format(bucket_name=bucket_name)
+          content_type = 'text/html'
+          char_code= 'utf-8'
+          
+          s3_client = boto3.client('s3')
+           
+          CREATE = 'Create'
+          DELETE = 'Delete'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                put_response = s3_client.put_object(
+                  Bucket=bucket_name,
+                  Key=object_name,
+                  Body=object_body.encode(char_code),
+                  ContentEncoding=char_code,
+                  ContentType=content_type)
+                print(put_response)
+              
+              elif event['RequestType'] == DELETE:
+                list_response = s3_client.list_objects_v2(
+                  Bucket=bucket_name)
+                for obj in list_response['Contents']:
+                  delete_response = s3_client.delete_object(
+                    Bucket=bucket_name,
+                    Key=obj['Key'])
+                  print(delete_response)
+              
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BucketName
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-S3Access"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Ref BucketArn
+                  - !Sub "${BucketArn}/*"
+        
+        
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
