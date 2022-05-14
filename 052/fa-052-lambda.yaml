@@ -13,9 +13,6 @@ Parameters:
   Runtime:
     Type: String
     
-  #ZipFile:
-  #  Type: String
-    
     
 Resources:
   Function:
@@ -33,11 +30,9 @@ Resources:
               'statusCode': 200,
               'body': json.dumps('Hello form Awstut !')
             }
-      FunctionName: !Sub ${Prefix}-function
+      FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Handler: index.lambda_handler
       Runtime: !Ref Runtime
-      #Runtime: python3.8
       Role: !GetAtt FunctionRole.Arn
       
   FunctionRole:
