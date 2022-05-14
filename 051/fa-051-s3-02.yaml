@@ -7,9 +7,6 @@ Parameters:
   OAI:
     Type: String
     
-  #Prefix:
-  #  Type: String
-    
 
 Resources:
   BucketPolicy:
@@ -24,7 +21,3 @@ Resources:
           Principal:
             AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OAI}"
           Resource: !Sub "arn:aws:s3:::${BucketName}/*"
-          #Condition:
-          #  StringLike:
-          #    aws:Referer:
-          #      - !Ref Prefix
