@@ -1,15 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ALBArn:
-  #  Type: String
-    
-  #ManagedRuleName:
-  #  Type: String
-  #  
-  #ManagedRuleVendor:
-  #  Type: String
-
   Prefix:
     Type: String
     
