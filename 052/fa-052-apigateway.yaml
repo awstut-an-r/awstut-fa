@@ -14,7 +14,7 @@ Resources:
     Properties:
       EndpointConfiguration:
         Types:
-          - REGIONAL
+          - EDGE
       Name: !Ref Prefix
       
   Deployment:
