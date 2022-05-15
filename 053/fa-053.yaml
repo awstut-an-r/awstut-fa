@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-053
+
+
+Resources:
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: arm64
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  ApiGatewayStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-apigateway.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        Prefix: !Ref Prefix
+
+  WAFStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ApiGatewayStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-waf.yaml"
+      Parameters:
+        #ALBArn: !GetAtt ALBStack.Outputs.ALBArn
+        #ManagedRuleName: AWSManagedRulesAmazonIpReputationList
+        #ManagedRuleVendor: AWS
+        Prefix: !Ref Prefix
+        RestApi: !GetAtt ApiGatewayStack.Outputs.RestApi
+        StageName: !GetAtt ApiGatewayStack.Outputs.StageName
