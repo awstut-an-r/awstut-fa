@@ -13,9 +13,6 @@ Parameters:
   Runtime:
     Type: String
     
-  #ZipFile:
-  #  Type: String
-    
     
 Resources:
   Function:
@@ -35,9 +32,7 @@ Resources:
             }
       FunctionName: !Sub ${Prefix}-function
       Handler: !Ref Handler
-      #Handler: index.lambda_handler
       Runtime: !Ref Runtime
-      #Runtime: python3.8
       Role: !GetAtt FunctionRole.Arn
       
   FunctionRole:
