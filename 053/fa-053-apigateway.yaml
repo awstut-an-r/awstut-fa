@@ -7,9 +7,6 @@ Parameters:
   FunctionArn:
     Type: String
     
-  #FunctionName:
-  #  Type: String
-    
 
 Resources:
   RestApi:
@@ -26,7 +23,6 @@ Resources:
       - Method
     Properties:
       RestApiId: !Ref RestApi
-      #StageName: 
       
   Resource:
     Type: AWS::ApiGateway::Resource
@@ -39,7 +35,6 @@ Resources:
     Type: AWS::ApiGateway::Stage
     Properties:
       DeploymentId: !Ref Deployment
-      #MethodSettings:
       RestApiId: !Ref RestApi
       StageName: !Sub "${Prefix}-stage"
       
@@ -50,56 +45,12 @@ Resources:
       HttpMethod: GET
       Integration:
         ConnectionType: INTERNET
-        #ContentHandling: CONVERT_TO_TEXT
         Credentials: !GetAtt ApiGatewayRole.Arn
         IntegrationHttpMethod: POST
-        #IntegrationResponses:
-        #PassthroughBehavior:
         Type: AWS_PROXY
         Uri: !Sub "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${FunctionArn}/invocations"
       ResourceId: !Ref Resource
       RestApiId: !Ref RestApi
-      
-
-
-  #HttpApi:
-  #  Type: AWS::ApiGatewayV2::Api
-  #  Properties:
-  #    Name: !Sub ${Prefix}-HttpApi
-  #    Description: HttpApi.
-  #    ProtocolType: HTTP
-#
-  #Stage:
-  #  Type: AWS::ApiGatewayV2::Stage
-  #  Properties:
-  #    ApiId: !Ref HttpApi
-  #    AutoDeploy: true
-  #    StageName: $default
-  #    
-  #Integration:
-  #  Type: AWS::ApiGatewayV2::Integration
-  #  Properties:
-  #    ApiId: !Ref HttpApi
-  #    ConnectionType: INTERNET
-  #    CredentialsArn: !GetAtt ApiGatewayRole.Arn
-  #    IntegrationMethod: POST
-  #    IntegrationType: AWS_PROXY
-  #    IntegrationUri: !Ref FunctionArn
-  #    PayloadFormatVersion: '2.0'
-  #    
-  #Route:
-  #  Type: AWS::ApiGatewayV2::Route
-  #  Properties:
-  #    ApiId: !Ref HttpApi
-  #    RouteKey: 'GET /'
-  #    Target: !Sub "integrations/${Integration}"
-          
-  #Permission:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    FunctionName: !Ref FunctionName
-  #    Action: lambda:InvokeFunction
-  #    Principal: apigateway.amazonaws.com
   
   ApiGatewayRole:
     Type: AWS::IAM::Role
