@@ -23,38 +23,12 @@ Parameters:
     
     
 Resources:
-  #S3Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
-  
-  #LambdaStack1:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - S3Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
-  #    Parameters:
-  #      BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-  #      BucketName: !GetAtt S3Stack.Outputs.BucketName
-  #      CodeS3Bucket: !Ref TemplateBucketName
-  #      CodeS3Key1: !Sub "${Prefix}/deploy1.zip"
-  #      Handler: !Ref Handler
-  #      Prefix: !Ref Prefix
-  #      Runtime: !Ref Runtime
-  #      Timeout: !Ref Timeout
-        
   AppSyncStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - LambdaStack1
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-appsync.yaml"
       Parameters:
         Prefix: !Ref Prefix
-        #FunctionArn: !GetAtt LambdaStack1.Outputs.Function1Arn
         
   LambdaStack:
     Type: AWS::CloudFormation::Stack
