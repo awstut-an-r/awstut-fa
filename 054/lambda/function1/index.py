@@ -1,4 +1,3 @@
-#import datetime
 import json
 import os
 import time
@@ -17,7 +16,6 @@ client = Client(transport=transport, fetch_schema_from_transport=True)
 
 ADD = 'Put'
 LIST = 'List'
-#DELETE = 'Delete'
 
 
 def lambda_handler(event, context):
