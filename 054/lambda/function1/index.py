@@ -19,7 +19,7 @@ LIST = 'List'
 
 
 def lambda_handler(event, context):
-  field = ''
+  operation = ''
   document = None
   result = None
   
