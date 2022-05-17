@@ -14,7 +14,7 @@ transport = AIOHTTPTransport(
   })
 client = Client(transport=transport, fetch_schema_from_transport=True)
 
-ADD = 'Put'
+ADD = 'Add'
 LIST = 'List'
 
 
