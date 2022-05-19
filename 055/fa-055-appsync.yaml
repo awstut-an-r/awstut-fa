@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  #FunctionArn:
+  #  Type: String
+
+
+Resources:
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: API_KEY
+      Name: !Sub "${Prefix}-GraphQLApi"
+
+  DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      #DynamoDBConfig:
+      #  AwsRegion: !Ref AWS::Region
+      #  TableName: !Ref TableName
+      #  UseCallerCredentials: false
+      #  Versioned: false
+      #LambdaConfig:
+      #  LambdaFunctionArn: !Ref FunctionArn
+      #Name: !Sub "${Prefix}-DataSource"
+      Name: DataSource
+      #ServiceRoleArn: !GetAtt DataSourceRole.Arn
+      Type: NONE
+      
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: |
+        schema {
+          query: Query
+          #mutation: Mutation
+        }
+        
+        type Query {
+          listSampleDatas: [SampleData]
+        }
+        
+        #type Mutation {
+        #  addSampleData(key: String!): SampleData
+        #}
+        
+        type SampleData {
+          key: String!
+          datetime: String
+        }
+        
+  #addSampleDataResolver:
+  #  Type: AWS::AppSync::Resolver
+  #  DependsOn:
+  #    - GraphQLSchema
+  #  Properties:
+  #    ApiId: !GetAtt GraphQLApi.ApiId
+  #    DataSourceName: !GetAtt DataSource.Name
+  #    FieldName: addSampleData
+  #    Kind: UNIT
+  #    RequestMappingTemplate: |
+  #      {
+  #        "version": "2018-05-29",
+  #        "payload": {
+  #          "key": $util.toJson($context.arguments.key)
+  #        }
+  #      }
+  #    #RequestMappingTemplateS3Location: 
+  #    ResponseMappingTemplate: |
+  #      {
+  #        "key": $util.toJson($context.result.key),
+  #        "datetime": $util.toJson($util.time.nowFormatted("yyyy-MM-dd HH:mm:ssZ"))
+  #      }
+  #    #ResponseMappingTemplateS3Location:
+  #    TypeName: Mutation
+        
+  ListSampleDatasResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: listSampleDatas
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        [
+          {
+            "key": "hoge",
+            "datetime": "2022-05-15 12:34:56.7890"
+          },
+          {
+            "key": "foo",
+            "datetime": "2022-05-16 12:34:56.7890"
+          },
+          {
+            "key": "bar",
+            "datetime": "2022-05-17 12:34:56.7890"
+          }
+        ]
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+      
+  #DeleteS3ObjectResolver:
+  #  Type: AWS::AppSync::Resolver
+  #  DependsOn:
+  #    - GraphQLSchema
+  #  Properties:
+  #    ApiId: !GetAtt GraphQLApi.ApiId
+  #    DataSourceName: !GetAtt DataSource.Name
+  #    FieldName: deleteS3Object
+  #    Kind: UNIT
+  #    RequestMappingTemplate: |
+  #      {
+  #        "version": "2018-05-29",
+  #        "operation": "Invoke",
+  #        "payload": {
+  #          "field": "Delete",
+  #          "arguments": $utils.toJson($context.arguments)
+  #        }
+  #      }
+  #    #RequestMappingTemplateS3Location: 
+  #    ResponseMappingTemplate: |
+  #      $context.result
+  #    #ResponseMappingTemplateS3Location:
+  #    TypeName: Mutation
+      
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+     ApiId: !GetAtt GraphQLApi.ApiId
+  
+  #DataSourceRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service: appsync.amazonaws.com
+  #    Policies:
+  #      - PolicyName: !Sub "${Prefix}-DataSourcePolicy"
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - lambda:InvokeFunction
+  #              Resource:
+  #                - !Ref FunctionArn
+                  
+                  
+Outputs:
+  GraphQLUrl:
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+    
+  ApiKey:
+    Value: !GetAtt ApiKey.ApiKey
+    
+  ApiArn:
+    Value: !Ref GraphQLApi
