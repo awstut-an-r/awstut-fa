@@ -15,53 +15,19 @@ transport = AIOHTTPTransport(
   })
 client = Client(transport=transport, fetch_schema_from_transport=True)
 
-#ADD = 'Put'
-LIST = 'List'
-#DELETE = 'Delete'
-
 
 def lambda_handler(event, context):
-  operation = ''
-  document = None
-  result = None
-  
-  if not 'queryStringParameters' in event or (
-      not 'operation' in event['queryStringParameters']):
-    operation = LIST
-  else:
-    operation = event['queryStringParameters']['operation']
-    
-  #if operation == ADD:
-  #  key = event['queryStringParameters']['key']
-  #  document = gql(
-  #    """
-  #    mutation AddSampleData($key: String!) {
-  #      addSampleData(key: $key) {
-  #        key
-  #        datetime
-  #      }
-  #    }
-  #    """
-  #    )
-  #  
-  #  params = {
-  #    'key': key
-  #  }
-  #  result = client.execute(document, variable_values=params)
-  
-  #elif operation == LIST:
-  if operation == LIST:
-    document = gql(
-      """
-      query ListSampleDatas {
-        listSampleDatas {
-          key
-        	datetime
-        }
+  document = gql(
+    """
+    query ListSampleDatas {
+      listSampleDatas {
+        key
+      	datetime
       }
-      """
-      )
-    result = client.execute(document)
+    }
+    """
+    )
+  result = client.execute(document)
     
   return {
     'statusCode': 200,
