@@ -1,27 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ALBArn:
-  #  Type: String
-    
-  #ManagedRuleName:
-  #  Type: String
-  #  
-  #ManagedRuleVendor:
-  #  Type: String
-  
   ApiArn:
     Type: String
 
   Prefix:
     Type: String
-    
-  #RestApi:
-  #  Type: String
-    
-  #StageName:
-  #  Type: String
-    
+
     
 Resources:
   RuleGroup:
@@ -75,6 +60,5 @@ Resources:
   WebACLAssociation:
     Type: AWS::WAFv2::WebACLAssociation
     Properties: 
-      #ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${RestApi}/stages/${StageName}"
       ResourceArn: !Ref ApiArn
       WebACLArn: !GetAtt WebACL.Arn
