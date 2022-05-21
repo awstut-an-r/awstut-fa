@@ -21,7 +21,6 @@ Resources:
       Architectures:
         - !Ref Architecture
       Code:
-        ZipFile: !Ref ZipFile
         ZipFile: |
           import json
           
