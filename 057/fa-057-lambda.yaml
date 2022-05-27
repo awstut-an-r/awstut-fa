@@ -1,15 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
-  #BulkFile:
-  #  Type: String
-  
   BulkS3Bucket:
     Type: String
     
@@ -51,9 +42,6 @@ Resources:
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
-      #CompatibleArchitectures:
-      #  - arm64
-      #  - x86_64
       CompatibleRuntimes:
         - !Ref Runtime
       Content:
@@ -67,12 +55,9 @@ Resources:
     Properties:
       Environment:
         Variables:
-          #BUCKET_NAME: !Ref BucketName
           BULK_ENDPOINT: !Sub "https://${DomainEndpoint}/_bulk"
           BULK_S3_BUCKET: !Ref BulkS3Bucket
           BULK_S3_KEY: !Ref BulkS3Key
-          #BULK_FILE: !Ref BulkFile
-          #DOMAIN_ENDPOINT: !Ref DomainEndpoint
           MASTER_USERNAME: !Ref MasterUserName
           MASTER_PASSWORD: !Ref MasterUserPassword
       Code:
