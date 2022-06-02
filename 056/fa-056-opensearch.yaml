@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AppSyncRoleName:
-  #  Type: String
-  
   DataSourceRoleArn:
     Type: String
 
@@ -12,10 +9,7 @@ Parameters:
   
   EngineVersion:
     Type: String
-    
-  #FunctionRoleName:
-  #  Type: String
-  
+
   FunctionRole2Arn:
     Type: String
     
@@ -24,13 +18,7 @@ Parameters:
     
   InstanceType:
     Type: String
-    
-  #MasterUserName:
-  #  Type: String
-  #  
-  #MasterUserPassword:
-  #  Type: String
-    
+
   VolumeSize:
     Type: Number
     
@@ -45,8 +33,6 @@ Resources:
           - Effect: Allow
             Principal:
               AWS:
-                #- !Sub "arn:aws:iam::${AWS::AccountId}:role/${AppSyncRoleName}"
-                #- !Sub "arn:aws:iam::${AWS::AccountId}:role/${FunctionRoleName}"
                 - !Ref DataSourceRoleArn
                 - !Ref FunctionRole2Arn
             Action:
@@ -56,13 +42,6 @@ Resources:
               - es:ESHttpPost
               - es:ESHttpPut
             Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
-      #AdvancedOptions:
-      #AdvancedSecurityOptions:
-      #  Enabled: true
-      #  InternalUserDatabaseEnabled: true
-      #  MasterUserOptions:
-      #    MasterUserName: !Ref MasterUserName
-      #    MasterUserPassword: !Ref MasterUserPassword
       ClusterConfig:
         DedicatedMasterEnabled: false
         InstanceCount: !Ref InstanceCount
