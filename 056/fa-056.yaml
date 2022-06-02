@@ -8,19 +8,11 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-056
-    
-  #AppSyncRoleName:
-  #  Type: String
-  #  Default: AppSyncDataSourceRole
-    
+
   BulkFile:
     Type: String
     Default: bulk_movies.json
-    
-  #FunctionRoleName:
-  #  Type: String
-  #  Default: CustomResourceFunctionRole
-    
+
   Handler:
     Type: String
     Default: index.lambda_handler
@@ -28,15 +20,7 @@ Parameters:
   IndexName:
     Type: String
     Default: movies
-    
-  #MasterUserName:
-  #  Type: String
-  #  Default: test
-  #  
-  #MasterUserPassword:
-  #  Type: String
-  #  Default: P@ssw0rd
-    
+
   Runtime:
     Type: String
     Default: python3.8
@@ -69,8 +53,6 @@ Resources:
         FunctionRole2Arn: !GetAtt IamRoleStack.Outputs.FunctionRole2Arn
         InstanceCount: 1
         InstanceType: t3.small.search
-        #MasterUserName: !Ref MasterUserName
-        #MasterUserPassword: !Ref MasterUserPassword
         VolumeSize: 10
         
   AppSyncStack:
@@ -81,7 +63,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-appsync.yaml"
       Parameters:
-        #AppSyncRoleName: !Ref AppSyncRoleName
         DataSourceRoleArn: !GetAtt IamRoleStack.Outputs.DataSourceRoleArn
         DomainArn: !GetAtt OpenSearchStack.Outputs.DomainArn
         DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
@@ -132,13 +113,9 @@ Resources:
         CodeS3Key: !Sub "${Prefix}/deploy2.zip"
         DomainArn: !GetAtt OpenSearchStack.Outputs.DomainArn
         DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
-        #FunctionRoleName: !Ref FunctionRoleName
         FunctionRole2Arn: !GetAtt IamRoleStack.Outputs.FunctionRole2Arn
         Handler: !Ref Handler
-        #LayerS3Key: !Sub "${Prefix}/layer.zip"
         LambdaLayer: !GetAtt LambdaStack1.Outputs.LambdaLayer
-        #MasterUserName: !Ref MasterUserName
-        #MasterUserPassword: !Ref MasterUserPassword
         Prefix: !Ref Prefix
         Runtime: !Ref Runtime
         Timeout: !Ref Timeout
