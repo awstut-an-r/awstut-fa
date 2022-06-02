@@ -34,8 +34,6 @@ Resources:
                   - es:ESHttpGet
                   - es:ESHttpPost
                   - es:ESHttpPut
-                #Resource:
-                #  - !Sub "${DomainArn}/*"
                 Resource:
                   - !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
                   
