@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    
+  LayerS3Key:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+
+
+Resources:
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - !Ref Runtime
+      Content:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref LayerS3Key
+      Description: !Ref Prefix
+      LayerName: !Ref Prefix
+      
+      
+Outputs:
+  LambdaLayer:
+    Value: !Ref LambdaLayer

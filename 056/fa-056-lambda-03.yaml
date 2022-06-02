@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketArn:
+  #  Type: String
+  #  
+  #BucketName:
+  #  Type: String
+  
+  #BulkFile:
+  #  Type: String
+  
+  BulkS3Bucket:
+    Type: String
+    
+  BulkS3Key:
+    Type: String
+    
+  CodeS3Bucket:
+    Type: String
+    
+  CodeS3Key:
+    Type: String
+    
+  DomainArn:
+    Type: String
+    
+  DomainEndpoint:
+    Type: String
+    
+  #FunctionRoleName:
+  #  Type: String
+  
+  FunctionRole2Arn:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  #LayerS3Key:
+  #  Type: String
+  
+  LambdaLayer:
+    Type: String
+    
+  #MasterUserName:
+  #  Type: String
+  #  
+  #MasterUserPassword:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  #LambdaLayer:
+  #  Type: AWS::Lambda::LayerVersion
+  #  Properties:
+  #    CompatibleRuntimes:
+  #      - !Ref Runtime
+  #    Content:
+  #      S3Bucket: !Ref CodeS3Bucket
+  #      S3Key: !Ref LayerS3Key
+  #    Description: !Ref Prefix
+  #    LayerName: !Ref Prefix
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          BULK_ENDPOINT: !Sub "https://${DomainEndpoint}/_bulk"
+          BULK_S3_BUCKET: !Ref BulkS3Bucket
+          BULK_S3_KEY: !Ref BulkS3Key
+          #MASTER_USERNAME: !Ref MasterUserName
+          #MASTER_PASSWORD: !Ref MasterUserPassword
+          REGION: !Ref AWS::Region
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      #Role: !GetAtt FunctionRole2.Arn
+      Role: !Ref FunctionRole2Arn
+      Timeout: !Ref Timeout
+      
+  #FunctionRole2:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - lambda.amazonaws.com
+  #    ManagedPolicyArns:
+  #      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  #    Policies:
+  #      - PolicyName: !Sub "${Prefix}-CustomResourceFunctionPolicy"
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - s3:GetObject
+  #              Resource:
+  #                - !Sub "arn:aws:s3:::${BulkS3Bucket}/*"
+  #            - Effect: Allow
+  #              Action:
+  #                - es:ESHttpDelete
+  #                - es:ESHttpHead
+  #                - es:ESHttpGet
+  #                - es:ESHttpPost
+  #                - es:ESHttpPut
+  #              Resource:
+  #                - !Sub "${DomainArn}/*"
+  #    RoleName: !Ref FunctionRoleName
+        
+      
+Outputs:
+  Function2Arn:
+    Value: !GetAtt Function2.Arn

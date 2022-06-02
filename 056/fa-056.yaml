@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-056
+    
+  #AppSyncRoleName:
+  #  Type: String
+  #  Default: AppSyncDataSourceRole
+    
+  BulkFile:
+    Type: String
+    Default: bulk_movies.json
+    
+  #FunctionRoleName:
+  #  Type: String
+  #  Default: CustomResourceFunctionRole
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  IndexName:
+    Type: String
+    Default: movies
+    
+  #MasterUserName:
+  #  Type: String
+  #  Default: test
+  #  
+  #MasterUserPassword:
+  #  Type: String
+  #  Default: P@ssw0rd
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+  Timeout:
+    Type: Number
+    Default: 10
+
+
+Resources:
+  IamRoleStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iamrole.yaml"
+      Parameters:
+        BulkS3Bucket: !Ref TemplateBucketName
+        DomainName: !Ref Prefix
+        Prefix: !Ref Prefix
+
+  OpenSearchStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IamRoleStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-opensearch.yaml"
+      Parameters:
+        DataSourceRoleArn: !GetAtt IamRoleStack.Outputs.DataSourceRoleArn
+        DomainName: !Ref Prefix
+        EngineVersion: OpenSearch_1.2
+        FunctionRole2Arn: !GetAtt IamRoleStack.Outputs.FunctionRole2Arn
+        InstanceCount: 1
+        InstanceType: t3.small.search
+        #MasterUserName: !Ref MasterUserName
+        #MasterUserPassword: !Ref MasterUserPassword
+        VolumeSize: 10
+        
+  AppSyncStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IamRoleStack
+      - OpenSearchStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-appsync.yaml"
+      Parameters:
+        #AppSyncRoleName: !Ref AppSyncRoleName
+        DataSourceRoleArn: !GetAtt IamRoleStack.Outputs.DataSourceRoleArn
+        DomainArn: !GetAtt OpenSearchStack.Outputs.DomainArn
+        DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
+        IndexName: !Ref IndexName
+        Prefix: !Ref Prefix
+  
+  LambdaStack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
+      Parameters:
+        CodeS3Bucket: !Ref TemplateBucketName
+        LayerS3Key: !Sub "${Prefix}/layer.zip"
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        
+  LambdaStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - AppSyncStack
+      - LambdaStack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
+      Parameters:
+        ApiKey: !GetAtt AppSyncStack.Outputs.ApiKey
+        CodeS3Bucket: !Ref TemplateBucketName
+        CodeS3Key: !Sub "${Prefix}/deploy1.zip"
+        FunctionRole1Arn: !GetAtt IamRoleStack.Outputs.FunctionRole1Arn
+        GraphQLUrl: !GetAtt AppSyncStack.Outputs.GraphQLUrl
+        Handler: !Ref Handler
+        LambdaLayer: !GetAtt LambdaStack1.Outputs.LambdaLayer
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
+        
+  LambdaStack3:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IamRoleStack
+      - LambdaStack1
+      - OpenSearchStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-03.yaml"
+      Parameters:
+        BulkS3Bucket: !Ref TemplateBucketName
+        BulkS3Key: !Sub "${Prefix}/${BulkFile}"
+        CodeS3Bucket: !Ref TemplateBucketName
+        CodeS3Key: !Sub "${Prefix}/deploy2.zip"
+        DomainArn: !GetAtt OpenSearchStack.Outputs.DomainArn
+        DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
+        #FunctionRoleName: !Ref FunctionRoleName
+        FunctionRole2Arn: !GetAtt IamRoleStack.Outputs.FunctionRole2Arn
+        Handler: !Ref Handler
+        #LayerS3Key: !Sub "${Prefix}/layer.zip"
+        LambdaLayer: !GetAtt LambdaStack1.Outputs.LambdaLayer
+        #MasterUserName: !Ref MasterUserName
+        #MasterUserPassword: !Ref MasterUserPassword
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack3
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack3.Outputs.Function2Arn

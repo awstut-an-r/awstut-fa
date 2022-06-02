@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BulkS3Bucket:
+    Type: String
+    
+  DomainName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  DataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: appsync.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DataSourcePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - es:ESHttpDelete
+                  - es:ESHttpHead
+                  - es:ESHttpGet
+                  - es:ESHttpPost
+                  - es:ESHttpPut
+                #Resource:
+                #  - !Sub "${DomainArn}/*"
+                Resource:
+                  - !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
+                  
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-CustomResourceFunctionPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BulkS3Bucket}/*"
+              - Effect: Allow
+                Action:
+                  - es:ESHttpDelete
+                  - es:ESHttpHead
+                  - es:ESHttpGet
+                  - es:ESHttpPost
+                  - es:ESHttpPut
+                Resource:
+                  - !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
+                  
+                  
+Outputs:
+  DataSourceRoleArn:
+    Value: !GetAtt DataSourceRole.Arn
+    
+  FunctionRole1Arn:
+    Value: !GetAtt FunctionRole1.Arn
+    
+  FunctionRole2Arn:
+    Value: !GetAtt FunctionRole2.Arn

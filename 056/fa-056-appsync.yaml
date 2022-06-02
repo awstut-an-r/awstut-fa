@@ -1,0 +1,346 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #AppSyncRoleName:
+  #  Type: String
+  
+  DataSourceRoleArn:
+    Type: String
+
+  DomainArn:
+    Type: String
+
+  DomainEndpoint:
+    Type: String
+    
+  IndexName:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  #FunctionArn:
+  #  Type: String
+
+
+Resources:
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: API_KEY
+      Name: !Sub "${Prefix}-GraphQLApi"
+
+  DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      #DynamoDBConfig:
+      #  AwsRegion: !Ref AWS::Region
+      #  TableName: !Ref TableName
+      #  UseCallerCredentials: false
+      #  Versioned: false
+      #LambdaConfig:
+      #  LambdaFunctionArn: !Ref FunctionArn
+      #Name: !Sub "${Prefix}-DataSource"
+      Name: DataSource
+      OpenSearchServiceConfig:
+        AwsRegion: !Ref AWS::Region
+        Endpoint: !Sub "https://${DomainEndpoint}"
+      #ServiceRoleArn: !GetAtt DataSourceRole.Arn
+      ServiceRoleArn: !Ref DataSourceRoleArn
+      Type: AMAZON_OPENSEARCH_SERVICE
+      
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: |
+        schema {
+          query: Query
+          mutation: Mutation
+        }
+        
+        type Query {
+          listMovies: [Movie]
+          getMovie(_id: ID!): Movie
+          getMovieByActor(actor: String!): [Movie]
+        }
+        
+        type Mutation {
+          addMovie(director: String, genre: [String], year: Int, actor: [String], title: String): Movie
+        }
+        
+        type Movie {
+          _id: ID!
+          director: String
+          genre: [String]
+          year: Int
+          actor: [String]
+          title: String
+        }
+        
+  ListMoviesResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: listMovies
+      Kind: UNIT
+      RequestMappingTemplate: !Sub |
+        {
+          "version": "2017-02-28",
+          "operation": "GET",
+          "path": "/${IndexName}/_doc/_search",
+          "params": {
+            "headers": {},
+            "queryString": {
+              "pretty": "true"
+            },
+            "body": {
+              ##"from": 0,
+              ##"size": 50
+            }
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        [
+          #foreach($hit in $context.result.hits.hits)
+            ## print ',' of list.
+            #if( $velocityCount > 1 )
+              ,
+            #end
+            
+            #set ($source = $hit.get("_source"))
+            
+            ## append _id to $hit.
+            $util.quiet($source.put("_id", $hit.get("_id")))
+            
+            $util.toJson($source)
+          #end
+        ]
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+      
+  GetMovieResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: getMovie
+      Kind: UNIT
+      RequestMappingTemplate: !Sub |
+        #set ($_id = $context.arguments.get("_id"))
+      
+        {
+          "version": "2017-02-28",
+          "operation": "GET",
+          "path": $util.toJson("/${IndexName}/_doc/$_id"),
+          "params": {
+            "headers": {},
+            "queryString": {
+              "pretty": "true"
+            },
+            "body": {}
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        #set ($source = $context.result.get("_source"))
+        
+        ## append _id to $hit.
+        $util.quiet($source.put("_id", $context.result.get("_id")))
+        
+        $util.toJson($source)
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+      
+  GetMovieByActorResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: getMovieByActor
+      Kind: UNIT
+      RequestMappingTemplate: !Sub |
+        #set ($actor = $context.arguments.get("actor"))
+      
+        {
+          "version": "2017-02-28",
+          "operation": "GET",
+          "path": "/${IndexName}/_doc/_search",
+          "params": {
+            "headers": {},
+            "queryString": {
+              "pretty": "true"
+            },
+            "body": {
+              "query": {
+                "match": {
+                  "actor": $util.toJson($actor)
+                }
+              }
+            }
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        [
+          #foreach($hit in $context.result.hits.hits)
+            ## print ',' of list.
+            #if( $velocityCount > 1 )
+              ,
+            #end
+            
+            #set ($source = $hit.get("_source"))
+            
+            ## append _id to $hit.
+            $util.quiet($source.put("_id", $hit.get("_id")))
+            
+            $util.toJson($source)
+          #end
+        ]
+      #ResponseMappingTemplateS3Location:
+      TypeName: Query
+  
+  AddMovieResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: addMovie
+      Kind: UNIT
+      RequestMappingTemplate: !Sub |
+        #set ($_id = $util.autoId())
+        #set ($director = $context.arguments.director)
+        #set ($genre = $context.arguments.genre)
+        #set ($year = $context.arguments.year)
+        #set ($actor = $context.arguments.actor)
+        #set ($title = $context.arguments.title)
+      
+        {
+          "version": "2017-02-28",
+          "operation": "PUT",
+          "path": $util.toJson("/${IndexName}/_doc/$_id"),
+          "params": {
+            "headers": {},
+            "queryString": {
+              "pretty": "true"
+            },
+            "body": {
+              ##"_id": $util.toJson($_id),
+              "director": $util.toJson($director),
+              "genre": $util.toJson($genre),
+              "year": $util.toJson($year),
+              "actor": $util.toJson($actor),
+              "title": $util.toJson($title)
+            }
+          }
+        }
+      #RequestMappingTemplateS3Location: 
+      ResponseMappingTemplate: |
+        #set ($source = $context.result.get("_source"))
+        
+        ## append _id to $hit.
+        $util.quiet($source.put("_id", $context.result.get("_id")))
+        
+        $util.toJson($source)
+      #ResponseMappingTemplateS3Location:
+      TypeName: Mutation
+        
+  #ListS3ObjectsResolver:
+  #  Type: AWS::AppSync::Resolver
+  #  DependsOn:
+  #    - GraphQLSchema
+  #  Properties:
+  #    ApiId: !GetAtt GraphQLApi.ApiId
+  #    DataSourceName: !GetAtt DataSource.Name
+  #    FieldName: listS3Objects
+  #    Kind: UNIT
+  #    RequestMappingTemplate: |
+  #      {
+  #        "version": "2018-05-29",
+  #        "operation": "Invoke",
+  #        "payload": {
+  #          "field": "List"
+  #        }
+  #      }
+  #    #RequestMappingTemplateS3Location: 
+  #    ResponseMappingTemplate: |
+  #      $context.result
+  #    #ResponseMappingTemplateS3Location:
+  #    TypeName: Query
+      
+  #DeleteS3ObjectResolver:
+  #  Type: AWS::AppSync::Resolver
+  #  DependsOn:
+  #    - GraphQLSchema
+  #  Properties:
+  #    ApiId: !GetAtt GraphQLApi.ApiId
+  #    DataSourceName: !GetAtt DataSource.Name
+  #    FieldName: deleteS3Object
+  #    Kind: UNIT
+  #    RequestMappingTemplate: |
+  #      {
+  #        "version": "2018-05-29",
+  #        "operation": "Invoke",
+  #        "payload": {
+  #          "field": "Delete",
+  #          "arguments": $utils.toJson($context.arguments)
+  #        }
+  #      }
+  #    #RequestMappingTemplateS3Location: 
+  #    ResponseMappingTemplate: |
+  #      $context.result
+  #    #ResponseMappingTemplateS3Location:
+  #    TypeName: Mutation
+      
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+     ApiId: !GetAtt GraphQLApi.ApiId
+  
+  #DataSourceRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service: appsync.amazonaws.com
+  #    Policies:
+  #      - PolicyName: !Sub "${Prefix}-DataSourcePolicy"
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - es:ESHttpDelete
+  #                - es:ESHttpHead
+  #                - es:ESHttpGet
+  #                - es:ESHttpPost
+  #                - es:ESHttpPut
+  #              Resource:
+  #                - !Sub "${DomainArn}/*"
+  #    RoleName: !Ref AppSyncRoleName
+                  
+                  
+Outputs:
+  GraphQLUrl:
+    Value: !GetAtt GraphQLApi.GraphQLUrl
+    
+  ApiKey:
+    Value: !GetAtt ApiKey.ApiKey
+    
+  #DataSourceRoleArn:
+  #  Value: !GetAtt DataSourceRole.Arn
