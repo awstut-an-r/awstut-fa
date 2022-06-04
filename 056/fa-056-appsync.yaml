@@ -131,7 +131,7 @@ Resources:
       ResponseMappingTemplate: |
         #set ($source = $context.result.get("_source"))
         
-        ## append _id to $hit.
+        ## append _id.
         $util.quiet($source.put("_id", $context.result.get("_id")))
         
         $util.toJson($source)
