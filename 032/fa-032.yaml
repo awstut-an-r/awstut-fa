@@ -115,6 +115,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
+        Arch: arm64
         Bucket: !GetAtt S3Stack.Outputs.Bucket
         BucketWebsiteURL: !GetAtt S3Stack.Outputs.BucketWebsiteURL
         GPGName: !Ref Prefix
