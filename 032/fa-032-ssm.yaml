@@ -21,10 +21,7 @@ Parameters:
     
   Instance2:
     Type: String
-    
-  #LogBucketName:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -44,10 +41,6 @@ Resources:
     Properties:
       AssociationName: !Sub "${Prefix}-runshellscript-association1"
       Name: AWS-RunShellScript
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref LogBucketName
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
       Parameters:
         commands:
           - "sudo apt update"
@@ -108,7 +101,6 @@ Resources:
               }
               EOF
               
-          #- !Sub "sudo aptly publish snapshot --skip-signing ${Repository}-${SnapshotSuffix} s3:${Bucket}:"
           - !Sub "sudo aptly publish snapshot -batch -passphrase='${GPGPassphrase}' ${Repository}-${SnapshotSuffix} s3:${Bucket}:"
           
           - "sudo gpg1 --export --armor > ./gpg.pub"
@@ -126,10 +118,6 @@ Resources:
     Properties:
       AssociationName: !Sub "${Prefix}-runshellscript-association2"
       Name: AWS-RunShellScript
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref LogBucketName
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
       Parameters:
         commands:
           - !Sub "curl ${BucketWebsiteURL}/gpg.pub | sudo apt-key add -"
