@@ -66,7 +66,7 @@ Resources:
           - "sudo gpg1 --gen-key --batch ./gpg.txt"
           
           - "sudo gpg1 --no-default-keyring --keyring trustedkeys.gpg --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 3B4FE6ACC0B21F32"
-          - "sudo aptly mirror create -architectures=arm64 -filter='apache2' -filter-with-deps myrepo http://ap-northeast-1a.clouds.ports.ubuntu.com/ubuntu-ports/ xenial main restricted universe multiverse"
+          - !Sub "sudo aptly mirror create -architectures=${Arch} -filter='apache2' -filter-with-deps myrepo http://ap-northeast-1a.clouds.ports.ubuntu.com/ubuntu-ports/ xenial main restricted universe multiverse"
           - !Sub "sudo aptly mirror update ${Repository}"
           - !Sub "sudo aptly snapshot create ${Repository}-${SnapshotSuffix} from mirror ${Repository}"
           
