@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Bucket:
+    Type: String
+    
+  BucketWebsiteURL:
+    Type: String
+    
+  GPGName:
+    Type: String
+    
+  GPGEmail:
+    Type: String
+    
+  GPGPassphrase:
+    Type: String
+    
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  #LogBucketName:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Repository:
+    Type: String
+    
+  SnapshotSuffix:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+    
+Resources:
+  RunShellScriptAssociation1:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-runshellscript-association1"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - "sudo apt update"
+          - "sudo apt install -y aptly"
+          - "sudo apt install -y unzip"
+          
+          - "curl 'https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip' -o 'awscliv2.zip'"
+          - "unzip awscliv2.zip"
+          - "sudo ./aws/install"
+        
+          
+          - !Sub |
+              sudo cat << EOF > ./gpg.txt
+              Key-Type: RSA
+              Subkey-Type: RSA
+              Key-Length: 2048
+              Subkey-Length: 2048
+              Expire-Date: 0
+              Name-Real: ${GPGName}
+              Name-Email: ${GPGEmail}
+              Passphrase: ${GPGPassphrase}
+              EOF
+          - "sudo gpg1 --gen-key --batch ./gpg.txt"
+          
+          - "sudo gpg1 --no-default-keyring --keyring trustedkeys.gpg --keyserver keyserver.ubuntu.com --recv-keys 40976EAF437D05B5 3B4FE6ACC0B21F32"
+          - "sudo aptly mirror create -architectures=arm64 -filter='apache2' -filter-with-deps myrepo http://ap-northeast-1a.clouds.ports.ubuntu.com/ubuntu-ports/ xenial main restricted universe multiverse"
+          - !Sub "sudo aptly mirror update ${Repository}"
+          - !Sub "sudo aptly snapshot create ${Repository}-${SnapshotSuffix} from mirror ${Repository}"
+          
+          - !Sub |
+              sudo cat << EOF > /root/.aptly.conf
+              {
+                "rootDir": "/root/.aptly",
+                "downloadConcurrency": 4,
+                "downloadSpeedLimit": 0,
+                "architectures": [],
+                "dependencyFollowSuggests": false,
+                "dependencyFollowRecommends": false,
+                "dependencyFollowAllVariants": false,
+                "dependencyFollowSource": false,
+                "dependencyVerboseResolve": false,
+                "gpgDisableSign": false,
+                "gpgDisableVerify": false,
+                "gpgProvider": "gpg",
+                "downloadSourcePackages": false,
+                "skipLegacyPool": true,
+                "ppaDistributorID": "ubuntu",
+                "ppaCodename": "",
+                "skipContentsPublishing": false,
+                "FileSystemPublishEndpoints": {},
+                "S3PublishEndpoints": {
+                  "fa-032": {
+                    "region": "${AWS::Region}",
+                    "bucket": "${Bucket}"
+                  }
+                },
+                "SwiftPublishEndpoints": {}
+              }
+              EOF
+              
+          #- !Sub "sudo aptly publish snapshot --skip-signing ${Repository}-${SnapshotSuffix} s3:${Bucket}:"
+          - !Sub "sudo aptly publish snapshot -batch -passphrase='${GPGPassphrase}' ${Repository}-${SnapshotSuffix} s3:${Bucket}:"
+          
+          - "sudo gpg1 --export --armor > ./gpg.pub"
+          - !Sub "aws s3 cp ./gpg.pub s3://${Bucket}/"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance1
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+      
+  RunShellScriptAssociation2:
+    Type: AWS::SSM::Association
+    DependsOn:
+      - RunShellScriptAssociation1
+    Properties:
+      AssociationName: !Sub "${Prefix}-runshellscript-association2"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - !Sub "curl ${BucketWebsiteURL}/gpg.pub | sudo apt-key add -"
+          - !Sub |
+              sudo cat << EOF > /etc/apt/sources.list
+              deb ${BucketWebsiteURL}/ xenial main
+              EOF
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance2
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

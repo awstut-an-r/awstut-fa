@@ -1,0 +1,153 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-032
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    #Default: ami-08b2e17267d4f983b
+    # ubuntu/images/hvm-ssd/ubuntu-focal-20.04-arm64-server-20220308
+    Default: /aws/service/canonical/ubuntu/server/20.04/stable/current/arm64/hvm/ebs-gp2/ami-id
+    
+  InstanceType:
+    Type: String
+    Default: t4g.micro
+    #Default: t4g.small
+    
+  VPCName1:
+    Type: String
+    Default: VPC1
+    
+  VPCName2:
+    Type: String
+    Default: VPC2
+    
+    
+Resources:
+  VPCStack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc1/${Prefix}-vpc-01.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        #AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        #HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        VPCName: !Ref VPCName1
+        
+  EC2Stack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack1
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc1/${Prefix}-ec2-01.yaml"
+      Parameters:
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        #Prefix: !Ref Prefix
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PrivateSubnet: !GetAtt VPCStack1.Outputs.PrivateSubnet
+        
+  VPCStack2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc2/${Prefix}-vpc-02.yaml"
+      Parameters:
+        AvailabilityZone: d
+        #AvailabilityZone2: d
+        CidrIp: 10.0.1.0/24
+        #CidrIp2: 10.0.2.0/24
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        VPCName: !Ref VPCName2
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack2
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc2/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack2.Outputs.EndpointSecurityGroup
+        #Prefix: !Ref Prefix
+        #PrivateRouteTable1: !GetAtt VPCStack.Outputs.PrivateRouteTable1
+        PrivateRouteTable: !GetAtt VPCStack2.Outputs.PrivateRouteTable
+        #PrivateSubnet1: !GetAtt VPCStack2.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  EC2Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      #- S3Stack
+      - VPCStack2
+      - EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/vpc2/${Prefix}-ec2-02.yaml"
+      Parameters:
+        #Bucket: !GetAtt S3Stack.Outputs.Bucket
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        #Prefix: !Ref Prefix
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet
+        #VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack1
+      - VPCStack2
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        EIP: !GetAtt VPCStack1.Outputs.EIP
+        Prefix: !Ref Prefix
+        VPC: !GetAtt VPCStack2.Outputs.VPC
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Bucket: !GetAtt S3Stack.Outputs.Bucket
+        BucketWebsiteURL: !GetAtt S3Stack.Outputs.BucketWebsiteURL
+        GPGName: !Ref Prefix
+        GPGEmail: !Sub "${Prefix}@example.com"
+        GPGPassphrase: P@ssw0rd
+        Instance1: !GetAtt EC2Stack1.Outputs.Instance
+        Instance2: !GetAtt EC2Stack2.Outputs.Instance
+        #LogBucketName: !Ref TemplateBucketName
+        Prefix: !Ref Prefix
+        Repository: myrepo
+        SnapshotSuffix: "20220618"
+        WaitForSuccessTimeoutSeconds: 300
