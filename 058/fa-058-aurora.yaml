@@ -55,26 +55,10 @@ Resources:
       DBClusterIdentifier: !Ref DBClusterIdentifier
       DBSubnetGroupName: !Ref DBSubnetGroup
       Engine: !Ref DBEngine
-      #Engine: aurora-mysql
       EngineMode: serverless
       EngineVersion: !Ref DBEngineVersion
-      #EngineVersion: 8.0.mysql_aurora.3.02.0
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
       StorageEncrypted: true
       VpcSecurityGroupIds:
         - !Ref DBSecurityGroup
-        
-  #DBInstance:
-  #  Type: AWS::RDS::DBInstance
-  #  Properties:
-  #    DBClusterIdentifier: !Ref DBCluster
-  #    DBSubnetGroupName: !Ref DBSubnetGroup
-  #    #DBParameterGroupName: !Ref DBParameterGroup
-  #    DBInstanceIdentifier: !Ref DBInstanceIdentifier
-  #    DBInstanceClass: !Ref DBInstanceClass
-  #    Engine: !Ref DBEngine
-  #    #Engine: aurora-mysql
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
-  #    PubliclyAccessible: false
-  #    #PromotionTier: 1
