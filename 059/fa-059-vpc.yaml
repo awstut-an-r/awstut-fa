@@ -71,6 +71,11 @@ Resources:
       GroupName: !Sub "${Prefix}-DBSecurityGroup"
       GroupDescription: DBSecurityGroup.
       VpcId: !Ref VPC
+      #    SecurityGroupIngress:
+  　　　　  #      - IpProtocol: tcp
+      #        FromPort: !Ref MySQLPort
+      #        ToPort: !Ref MySQLPort
+      #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
 
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
