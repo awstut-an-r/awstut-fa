@@ -59,10 +59,8 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       EnableHttpEndpoint: true
       Engine: !Ref DBEngine
-      #Engine: aurora-mysql
       EngineMode: serverless
       EngineVersion: !Ref DBEngineVersion
-      #EngineVersion: 8.0.mysql_aurora.3.02.0
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
       StorageEncrypted: true
