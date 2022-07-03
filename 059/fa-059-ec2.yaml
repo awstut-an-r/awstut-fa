@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #DBClusterArn:
-  #  Type: String
-
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
 
@@ -12,15 +9,9 @@ Parameters:
 
   InstanceType:
     Type: String
-    
-  #Prefix:
-  #  Type: String
-    
+
   PrivateSubnet:
     Type: String
-    
-  #SecretArn:
-  #  Type: String
 
 
 Resources:
@@ -60,25 +51,6 @@ Resources:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      #Policies:
-      #  - PolicyName: !Sub "${Prefix}-AuroraServerlessDataAPIPolicy"
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - secretsmanager:GetSecretValue
-      #          Resource:
-      #            - !Ref SecretArn
-      #        - Effect: Allow
-      #          Action:
-      #            - rds-data:BatchExecuteStatement
-      #            - rds-data:BeginTransaction
-      #            - rds-data:CommitTransaction
-      #            - rds-data:ExecuteStatement
-      #            - rds-data:RollbackTransaction
-      #          Resource:
-      #            - !Ref DBClusterArn
       
       
 Outputs:
