@@ -6,10 +6,7 @@ Parameters:
     
   EndpointSecurityGroup2:
     Type: String
-    
-  #PrivateRouteTable:
-  #  Type: String
-    
+
   PrivateSubnet1:
     Type: String
     
@@ -24,14 +21,6 @@ Parameters:
     
 
 Resources:
-  #S3Endpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    RouteTableIds:
-  #      - !Ref PrivateRouteTable
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
-  #    VpcId: !Ref VPC
-
   SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -77,21 +66,13 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.rds-data"
       SubnetIds:
         - !Ref PrivateSubnet1
-        #- !Ref PrivateSubnet2
-        #- !Ref PrivateSubnet3
       VpcEndpointType: Interface
       VpcId: !Ref VPC
       
-  #SecretsManagerEndpoint:
+  #S3Endpoint:
   #  Type: AWS::EC2::VPCEndpoint
   #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
-  #    SubnetIds:
-  #      #- !Ref PrivateSubnet1
-  #      - !Ref PrivateSubnet2
-  #      - !Ref PrivateSubnet3
-  #    VpcEndpointType: Interface
+  #    RouteTableIds:
+  #      - !Ref PrivateRouteTable
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
   #    VpcId: !Ref VPC
