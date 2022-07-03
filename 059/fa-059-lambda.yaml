@@ -53,12 +53,6 @@ Resources:
           client = boto3.client('rds-data', region_name=region)
           
           def lambda_handler(event, context):
-            #response = client.execute_sql(
-            #  awsSecretStoreArn=secret_arn,
-            #  database=dbname,
-            #  dbClusterOrInstanceArn=dbcluster_arn,
-            #  sqlStatements=sql
-            #  )
             response = client.execute_statement(
               database=dbname,
               resourceArn=dbcluster_arn,
@@ -73,11 +67,8 @@ Resources:
             }
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
-      #Timeout: !Ref Timeout
       
   FunctionRole:
     Type: AWS::IAM::Role
