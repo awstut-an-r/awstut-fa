@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EndpointSecurityGroup1:
+    Type: String
+    
+  EndpointSecurityGroup2:
+    Type: String
+    
+  #PrivateRouteTable:
+  #  Type: String
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+    
+  PrivateSubnet3:
+    Type: String
+    
+  VPC:
+    Type: String
+    
+
+Resources:
+  #S3Endpoint:
+  #  Type: AWS::EC2::VPCEndpoint
+  #  Properties:
+  #    RouteTableIds:
+  #      - !Ref PrivateRouteTable
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+  #    VpcId: !Ref VPC
+
+  SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+
+  EC2MessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+        
+  SSMMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+
+  RDSDataEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.rds-data"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        #- !Ref PrivateSubnet2
+        #- !Ref PrivateSubnet3
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+      
+  #SecretsManagerEndpoint:
+  #  Type: AWS::EC2::VPCEndpoint
+  #  Properties:
+  #    PrivateDnsEnabled: true
+  #    SecurityGroupIds:
+  #      - !Ref EndpointSecurityGroup2
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.secretsmanager"
+  #    SubnetIds:
+  #      #- !Ref PrivateSubnet1
+  #      - !Ref PrivateSubnet2
+  #      - !Ref PrivateSubnet3
+  #    VpcEndpointType: Interface
+  #    VpcId: !Ref VPC

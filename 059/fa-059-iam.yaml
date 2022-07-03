@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DBClusterArn:
+    Type: String
+    
+  FunctionRole:
+    Type: String
+    
+  InstanceRole:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  SecretArn:
+    Type: String
+
+
+Resources:
+  AuroraServerlessDataAPIPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${Prefix}-AuroraServerlessDataAPIPolicy"
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - !Ref SecretArn
+          - Effect: Allow
+            Action:
+              - rds-data:BatchExecuteStatement
+              - rds-data:BeginTransaction
+              - rds-data:CommitTransaction
+              - rds-data:ExecuteStatement
+              - rds-data:RollbackTransaction
+            Resource:
+              - !Ref DBClusterArn
+      Roles:
+        - !Ref FunctionRole
+        - !Ref InstanceRole

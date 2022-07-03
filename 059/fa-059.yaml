@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-059
+
+  AvailabilityZone1:
+    Type: String
+    Default: a
+    
+  AvailabilityZone2:
+    Type: String
+    Default: d
+    
+  AvailabilityZone3:
+    Type: String
+    Default: c
+    
+  DBInstanceClass:
+    Type: String
+    Default: db.t4g.micro
+    
+  DBName:
+    Type: String
+    Default: testdb
+    
+  DBMasterUsername:
+    Type: String
+    Default: testuser
+    
+  DBMasterUserPassword:
+    Type: String
+    Default: Passw0rd
+    
+  DBTableName:
+    Type: String
+    #Default: testtable
+    Default: Pets
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  #MySQLPort:
+  #  Type: Number
+  #  Default: 3306
+    
+    
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        AvailabilityZone3: !Ref AvailabilityZone3
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        HTTPSPort: !Ref HTTPSPort
+        #MySQLPort: !Ref MySQLPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup1: !GetAtt VPCStack.Outputs.EndpointSecurityGroup1
+        EndpointSecurityGroup2: !GetAtt VPCStack.Outputs.EndpointSecurityGroup2
+        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PrivateSubnet3: !GetAtt VPCStack.Outputs.PrivateSubnet3
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  #SecretsManagerStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  #DependsOn:
+  #  #  - VPCStack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-secretsmanager.yaml"
+  #    Parameters:
+  #      DBMasterUsername: !Ref DBMasterUsername
+  #      DBMasterUserPassword: !Ref DBMasterUserPassword
+        
+  AuroraStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-aurora.yaml"
+      Parameters:
+        AvailabilityZone: !Ref AvailabilityZone2
+        DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
+        DBEngine: aurora-mysql
+        DBEngineVersion: 5.7.mysql_aurora.2.07.1
+        DBInstanceClass: !Ref DBInstanceClass
+        DBInstanceIdentifier: !Sub "${Prefix}-dbinstance"
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBName: !Ref DBName
+        DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
+        Prefix: !Ref Prefix
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PrivateSubnet3: !GetAtt VPCStack.Outputs.PrivateSubnet3
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - AuroraStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        #DBClusterArn: !GetAtt AuroraStack.Outputs.DBClusterArn
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        #Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #SecretArn: !GetAtt AuroraStack.Outputs.SecretArn
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - AuroraStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: arm64
+        DBClusterArn: !GetAtt AuroraStack.Outputs.DBClusterArn
+        DBName: !Ref DBName
+        DBTableName: !Ref DBTableName
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        SecretArn: !GetAtt AuroraStack.Outputs.SecretArn
+        
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EC2Stack
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
+      Parameters:
+        DBClusterArn: !GetAtt AuroraStack.Outputs.DBClusterArn
+        FunctionRole: !GetAtt LambdaStack.Outputs.FunctionRole
+        InstanceRole: !GetAtt EC2Stack.Outputs.InstanceRole
+        Prefix: !Ref Prefix
+        SecretArn: !GetAtt AuroraStack.Outputs.SecretArn
