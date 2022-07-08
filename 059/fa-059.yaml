@@ -90,7 +90,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-aurora.yaml"
       Parameters:
-        AvailabilityZone: !Ref AvailabilityZone2
         DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
         DBEngine: aurora-mysql
         DBEngineVersion: 5.7.mysql_aurora.2.07.1
