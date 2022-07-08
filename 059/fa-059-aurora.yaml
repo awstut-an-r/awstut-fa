@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  AvailabilityZone:
-    Type: String
-
   DBClusterIdentifier:
     Type: String
     
