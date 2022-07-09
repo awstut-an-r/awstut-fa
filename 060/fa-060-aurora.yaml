@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AvailabilityZone:
-  #  Type: String
-
   DBClusterIdentifier:
     Type: String
     
@@ -59,10 +56,8 @@ Resources:
       DBSubnetGroupName: !Ref DBSubnetGroup
       EnableHttpEndpoint: true
       Engine: !Ref DBEngine
-      #Engine: aurora-mysql
       EngineMode: serverless
       EngineVersion: !Ref DBEngineVersion
-      #EngineVersion: 8.0.mysql_aurora.3.02.0
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
       StorageEncrypted: true
