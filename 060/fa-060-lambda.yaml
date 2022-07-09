@@ -1,0 +1,200 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  DBClusterArn:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBTableName:
+    Type: String
+    
+  Handler:
+    Type: String
+  
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  SecretArn:
+    Type: String
+    
+    
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          DBCLUSTER_ARN: !Ref DBClusterArn
+          DBNAME: !Ref DBName
+          DBTABLE: !Ref DBTableName
+          REGION: !Ref AWS::Region
+          SECRET_ARN: !Ref SecretArn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          
+          dbcluster_arn = os.environ['DBCLUSTER_ARN']
+          dbname = os.environ['DBNAME']
+          dbtable = os.environ['DBTABLE']
+          region = os.environ['REGION']
+          secret_arn = os.environ['SECRET_ARN']
+          
+          sql = 'select * from {table};'.format(table=dbtable)
+          client = boto3.client('rds-data', region_name=region)
+          
+          def lambda_handler(event, context):
+            #response = client.execute_sql(
+            #  awsSecretStoreArn=secret_arn,
+            #  database=dbname,
+            #  dbClusterOrInstanceArn=dbcluster_arn,
+            #  sqlStatements=sql
+            #  )
+            response = client.execute_statement(
+              database=dbname,
+              resourceArn=dbcluster_arn,
+              schema='mysql',
+              secretArn=secret_arn,
+              sql=sql
+            )
+              
+            return {
+              'statusCode': 200,
+              'body': json.dumps(response, indent=2)
+            }
+      FunctionName: !Sub "${Prefix}-function1"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      #Timeout: !Ref Timeout
+        
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Function1.Arn
+      
+  FunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt Function1.Arn
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          DBCLUSTER_ARN: !Ref DBClusterArn
+          DBNAME: !Ref DBName
+          DBTABLE: !Ref DBTableName
+          REGION: !Ref AWS::Region
+          SECRET_ARN: !Ref SecretArn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import json
+          import os
+          
+          dbcluster_arn = os.environ['DBCLUSTER_ARN']
+          dbname = os.environ['DBNAME']
+          dbtable = os.environ['DBTABLE']
+          region = os.environ['REGION']
+          secret_arn = os.environ['SECRET_ARN']
+          
+          sql1 = 'create table {table}(id varchar(200), type varchar(200), price float)'.format(table=dbtable)
+          sql2 = 'insert into {table} values (111, "dog", 123)'.format(table=dbtable)
+          client = boto3.client('rds-data', region_name=region)
+          schema = 'mysql'
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                response1 = client.execute_statement(
+                  database=dbname,
+                  resourceArn=dbcluster_arn,
+                  schema=schema,
+                  secretArn=secret_arn,
+                  sql=sql1
+                )
+                print(response1)
+                
+                response2 = client.execute_statement(
+                  database=dbname,
+                  resourceArn=dbcluster_arn,
+                  schema=schema,
+                  secretArn=secret_arn,
+                  sql=sql2
+                )
+                print(response2)
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function2"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      #Timeout: !Ref Timeout
+        
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-AuroraServerlessDataAPIPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref SecretArn
+              - Effect: Allow
+                Action:
+                  - rds-data:BatchExecuteStatement
+                  - rds-data:BeginTransaction
+                  - rds-data:CommitTransaction
+                  - rds-data:ExecuteStatement
+                  - rds-data:RollbackTransaction
+                Resource:
+                  - !Ref DBClusterArn
+                
+                
+Outputs:
+  Function2Arn:
+    Value: !GetAtt Function2.Arn
+
+  #FunctionRole:
+  #  Value: !Ref FunctionRole
