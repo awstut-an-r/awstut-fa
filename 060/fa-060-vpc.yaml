@@ -6,25 +6,13 @@ Parameters:
     
   AvailabilityZone2:
     Type: String
-    
-  #AvailabilityZone3:
-  #  Type: String
-    
+
   CidrIp1:
     Type: String
     
   CidrIp2:
     Type: String
-    
-  #CidrIp3:
-  #  Type: String
-    
-  #HTTPSPort:
-  #  Type: Number
-    
-  #MySQLPort:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
     
@@ -53,80 +41,14 @@ Resources:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
-      
-  #PrivateSubnet3:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    CidrBlock: !Ref CidrIp3
-  #    VpcId: !Ref VPC
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
-      
-  #PrivateRouteTable:
-  #  Type: AWS::EC2::RouteTable
-  #  Properties:
-  #    VpcId: !Ref VPC
-      
-  #PrivateSubnetRouteTableAssociation:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PrivateSubnet1
-  #    RouteTableId: !Ref PrivateRouteTable
-      
-  #InstanceSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
-  #    GroupDescription: Deny All.
-  #    VpcId: !Ref VPC
-          
-  #DBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-DBSecurityGroup"
-  #    GroupDescription: DBSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref MySQLPort
-  #        ToPort: !Ref MySQLPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-  
+
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub "${Prefix}-DBSecurityGroup"
       GroupDescription: DBSecurityGroup.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: -1
-      #    FromPort: -1
-      #    ToPort: -1
-      #    #SourceSecurityGroupId: !Ref InstanceSecurityGroup
-      
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
-  #EndpointSecurityGroup2:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup2"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref DBSecurityGroup
-          
+
           
 Outputs:
   VPC:
@@ -137,21 +59,6 @@ Outputs:
       
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-    
-  #PrivateSubnet3:
-  #  Value: !Ref PrivateSubnet3
-      
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-    
-  #InstanceSecurityGroup:
-  #  Value: !Ref InstanceSecurityGroup
-    
+
   DBSecurityGroup:
     Value: !Ref DBSecurityGroup
-      
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
-    
-  #EndpointSecurityGroup2:
-  #  Value: !Ref EndpointSecurityGroup2
