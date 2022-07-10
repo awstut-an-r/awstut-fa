@@ -16,11 +16,7 @@ Parameters:
   AvailabilityZone2:
     Type: String
     Default: c
-    
-  #AvailabilityZone3:
-  #  Type: String
-  #  Default: c
-    
+
   DBInstanceClass:
     Type: String
     Default: db.t4g.micro
@@ -39,25 +35,8 @@ Parameters:
     
   DBTableName:
     Type: String
-    #Default: testtable
     Default: Pets
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-    
-  #ImageId:
-  #  Type: String
-  #  Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-    
-  #InstanceType:
-  #  Type: String
-  #  Default: t4g.nano
-    
-  #MySQLPort:
-  #  Type: Number
-  #  Default: 3306
-  
+
   Timeout:
     Type: Number
     Default: 10
@@ -99,17 +78,10 @@ Resources:
   AppSyncStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- IamRoleStack
-      #- OpenSearchStack
       - AuroraStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-appsync.yaml"
       Parameters:
-        #AppSyncRoleName: !Ref AppSyncRoleName
-        #DataSourceRoleArn: !GetAtt IamRoleStack.Outputs.DataSourceRoleArn
-        #DomainArn: !GetAtt OpenSearchStack.Outputs.DomainArn
-        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
-        #IndexName: !Ref IndexName
         DBClusterArn: !GetAtt AuroraStack.Outputs.DBClusterArn
         DBName: !Ref DBName
         Prefix: !Ref Prefix
