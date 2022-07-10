@@ -1,21 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AppSyncRoleName:
-  #  Type: String
-  
-  #DataSourceRoleArn:
-  #  Type: String
-  
-  #DomainArn:
-  #  Type: String
-  
-  #DomainEndpoint:
-  #  Type: String
-  #  
-  #IndexName:
-  #  Type: String
-  
   DBClusterArn:
     Type: String
   
@@ -47,7 +32,6 @@ Resources:
           AwsSecretStoreArn: !Ref SecretArn
           DatabaseName: !Ref DBName
           DbClusterIdentifier: !Ref DBClusterArn
-          #Schema: mysql
         RelationalDatabaseSourceType: RDS_HTTP_ENDPOINT
       ServiceRoleArn: !GetAtt DataSourceRole.Arn
       Type: RELATIONAL_DATABASE
@@ -269,7 +253,6 @@ Resources:
                 Resource:
                   - !Ref SecretArn
                   - !Sub "${SecretArn}:*"
-      #RoleName: !Ref AppSyncRoleName
                   
                   
 Outputs:
