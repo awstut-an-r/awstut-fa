@@ -1,0 +1,280 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #AppSyncRoleName:
+  #  Type: String
+  
+  #DataSourceRoleArn:
+  #  Type: String
+  
+  #DomainArn:
+  #  Type: String
+  
+  #DomainEndpoint:
+  #  Type: String
+  #  
+  #IndexName:
+  #  Type: String
+  
+  DBClusterArn:
+    Type: String
+  
+  DBName:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  SecretArn:
+    Type: String
+
+
+Resources:
+  GraphQLApi:
+    Type: AWS::AppSync::GraphQLApi
+    Properties:
+      AuthenticationType: API_KEY
+      Name: !Sub "${Prefix}-GraphQLApi"
+
+  DataSource:
+    Type: AWS::AppSync::DataSource
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Name: DataSource
+      RelationalDatabaseConfig:
+        RdsHttpEndpointConfig:
+          AwsRegion: !Ref AWS::Region
+          AwsSecretStoreArn: !Ref SecretArn
+          DatabaseName: !Ref DBName
+          DbClusterIdentifier: !Ref DBClusterArn
+          #Schema: mysql
+        RelationalDatabaseSourceType: RDS_HTTP_ENDPOINT
+      ServiceRoleArn: !GetAtt DataSourceRole.Arn
+      Type: RELATIONAL_DATABASE
+      
+  GraphQLSchema:
+    Type: AWS::AppSync::GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      Definition: |
+        type Mutation {
+          createPet(input: CreatePetInput!): Pet
+          updatePet(input: UpdatePetInput!): Pet
+          deletePet(input: DeletePetInput!): Pet
+        }
+        
+        input CreatePetInput {
+            type: PetType
+            price: Float!
+        }
+        
+        input UpdatePetInput {
+        id: ID!
+            type: PetType
+            price: Float!
+        }
+        
+        input DeletePetInput {
+            id: ID!
+        }
+        
+        type Pet {
+            id: ID!
+            type: PetType
+            price: Float
+        }
+        
+        enum PetType {
+            dog
+            cat
+            fish
+            bird
+            gecko
+        }
+        
+        type Query {
+            getPet(id: ID!): Pet
+            listPets: [Pet]
+            listPetsByPriceRange(min: Float, max: Float): [Pet]
+        }
+        
+        schema {
+            query: Query
+            mutation: Mutation
+        }
+        
+  CreatePetResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: createPet
+      Kind: UNIT
+      RequestMappingTemplate: |
+        #set($id=$utils.autoId())
+        {
+            "version": "2018-05-29",
+            "statements": [
+                "insert into Pets VALUES ('$id', '$ctx.args.input.type', $ctx.args.input.price)",
+                "select * from Pets WHERE id = '$id'"
+            ]
+        }
+      ResponseMappingTemplate: |
+        $utils.toJson($utils.rds.toJsonObject($ctx.result)[1][0])
+      TypeName: Mutation
+        
+  UpdatePetResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: updatePet
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "statements": [
+              $util.toJson("update Pets set type='$ctx.args.input.type', price=$ctx.args.input.price WHERE id='$ctx.args.input.id'"),
+              $util.toJson("select * from Pets WHERE id = '$ctx.args.input.id'")
+          ]
+        }
+      ResponseMappingTemplate: |
+        $utils.toJson($utils.rds.toJsonObject($ctx.result)[1][0])
+      TypeName: Mutation
+        
+  DeletePetResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: deletePet
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "statements": [
+              $util.toJson("select * from Pets WHERE id='$ctx.args.input.id'"),
+              $util.toJson("delete from Pets WHERE id='$ctx.args.input.id'")
+          ]
+        }
+      ResponseMappingTemplate: |
+        $utils.toJson($utils.rds.toJsonObject($ctx.result)[0][0])
+      TypeName: Mutation
+        
+  GetPetResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: getPet
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+              "statements": [
+                  $util.toJson("select * from Pets WHERE id='$ctx.args.id'")
+          ]
+        }
+      ResponseMappingTemplate: |
+        $utils.toJson($utils.rds.toJsonObject($ctx.result)[0][0])
+      TypeName: Query
+        
+  ListPetsResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: listPets
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "statements": [
+              "select * from Pets"
+          ]
+        }
+      ResponseMappingTemplate: |
+        $utils.toJson($utils.rds.toJsonObject($ctx.result)[0])
+      TypeName: Query
+        
+  ListPetsByPriceRangeResolver:
+    Type: AWS::AppSync::Resolver
+    DependsOn:
+      - GraphQLSchema
+    Properties:
+      ApiId: !GetAtt GraphQLApi.ApiId
+      DataSourceName: !GetAtt DataSource.Name
+      FieldName: listPetsByPriceRange
+      Kind: UNIT
+      RequestMappingTemplate: |
+        {
+          "version": "2018-05-29",
+          "statements": [
+                  "select * from Pets where price > :MIN and price < :MAX"
+          ],
+      
+          "variableMap": {
+              ":MAX": $util.toJson($ctx.args.max),
+              ":MIN": $util.toJson($ctx.args.min)
+          }
+        }
+      ResponseMappingTemplate: |
+        $utils.toJson($utils.rds.toJsonObject($ctx.result)[0])
+      TypeName: Query
+      
+  ApiKey:
+    Type: AWS::AppSync::ApiKey
+    Properties:
+     ApiId: !GetAtt GraphQLApi.ApiId
+  
+  DataSourceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: appsync.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DataSourcePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - rds-data:DeleteItems
+                  - rds-data:ExecuteSql
+                  - rds-data:ExecuteStatement
+                  - rds-data:GetItems
+                  - rds-data:InsertItems
+                  - rds-data:UpdateItems
+                Resource:
+                  - !Ref DBClusterArn
+                  - !Sub "${DBClusterArn}:*"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref SecretArn
+                  - !Sub "${SecretArn}:*"
+      #RoleName: !Ref AppSyncRoleName
+                  
+                  
+Outputs:
+  ApiKey:
+    Value: !GetAtt ApiKey.ApiKey
+    
+  GraphQLUrl:
+    Value: !GetAtt GraphQLApi.GraphQLUrl

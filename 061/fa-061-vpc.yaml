@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  VPCCidrBlock:
+    Type: String
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+  
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-DBSecurityGroup"
+      GroupDescription: DBSecurityGroup.
+      VpcId: !Ref VPC
+          
+          
+Outputs:
+  VPC:
+    Value: !Ref VPC
+    
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+      
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+    
+  DBSecurityGroup:
+    Value: !Ref DBSecurityGroup

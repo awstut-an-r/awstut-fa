@@ -1,0 +1,217 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ApiKey:
+    Type: String
+    
+  Architecture:
+    Type: String
+    
+  CodeS3Bucket:
+    Type: String
+    
+  CodeS3Key:
+    Type: String
+    
+  DBClusterArn:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBTableName:
+    Type: String
+    
+  GraphQLUrl:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  LayerS3Key:
+    Type: String
+  
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  SecretArn:
+    Type: String
+    
+  Timeout:
+    Type: Number
+    
+    
+Resources:
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      #CompatibleArchitectures:
+      #  - arm64
+      #  - x86_64
+      CompatibleRuntimes:
+        - !Ref Runtime
+      Content:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref LayerS3Key
+      Description: !Ref Prefix
+      LayerName: !Ref Prefix
+
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          API_KEY: !Ref ApiKey
+          GRAPHQL_URL: !Ref GraphQLUrl
+          #DBCLUSTER_ARN: !Ref DBClusterArn
+          #DBNAME: !Ref DBName
+          #DBTABLE: !Ref DBTableName
+          #REGION: !Ref AWS::Region
+          #SECRET_ARN: !Ref SecretArn
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      FunctionName: !Sub "${Prefix}-function1"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole1.Arn
+      Timeout: !Ref Timeout
+      
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Function1.Arn
+      
+  FunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt Function1.Arn
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          DBCLUSTER_ARN: !Ref DBClusterArn
+          DBNAME: !Ref DBName
+          DBTABLE: !Ref DBTableName
+          REGION: !Ref AWS::Region
+          SECRET_ARN: !Ref SecretArn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import json
+          import os
+          
+          dbcluster_arn = os.environ['DBCLUSTER_ARN']
+          dbname = os.environ['DBNAME']
+          dbtable = os.environ['DBTABLE']
+          region = os.environ['REGION']
+          secret_arn = os.environ['SECRET_ARN']
+          
+          sql1 = 'create table {table}(id varchar(200), type varchar(200), price float)'.format(table=dbtable)
+          #sql2 = 'insert into {table} values (111, "dog", 123)'.format(table=dbtable)
+          client = boto3.client('rds-data', region_name=region)
+          schema = 'mysql'
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                response1 = client.execute_statement(
+                  database=dbname,
+                  resourceArn=dbcluster_arn,
+                  schema=schema,
+                  secretArn=secret_arn,
+                  sql=sql1
+                )
+                print(response1)
+                
+                #response2 = client.execute_statement(
+                #  database=dbname,
+                #  resourceArn=dbcluster_arn,
+                #  schema=schema,
+                #  secretArn=secret_arn,
+                #  sql=sql2
+                #)
+                #print(response2)
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function2"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      #Timeout: !Ref Timeout
+        
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-AuroraServerlessDataAPIPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref SecretArn
+              - Effect: Allow
+                Action:
+                  - rds-data:BatchExecuteStatement
+                  - rds-data:BeginTransaction
+                  - rds-data:CommitTransaction
+                  - rds-data:ExecuteStatement
+                  - rds-data:RollbackTransaction
+                Resource:
+                  - !Ref DBClusterArn
+                
+                
+Outputs:
+  Function2Arn:
+    Value: !GetAtt Function2.Arn
+
+  #FunctionRole:
+  #  Value: !Ref FunctionRole
