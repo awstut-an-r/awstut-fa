@@ -15,10 +15,7 @@ Parameters:
     
   DBInstanceClass:
     Type: String
-    
-  #DBName:
-  #  Type: String
-    
+
   DBMasterUsername:
     Type: String
     
@@ -46,7 +43,6 @@ Resources:
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       DBInstanceClass: !Ref DBInstanceClass
       DBInstanceIdentifier: dbinstance
-      #DBName: !Ref DBName
       DBSubnetGroupName: !Ref DBSubnetGroup
       Engine: !Ref DBEngine
       EngineVersion: !Ref DBEngineVersion
