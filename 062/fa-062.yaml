@@ -40,11 +40,7 @@ Parameters:
   DBMasterUserPassword:
     Type: String
     Default: Passw0rd
-    
-  #DBName:
-  #  Type: String
-  #  Default: testdb
-    
+
   HTTPSPort:
     Type: Number
     Default: 443
@@ -60,11 +56,7 @@ Parameters:
   LambdaLayerPackage:
     Type: String
     Default: layer.zip
-    
-  #LambdaPackage:
-  #  Type: String
-  #  Default: deploy.zip
-    
+
   MySQLPort:
     Type: Number
     Default: 3306
@@ -133,7 +125,6 @@ Resources:
         DBEngine: !Ref DBEngine
         DBEngineVersion: !Ref DBEngineVersion
         DBInstanceClass: !Ref DBInstanceClass
-        #DBName: !Ref DBName
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
         Prefix: !Ref Prefix
@@ -157,15 +148,10 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
         CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
-        #DBTableName: !Ref DBTableName
         DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
-        #DBName: !Ref DBName
-        #DBProxyEndpointAddress: !GetAtt RDSStack.Outputs.DBProxyEndpointAddress
         FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
         MySQLPort: !Ref MySQLPort
