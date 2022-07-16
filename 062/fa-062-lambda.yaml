@@ -1,0 +1,166 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  CodeS3Bucket:
+    Type: String
+    
+  #CodeS3Key:
+  #  Type: String
+    
+  #DBTableName:
+  #  Type: String
+  
+  DBInstanceEndpointAddress:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  #DBName:
+  #  Type: String
+    
+  FunctionSecurityGroup:
+    Type: String
+    
+  LayerS3Key:
+    Type: String
+    
+  MySQLPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  PrivateSubnet:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  SQLParameter:
+    Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      CompatibleRuntimes:
+        - !Ref Runtime
+      Content:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref LayerS3Key
+      Description: !Ref Prefix
+      LayerName: !Ref Prefix
+
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          #DB_NAME: !Ref DBName
+          #DB_PROXY_ENDPOINT_ADDRESS: !Ref DBProxyEndpointAddress
+          DB_ENDPOINT_ADDRESS: !Ref DBInstanceEndpointAddress
+          DB_ENDPOINT_PORT: !Ref MySQLPort
+          DB_PASSWORD: !Ref DBMasterUserPassword
+          #DB_TABLENAME: !Ref DBTableName
+          DB_USER: !Ref DBMasterUsername
+          REGION: !Ref AWS::Region
+          SQL_PARAMETER: !Ref SQLParameter
+      Code:
+        #S3Bucket: !Ref CodeS3Bucket
+        #S3Key: !Ref CodeS3Key
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import mysql.connector
+          import os
+          
+          db_endpoint_port = os.environ['DB_ENDPOINT_PORT']
+          db_endpoint_address = os.environ['DB_ENDPOINT_ADDRESS']
+          db_password = os.environ['DB_PASSWORD']
+          db_user = os.environ['DB_USER']
+          region = os.environ['REGION']
+          sql_parameter = os.environ['SQL_PARAMETER']
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                client = boto3.client('ssm', region_name=region)
+                response = client.get_parameter(Name=sql_parameter)
+                sql_statements = response['Parameter']['Value']
+                #print(sql_statements)
+                
+                conn = mysql.connector.connect(
+                  host=db_endpoint_address,
+                  port=db_endpoint_port,
+                  user=db_user,
+                  password=db_password
+                  )
+                cur = conn.cursor()
+                
+                for sql in sql_statements.splitlines():
+                  print(sql)
+                  cur.execute(sql)
+                  
+                cur.close()
+                conn.commit()
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: index.lambda_handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      VpcConfig:
+        SecurityGroupIds:
+          - !Ref FunctionSecurityGroup
+        SubnetIds:
+          - !Ref PrivateSubnet
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
+      Policies:
+        - PolicyName: GetSSMParameterPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SQLParameter}"
+        
+        
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+    
+  #FunctionName:
+  #  Value: !Ref Function

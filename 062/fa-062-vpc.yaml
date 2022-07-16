@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  CidrIp3:
+    Type: String
+    
+  HTTPSPort:
+    Type: Number
+    
+  MySQLPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+
+  VPCCidrBlock:
+    Type: String
+    
+    
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+      
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      CidrBlock: !Ref CidrIp3
+      VpcId: !Ref VPC
+      
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  PrivateSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+      
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  FunctionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-DBSecurityGroup"
+      GroupDescription: Allow MySQL from Instance and Function.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref FunctionSecurityGroup
+          
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
+          SourceSecurityGroupId: !Ref FunctionSecurityGroup
+          
+          
+Outputs:
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+    
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+    
+  PrivateSubnet3:
+    Value: !Ref PrivateSubnet3
+  
+  PrivateRouteTable:
+    Value: !Ref PrivateRouteTable
+    
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+    
+  FunctionSecurityGroup:
+    Value: !Ref FunctionSecurityGroup
+    
+  DBSecurityGroup:
+    Value: !Ref DBSecurityGroup
+    
+  EndpointSecurityGroup:
+    Value: !Ref EndpointSecurityGroup
+    
+  VPC:
+    Value: !Ref VPC
