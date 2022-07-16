@@ -3,13 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   CodeS3Bucket:
     Type: String
-    
-  #CodeS3Key:
-  #  Type: String
-    
-  #DBTableName:
-  #  Type: String
-  
+
   DBInstanceEndpointAddress:
     Type: String
     
@@ -18,10 +12,7 @@ Parameters:
     
   DBMasterUserPassword:
     Type: String
-    
-  #DBName:
-  #  Type: String
-    
+
   FunctionSecurityGroup:
     Type: String
     
@@ -64,18 +55,13 @@ Resources:
     Properties:
       Environment:
         Variables:
-          #DB_NAME: !Ref DBName
-          #DB_PROXY_ENDPOINT_ADDRESS: !Ref DBProxyEndpointAddress
           DB_ENDPOINT_ADDRESS: !Ref DBInstanceEndpointAddress
           DB_ENDPOINT_PORT: !Ref MySQLPort
           DB_PASSWORD: !Ref DBMasterUserPassword
-          #DB_TABLENAME: !Ref DBTableName
           DB_USER: !Ref DBMasterUsername
           REGION: !Ref AWS::Region
           SQL_PARAMETER: !Ref SQLParameter
       Code:
-        #S3Bucket: !Ref CodeS3Bucket
-        #S3Key: !Ref CodeS3Key
         ZipFile: |
           import boto3
           import cfnresponse
@@ -98,7 +84,6 @@ Resources:
                 client = boto3.client('ssm', region_name=region)
                 response = client.get_parameter(Name=sql_parameter)
                 sql_statements = response['Parameter']['Value']
-                #print(sql_statements)
                 
                 conn = mysql.connector.connect(
                   host=db_endpoint_address,
@@ -161,6 +146,3 @@ Resources:
 Outputs:
   FunctionArn:
     Value: !GetAtt Function.Arn
-    
-  #FunctionName:
-  #  Value: !Ref Function
