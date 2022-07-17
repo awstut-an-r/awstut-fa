@@ -47,7 +47,6 @@ Resources:
         S3Key: !Ref LayerS3Key
       Description: !Ref Prefix
       LayerName: !Ref Prefix
-      #LicenseInfo: MIT
       
   CustomResource:
     Type: Custom::CustomResource
@@ -90,11 +89,7 @@ Resources:
           
           requirements_path = os.path.join(work_dir, requirements_file)
           package_dir_path = os.path.join(work_dir, package_dir)
-          layer_package_path = os.path.join(
-            work_dir,
-            #os.path.splitext(os.path.basename(layer_package))[0]
-            layer_package
-            )
+          layer_package_path = os.path.join(work_dir,　layer_package)
           
           def lambda_handler(event, context):
             try:
@@ -102,7 +97,6 @@ Resources:
                 ssm_client = boto3.client('ssm', region_name=region)
                 ssm_response = ssm_client.get_parameter(Name=requirements_parameter)
                 requirements = ssm_response['Parameter']['Value']
-                #print(requirements)
                 
                 with open(requirements_path, 'w') as file_data:
                   print(requirements, file=file_data)
@@ -132,16 +126,9 @@ Resources:
         Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function1"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
       Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   Function2:
     Type: AWS::Lambda::Function
@@ -175,32 +162,12 @@ Resources:
         - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      #Timeout: 10
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
-  #FunctionUrl1:
-  #  Type: AWS::Lambda::Url
-  #  Properties:
-  #    AuthType: NONE
-  #    TargetFunctionArn: !GetAtt Function1.Arn
   
   FunctionUrl2:
     Type: AWS::Lambda::Url
     Properties:
       AuthType: NONE
       TargetFunctionArn: !GetAtt Function2.Arn
-      
-  #FunctionUrlPermission1:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunctionUrl
-  #    FunctionName: !GetAtt Function1.Arn
-  #    FunctionUrlAuthType: NONE
-  #    Principal: "*"
   
   FunctionUrlPermission2:
     Type: AWS::Lambda::Permission
