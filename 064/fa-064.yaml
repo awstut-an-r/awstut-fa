@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-064
+    
+  Architecture:
+    Type: String
+    Default: arm64
+    
+  EphemeralStorageSize:
+    Type: Number
+    Default: 512
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LayerPackage:
+    Type: String
+    Default: layer.zip
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+  Timeout:
+    Type: Number
+    Default: 300
+    
+    
+Resources:
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref Architecture
+        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
+        CodeS3Bucket: !Ref TemplateBucketName
+        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
+        EphemeralStorageSize: !Ref EphemeralStorageSize
+        #FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
+        Handler: !Ref Handler
+        LayerPackage: !Ref LayerPackage
+        LayerS3Key: !Sub "${Prefix}/${LayerPackage}"
+        Prefix: !Ref Prefix
+        RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
