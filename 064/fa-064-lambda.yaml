@@ -145,10 +145,7 @@ Resources:
           def lambda_handler(event, context):
             r = requests.get(url)
             soup = BeautifulSoup(r.text, 'lxml')
-            
-            for item in soup.find_all('item'):
-              print(item.find('title').getText())
-              
+
             titles = [item.find('title').getText() for item in soup.find_all('item')]
               
             return {
