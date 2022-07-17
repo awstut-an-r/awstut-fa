@@ -72,7 +72,6 @@ Resources:
           import os
           import pip
           import shutil
-          import subprocess
           
           layer_package = os.environ['LAYER_PACKAGE']
           region = os.environ['REGION']
