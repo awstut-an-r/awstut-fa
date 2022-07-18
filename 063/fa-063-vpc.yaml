@@ -92,31 +92,7 @@ Resources:
       GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      
-  #DBProxySecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-DBProxySecurityGroup"
-  #    GroupDescription: Security Group for DB Proxy.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref MySQLPort
-  #        ToPort: !Ref MySQLPort
-  #        SourceSecurityGroupId: !Ref FunctionSecurityGroup
-      
-  #DBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-DBSecurityGroup"
-  #    GroupDescription: Allow MySQL from Instance and Function.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref MySQLPort
-  #        ToPort: !Ref MySQLPort
-  #        SourceSecurityGroupId: !Ref DBProxySecurityGroup
-          
+
   CacheSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -152,13 +128,7 @@ Outputs:
 
   LambdaSubnet:
     Value: !Ref LambdaSubnet
-    
-  #DBSubnet1:
-  #  Value: !Ref DBSubnet1
-  #  
-  #DBSubnet2:
-  #  Value: !Ref DBSubnet2
-    
+
   CacheSubnet1:
     Value: !Ref CacheSubnet1
     
@@ -173,13 +143,7 @@ Outputs:
     
   FunctionSecurityGroup:
     Value: !Ref FunctionSecurityGroup
-    
-  #DBSecurityGroup:
-  #  Value: !Ref DBSecurityGroup
-  #  
-  #DBProxySecurityGroup:
-  #  Value: !Ref DBProxySecurityGroup
-    
+
   CacheSecurityGroup:
     Value: !Ref CacheSecurityGroup
     
