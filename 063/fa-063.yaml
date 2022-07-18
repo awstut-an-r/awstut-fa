@@ -1,0 +1,203 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-063
+    
+  Architecture:
+    Type: String
+    Default: arm64
+    
+  AvailabilityZone1:
+    Type: String
+    Default: a
+    
+  AvailabilityZone2:
+    Type: String
+    Default: d
+    
+  CacheEngine:
+    Type: String
+    Default: redis
+  
+  CacheEngineVersion:
+    Type: String
+    Default: 6.2
+    
+  CacheNodeType:
+    Type: String
+    Default: cache.t4g.micro
+    
+  CacheParameterGroupName:
+    Type: String
+    #Default: default.redis6.x.cluster.on
+    Default: default.redis6.x
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  LayerPackage:
+    Type: String
+    Default: layer.zip
+    
+  #NumCacheNodes:
+  #  Type: Number
+  #  Default: 2
+
+  #NumCacheClusters:
+  #  Type: Number
+  #  Default: 1
+    
+  ReplicaCount:
+    Type: Number
+    Default: 1
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+
+  RedisPort:
+    Type: Number
+    Default: 6379
+    
+    
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        CidrIp4: 10.0.4.0/24
+        HTTPSPort: !Ref HTTPSPort
+        #MySQLPort: !Ref MySQLPort
+        Prefix: !Ref Prefix
+        RedisPort: !Ref RedisPort
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        #Prefix: !Ref Prefix
+        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        RouteTable: !GetAtt VPCStack.Outputs.InstanceSubnetRouteTable
+        #PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  ElastiCacheStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-elasticache.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        CacheEngine: !Ref CacheEngine
+        CacheEngineVersion: !Ref CacheEngineVersion
+        CacheNodeType: !Ref CacheNodeType
+        CacheParameterGroupName: !Ref CacheParameterGroupName
+        CacheSecurityGroup: !GetAtt VPCStack.Outputs.CacheSecurityGroup
+        CacheSubnet1: !GetAtt VPCStack.Outputs.CacheSubnet1
+        CacheSubnet2: !GetAtt VPCStack.Outputs.CacheSubnet2
+        #NumCacheNodes: !Ref NumCacheNodes
+        #NumCacheClusters: !Ref NumCacheClusters
+        Prefix: !Ref Prefix
+        RedisPort: !Ref RedisPort
+        ReplicaCount: !Ref ReplicaCount
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+      - EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        
+  #SSMStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+  #    Parameters:
+  #      Prefix: !Ref Prefix
+        
+  LambdaLayerStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambdalayer.yaml"
+      Parameters:
+        Architecture: !Ref Architecture
+        EphemeralStorageSize: 512
+        Handler: !Ref Handler
+        LayerPackage: !Ref LayerPackage
+        #LayerS3Key: !Sub "${Prefix}/${LayerPackage}"
+        Prefix: !Ref Prefix
+        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        Runtime: !Ref Runtime
+        S3Bucket: !Ref TemplateBucketName
+        S3Folder: !Ref Prefix
+        Timeout: 300
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+      - ElastiCacheStack
+      - LambdaLayerStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref Architecture
+        CachePrimaryEndpointAddress: !GetAtt ElastiCacheStack.Outputs.CachePrimaryEndpointAddress
+        CacheReaderEndPointAddress: !GetAtt ElastiCacheStack.Outputs.CacheReaderEndPointAddress
+        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
+        #CodeS3Bucket: !Ref TemplateBucketName
+        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
+        #EphemeralStorageSize: !Ref EphemeralStorageSize
+        FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
+        Handler: !Ref Handler
+        LambdaLayer: !GetAtt LambdaLayerStack.Outputs.LambdaLayer
+        LambdaSubnet: !GetAtt VPCStack.Outputs.LambdaSubnet
+        #LayerPackage: !Ref LayerPackage
+        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
+        Prefix: !Ref Prefix
+        RedisPort: !Ref RedisPort
+        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        Runtime: !Ref Runtime
+        #Timeout: !Ref Timeout

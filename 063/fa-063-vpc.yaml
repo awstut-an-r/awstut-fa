@@ -1,0 +1,190 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  CidrIp3:
+    Type: String
+    
+  CidrIp4:
+    Type: String
+    
+  HTTPSPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  RedisPort:
+    Type: Number
+
+  VPCCidrBlock:
+    Type: String
+    
+    
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  InstanceSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      
+  LambdaSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+      
+  CacheSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp3
+      VpcId: !Ref VPC
+      
+  CacheSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      CidrBlock: !Ref CidrIp4
+      VpcId: !Ref VPC
+      
+  InstanceSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  InstanceSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref InstanceSubnet
+      RouteTableId: !Ref InstanceSubnetRouteTable
+      
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  FunctionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  #DBProxySecurityGroup:
+  #  Type: AWS::EC2::SecurityGroup
+  #  Properties:
+  #    GroupName: !Sub "${Prefix}-DBProxySecurityGroup"
+  #    GroupDescription: Security Group for DB Proxy.
+  #    VpcId: !Ref VPC
+  #    SecurityGroupIngress:
+  #      - IpProtocol: tcp
+  #        FromPort: !Ref MySQLPort
+  #        ToPort: !Ref MySQLPort
+  #        SourceSecurityGroupId: !Ref FunctionSecurityGroup
+      
+  #DBSecurityGroup:
+  #  Type: AWS::EC2::SecurityGroup
+  #  Properties:
+  #    GroupName: !Sub "${Prefix}-DBSecurityGroup"
+  #    GroupDescription: Allow MySQL from Instance and Function.
+  #    VpcId: !Ref VPC
+  #    SecurityGroupIngress:
+  #      - IpProtocol: tcp
+  #        FromPort: !Ref MySQLPort
+  #        ToPort: !Ref MySQLPort
+  #        SourceSecurityGroupId: !Ref DBProxySecurityGroup
+          
+  CacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-CacheSecurityGroup"
+      GroupDescription: Allow Redis from Function.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref RedisPort
+          ToPort: !Ref RedisPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: !Ref RedisPort
+          ToPort: !Ref RedisPort
+          SourceSecurityGroupId: !Ref FunctionSecurityGroup
+          
+  EndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+          
+Outputs:
+  InstanceSubnet:
+    Value: !Ref InstanceSubnet
+
+  LambdaSubnet:
+    Value: !Ref LambdaSubnet
+    
+  #DBSubnet1:
+  #  Value: !Ref DBSubnet1
+  #  
+  #DBSubnet2:
+  #  Value: !Ref DBSubnet2
+    
+  CacheSubnet1:
+    Value: !Ref CacheSubnet1
+    
+  CacheSubnet2:
+    Value: !Ref CacheSubnet2
+  
+  InstanceSubnetRouteTable:
+    Value: !Ref InstanceSubnetRouteTable
+    
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+    
+  FunctionSecurityGroup:
+    Value: !Ref FunctionSecurityGroup
+    
+  #DBSecurityGroup:
+  #  Value: !Ref DBSecurityGroup
+  #  
+  #DBProxySecurityGroup:
+  #  Value: !Ref DBProxySecurityGroup
+    
+  CacheSecurityGroup:
+    Value: !Ref CacheSecurityGroup
+    
+  EndpointSecurityGroup:
+    Value: !Ref EndpointSecurityGroup
+    
+  VPC:
+    Value: !Ref VPC

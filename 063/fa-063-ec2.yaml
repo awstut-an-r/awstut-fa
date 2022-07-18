@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  InstanceSubnet:
+    Type: String
+
+
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref InstanceSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+      UserData: !Base64 |
+        #!/bin/bash -xe
+        yum update -y
+        amazon-linux-extras install redis6 -y
+            
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore

@@ -1,0 +1,145 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+
+  CacheEngine:
+    Type: String
+  
+  CacheEngineVersion:
+    Type: String
+
+  CacheNodeType:
+    Type: String
+    
+  CacheParameterGroupName:
+    Type: String
+    
+  CacheSecurityGroup:
+    Type: String
+    
+  CacheSubnet1:
+    Type: String
+    
+  CacheSubnet2:
+    Type: String
+    
+  #NumCacheNodes:
+  #  Type: Number
+  
+  #NumCacheClusters:
+  #  Type: Number
+    
+  Prefix:
+    Type: String
+    
+  RedisPort:
+    Type: Number
+    
+  ReplicaCount:
+    Type: Number
+
+
+Resources:
+  #CacheCluster:
+  #  Type: AWS::ElastiCache::CacheCluster
+  #  Properties:
+  #    AutoMinorVersionUpgrade: true
+  #    #AZMode: # memcached only.
+  #    CacheNodeType: !Ref CacheNodeType
+  #    #CacheParameterGroupName: !Ref ParameterGroup
+  #    CacheParameterGroupName: !Ref CacheParameterGroupName
+  #    CacheSubnetGroupName: !Ref SubnetGroup
+  #    ClusterName: !Sub "${Prefix}-cachecluster"
+  #    Engine: !Ref CacheEngine
+  #    EngineVersion: !Ref CacheEngineVersion
+  #    #LogDeliveryConfigurations:
+  #    #NotificationTopicArn:
+  #    #NumCacheNodes: !Ref NumCacheNodes
+  #    NumCacheNodes: 1 # NumCacheNodes should be 1 if engine is redis
+  #    Port: !Ref RedisPort
+  #    #PreferredAvailabilityZone:
+  #    #PreferredAvailabilityZones:
+  #    #PreferredMaintenanceWindow:
+  #    #SnapshotArns:
+  #    #SnapshotName:
+  #    #SnapshotRetentionLimit:
+  #    #SnapshotWindow:
+  #    VpcSecurityGroupIds:
+  #      - !Ref CacheSecurityGroup
+      
+  #ParameterGroup:
+  #  Type: AWS::ElastiCache::ParameterGroup
+  #  Properties:
+  #    CacheParameterGroupFamily: redis6.x
+  #    Description: !Sub "${Prefix}-ParameterGroup"
+  #    Properties:
+  #      cluster-enabled: "yes"
+        
+  SubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      CacheSubnetGroupName: !Sub "${Prefix}-subnetgroup"
+      Description: !Sub "${Prefix}-SubnetGroup"
+      SubnetIds:
+        - !Ref CacheSubnet1
+        - !Ref CacheSubnet2
+        
+  ReplicationGroup:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      #AtRestEncryptionEnabled:
+      #AuthToken:
+      #AutomaticFailoverEnabled: true
+      AutoMinorVersionUpgrade: true
+      CacheNodeType: !Ref CacheNodeType
+      CacheParameterGroupName: !Ref CacheParameterGroupName
+      CacheSubnetGroupName: !Ref SubnetGroup
+      #DataTieringEnabled:
+      Engine: !Ref CacheEngine
+      EngineVersion: !Ref CacheEngineVersion
+      #GlobalReplicationGroupId:
+      #KmsKeyId:
+      #LogDeliveryConfigurations:
+      MultiAZEnabled: true
+      NodeGroupConfiguration:
+        - #NodeGroupId:
+          PrimaryAvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+          ReplicaAvailabilityZones:
+            - !Sub "${AWS::Region}${AvailabilityZone2}"
+          ReplicaCount: !Ref ReplicaCount
+          #Slots:
+      #NotificationTopicArn:
+      #NumCacheClusters: !Ref NumCacheClusters # Property NumCacheCluster cannot be defined along with Properties NumNodeGroups, ReplicasPerNodeGroup or NodeGroupConfiguration
+      #NumNodeGroups: 1
+      Port: !Ref RedisPort
+      #PreferredCacheClusterAZs: 
+      #PreferredMaintenanceWindow:
+      #PrimaryClusterId:
+      #ReplicasPerNodeGroup:
+      ReplicationGroupDescription: !Sub "${Prefix}-ReplicationGroup"
+      ReplicationGroupId: !Sub "${Prefix}-replicationgroup"
+      SecurityGroupIds:
+        - !Ref CacheSecurityGroup
+      #SnapshotArns:
+      #SnapshotName:
+      #SnapshotRetentionLimit:
+      #SnapshottingClusterId:
+      #SnapshotWindow:
+      #Tags:
+      #TransitEncryptionEnabled:
+      #UserGroupIds:
+        
+Outputs:
+  #CacheClusterAddress:
+  #  Value: !GetAtt CacheCluster.RedisEndpoint.Address
+  
+  CachePrimaryEndpointAddress:
+    Value: !GetAtt ReplicationGroup.PrimaryEndPoint.Address
+    
+  CacheReaderEndPointAddress:
+    Value: !GetAtt ReplicationGroup.ReaderEndPoint.Address
