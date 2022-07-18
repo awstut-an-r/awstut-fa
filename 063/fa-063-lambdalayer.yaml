@@ -15,10 +15,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
     
@@ -98,7 +95,6 @@ Resources:
           package_dir_path = os.path.join(work_dir, package_dir)
           layer_package_path = os.path.join(
             work_dir,
-            #os.path.splitext(os.path.basename(layer_package))[0]
             layer_package
             )
           
@@ -137,84 +133,10 @@ Resources:
         Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-custom-resource-lambdalayer-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt CustomResourceLambdaLayerFunctionRole.Arn
       Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
-  #Function2:
-  #  Type: AWS::Lambda::Function
-  #  Properties:
-  #    Architectures:
-  #      - !Ref Architecture
-  #    Code:
-  #      ZipFile: |
-  #        import json
-  #        import requests
-  #        from bs4 import BeautifulSoup
-  #        
-  #        url = 'https://news.google.com/rss'
-  #        
-  #        def lambda_handler(event, context):
-  #          r = requests.get(url)
-  #          soup = BeautifulSoup(r.text, 'lxml')
-  #          
-  #          for item in soup.find_all('item'):
-  #            print(item.find('title').getText())
-  #            
-  #          titles = [item.find('title').getText() for item in soup.find_all('item')]
-  #            
-  #          return {
-  #            'statusCode': 200,
-  #            'body': json.dumps(titles, indent=2)
-  #          }
-  #    FunctionName: !Sub "${Prefix}-function2"
-  #    Handler: !Ref Handler
-  #    Layers:
-  #      - !Ref LambdaLayer
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole2.Arn
-  #    #Timeout: 10
-  #    #VpcConfig:
-  #    #  SecurityGroupIds:
-  #    #    - !Ref FunctionSecurityGroup
-  #    #  SubnetIds:
-  #    #    - !Ref FunctionSubnet
-      
-  #FunctionUrl1:
-  #  Type: AWS::Lambda::Url
-  #  Properties:
-  #    AuthType: NONE
-  #    TargetFunctionArn: !GetAtt Function1.Arn
-  
-  #FunctionUrl2:
-  #  Type: AWS::Lambda::Url
-  #  Properties:
-  #    AuthType: NONE
-  #    TargetFunctionArn: !GetAtt Function2.Arn
-      
-  #FunctionUrlPermission1:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunctionUrl
-  #    FunctionName: !GetAtt Function1.Arn
-  #    FunctionUrlAuthType: NONE
-  #    Principal: "*"
-  
-  #FunctionUrlPermission2:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunctionUrl
-  #    FunctionName: !GetAtt Function2.Arn
-  #    FunctionUrlAuthType: NONE
-  #    Principal: "*"
-  
+
   CustomResourceLambdaLayerFunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -244,20 +166,7 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${S3Bucket}/*"
 
-  #FunctionRole2:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - lambda.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  
+
 Outputs:
   LambdaLayer:
     Value: !Ref LambdaLayer
