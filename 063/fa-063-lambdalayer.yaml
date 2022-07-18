@@ -93,10 +93,7 @@ Resources:
           
           requirements_path = os.path.join(work_dir, requirements_file)
           package_dir_path = os.path.join(work_dir, package_dir)
-          layer_package_path = os.path.join(
-            work_dir,
-            layer_package
-            )
+          layer_package_path = os.path.join(work_dir, layer_package)
           
           def lambda_handler(event, context):
             try:
