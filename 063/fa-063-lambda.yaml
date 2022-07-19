@@ -59,7 +59,6 @@ Resources:
               port=redis_port
               )
             primary_redis.set('hogehoge', 'fugafuga')
-            #print(primary_redis.get('hogehoge'))
             
             reader_redis = redis.Redis(
               host=reader_endpoint_address,
