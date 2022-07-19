@@ -97,7 +97,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub "${Prefix}-CacheSecurityGroup"
-      GroupDescription: Allow Redis from Function.
+      GroupDescription: Allow Redis from Instance and Function.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
