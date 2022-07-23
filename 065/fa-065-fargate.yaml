@@ -61,7 +61,6 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: !Sub "${Prefix}-container"
-          #Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
           Image: nginx:latest
           LogConfiguration:
             LogDriver: awslogs
@@ -69,7 +68,6 @@ Resources:
               awslogs-group: !Ref LogGroup
               awslogs-region: !Ref AWS::Region
               awslogs-stream-prefix: !Sub "${Prefix}-container"
-            #SecretOptions:
       Cpu: !Ref TaskCpu
       ExecutionRoleArn: !Ref FargateTaskExecutionRole
       Memory: !Ref TaskMemory
@@ -81,7 +79,6 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -89,17 +86,7 @@ Resources:
       ServiceName: !Sub "${Prefix}-service"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref ContainerSubnet
-            #- !Ref PrivateSubnet1
-        
-        
-#Outputs:
-#  Cluster:
-#    Value: !Ref Cluster
-#
-#  FargateTaskExecutionRole:
-#    Value: !Ref FargateTaskExecutionRole
