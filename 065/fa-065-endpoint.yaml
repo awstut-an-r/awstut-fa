@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ContainerRouteTable:
-  #  Type: String
-    
   ContainerSubnet:
     Type: String
 
@@ -21,14 +18,6 @@ Parameters:
     
 
 Resources:
-  #S3Endpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    RouteTableIds:
-  #      - !Ref ContainerRouteTable2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
-  #    VpcId: !Ref VPC
-  
   CloudWatchLogsEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -76,27 +65,3 @@ Resources:
         - !Ref InstanceSubnet
       VpcEndpointType: Interface
       VpcId: !Ref VPC
-      
-  #ECRDkrEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.dkr"
-  #    SubnetIds:
-  #      - !Ref ContainerSubnet2
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-  #      
-  #ECRApiEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.api"
-  #    SubnetIds:
-  #      - !Ref ContainerSubnet2
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
