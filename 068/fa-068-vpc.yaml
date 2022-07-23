@@ -161,7 +161,7 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub "${Prefix}-EndpointSecurityGroup1"
-      GroupDescription: Allow HTTPS from ContainerSecurityGroup.
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
