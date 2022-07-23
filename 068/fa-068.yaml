@@ -59,27 +59,17 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
       Parameters:
-        #ContainerSubnet1: !GetAtt VPCStack.Outputs.ContainerSubnet1
         ContainerSubnet2: !GetAtt VPCStack.Outputs.ContainerSubnet2
         EndpointSecurityGroup1: !GetAtt VPCStack.Outputs.EndpointSecurityGroup1
         EndpointSecurityGroup2: !GetAtt VPCStack.Outputs.EndpointSecurityGroup2
         InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
-        #Prefix: !Ref Prefix
         ContainerRouteTable2: !GetAtt VPCStack.Outputs.ContainerRouteTable2
         VPC: !GetAtt VPCStack.Outputs.VPC
-        
-  #ECRStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
         
   FargateStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - EndpointStack
-      #- ECRStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate.yaml"
       Parameters:
@@ -96,7 +86,6 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
@@ -105,48 +94,3 @@ Resources:
         InstanceType: !Ref InstanceType
         Prefix: !Ref Prefix
         InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
-        
-  #FargateService1Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - EndpointStack
-  #    #- ECRStack
-  #    - FargateStack
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate-service1.yaml"
-  #    Parameters:
-  #      Cluster: !GetAtt FargateStack.Outputs.Cluster
-  #      FargateTaskExecutionRole: !GetAtt FargateStack.Outputs.FargateTaskExecutionRole
-  #      #MyServiceRepository: !GetAtt ECRStack.Outputs.MyServiceRepository
-  #      Prefix: !Ref Prefix
-  #      ServiceCpu: !Ref ServiceCpu
-  #      ServiceMemory: !Ref ServiceMemory
-  #      ServiceName: service1
-  #      ServiceSecurityGroup: !GetAtt VPCStack.Outputs.ServiceSecurityGroup
-  #      #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-        
-  #FargateService2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    #- EndpointStack
-  #    #- ECRStack
-  #    - FargateStack
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate-service2.yaml"
-  #    Parameters:
-  #      Cluster: !GetAtt FargateStack.Outputs.Cluster
-  #      FargateTaskExecutionRole: !GetAtt FargateStack.Outputs.FargateTaskExecutionRole
-  #      #MyServiceRepository: !GetAtt ECRStack.Outputs.MyServiceRepository
-  #      MyServiceRepository:
-  #        Fn::ImportValue: !Sub "${Prefix}-MyServiceRepository"
-  #      Prefix: !Ref Prefix
-  #      ServiceCpu: !Ref ServiceCpu
-  #      ServiceMemory: !Ref ServiceMemory
-  #      ServiceName: service2
-  #      ServiceSecurityGroup: !GetAtt VPCStack.Outputs.ServiceSecurityGroup
-  #      #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      #PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-  #      PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
