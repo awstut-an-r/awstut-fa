@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ContainerSubnet1:
-  #  Type: String
-    
   ContainerSubnet2:
     Type: String
 
@@ -12,9 +9,6 @@ Parameters:
     
   EndpointSecurityGroup2:
     Type: String
-  
-  #Prefix:
-  #  Type: String
   
   InstanceSubnet:
     Type: String
