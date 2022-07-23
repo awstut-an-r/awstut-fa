@@ -29,11 +29,7 @@ Resources:
           SubnetId: !Ref InstanceSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  yum update -y
-      #  amazon-linux-extras install redis6 -y
-            
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
