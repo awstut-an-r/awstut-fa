@@ -88,7 +88,6 @@ Resources:
   Service1:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -96,17 +95,14 @@ Resources:
       ServiceName: !Sub "${Prefix}-service1"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref ContainerSubnet1
-            #- !Ref PrivateSubnet1
             
   Service2:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -114,9 +110,7 @@ Resources:
       ServiceName: !Sub "${Prefix}-service2"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref ContainerSubnet2
-            #- !Ref PrivateSubnet1
