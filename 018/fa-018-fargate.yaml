@@ -69,9 +69,7 @@ Resources:
       TaskRoleArn: !Ref TaskRole
       ContainerDefinitions:
         - Name: !Sub "${Prefix}-task1-container"
-          #Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
           Image: nginx:latest
-          #LogConfiguration:
           
   TaskDefinition2:
     Type: AWS::ECS::TaskDefinition
@@ -90,7 +88,6 @@ Resources:
   Service1:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -107,7 +104,6 @@ Resources:
   Service2:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -120,10 +116,3 @@ Resources:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref PublicSubnet2
-        
-#Outputs:
-#  Cluster:
-#    Value: !Ref Cluster
-#
-#  FargateTaskExecutionRole:
-#    Value: !Ref FargateTaskExecutionRole
