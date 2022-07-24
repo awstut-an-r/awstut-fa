@@ -44,7 +44,6 @@ Resources:
               Subject='hogehoge',
               Message='fugafuga'
               )
-            print(response)
             
             return {
               'statusCode': 200,
