@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #ContainerRouteTable:
+  #  Type: String
+    
+  ContainerSubnet:
+    Type: String
+
+  EndpointSecurityGroup1:
+    Type: String
+    
+  EndpointSecurityGroup2:
+    Type: String
+  
+  InstanceSubnet:
+    Type: String
+    
+  VPC:
+    Type: String
+    
+
+Resources:
+  #S3Endpoint:
+  #  Type: AWS::EC2::VPCEndpoint
+  #  Properties:
+  #    RouteTableIds:
+  #      - !Ref ContainerRouteTable2
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+  #    VpcId: !Ref VPC
+  
+  CloudWatchLogsEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup2
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.logs"
+      SubnetIds:
+        - !Ref ContainerSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+
+  SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      SubnetIds:
+        - !Ref InstanceSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+  
+  EC2MessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+      SubnetIds:
+        - !Ref InstanceSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+  
+  SSMMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup1
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      SubnetIds:
+        - !Ref InstanceSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+      
+  #ECRDkrEndpoint:
+  #  Type: AWS::EC2::VPCEndpoint
+  #  Properties:
+  #    PrivateDnsEnabled: true
+  #    SecurityGroupIds:
+  #      - !Ref EndpointSecurityGroup2
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.dkr"
+  #    SubnetIds:
+  #      - !Ref ContainerSubnet2
+  #    VpcEndpointType: Interface
+  #    VpcId: !Ref VPC
+  #      
+  #ECRApiEndpoint:
+  #  Type: AWS::EC2::VPCEndpoint
+  #  Properties:
+  #    PrivateDnsEnabled: true
+  #    SecurityGroupIds:
+  #      - !Ref EndpointSecurityGroup2
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.ecr.api"
+  #    SubnetIds:
+  #      - !Ref ContainerSubnet2
+  #    VpcEndpointType: Interface
+  #    VpcId: !Ref VPC
