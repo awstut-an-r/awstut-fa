@@ -50,34 +50,16 @@ Resources:
               'statusCode': 200,
               'body': json.dumps(response, indent=2)
             }
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   FunctionUrl:
     Type: AWS::Lambda::Url
     Properties:
       AuthType: NONE
       TargetFunctionArn: !GetAtt Function.Arn
-      
-  #FunctionUrlPermission1:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunctionUrl
-  #    FunctionName: !GetAtt Function1.Arn
-  #    FunctionUrlAuthType: NONE
-  #    Principal: "*"
   
   FunctionUrlPermission:
     Type: AWS::Lambda::Permission
