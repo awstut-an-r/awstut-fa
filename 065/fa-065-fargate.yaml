@@ -21,7 +21,7 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      LogGroupName: !Sub "${Prefix}-LogGroup"
 
   Cluster:
     Type: AWS::ECS::Cluster
