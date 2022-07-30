@@ -72,7 +72,6 @@ Resources:
             
             response = client.publish(
               TopicArn=topic,
-              #Subject=subscription_data_loaded['logStream'],
               Subject=subject,
               Message=subscription_data_loaded['logEvents'][0]['message']
               )
