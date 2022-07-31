@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-071
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  TaskCpu:
+    Type: Number
+    Default: 512
+    
+  TaskMemory:
+    Type: Number
+    Default: 1024
+
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone: a
+        #AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        #CidrIp4: 10.0.4.0/24
+        HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        #ContainerRouteTable: !GetAtt VPCStack.Outputs.ContainerRouteTable
+        ContainerSubnet: !GetAtt VPCStack.Outputs.ContainerSubnet
+        EndpointSecurityGroup1: !GetAtt VPCStack.Outputs.EndpointSecurityGroup1
+        EndpointSecurityGroup2: !GetAtt VPCStack.Outputs.EndpointSecurityGroup2
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        #EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        #Prefix: !Ref Prefix
+        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  #ECRStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
+  #    Parameters:
+  #      Prefix: !Ref Prefix
+        
+  FargateStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EndpointStack
+    #  - ECRStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate.yaml"
+      Parameters:
+        ContainerSecurityGroup: !GetAtt VPCStack.Outputs.ContainerSecurityGroup
+        ContainerSubnet: !GetAtt VPCStack.Outputs.ContainerSubnet
+        Prefix: !Ref Prefix
+        TaskCpu: !Ref TaskCpu
+        TaskMemory: !Ref TaskMemory
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EndpointStack
+      #- VPCStack
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - FargateStack
+      #- VPCStack
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      Parameters:
+        Architecture: arm64
+        ContainerRouteTable: !GetAtt VPCStack.Outputs.ContainerRouteTable
+        EIPAllocationId: !GetAtt VPCStack.Outputs.EIPAllocationId
+        Handler: index.lambda_handler
+        IGW: !GetAtt VPCStack.Outputs.IGW
+        NATGateway: !GetAtt VPCStack.Outputs.NATGateway
+        Prefix: !Ref Prefix
+        PublicRouteTable: !GetAtt VPCStack.Outputs.PublicRouteTable
+        Runtime: python3.8
+        Timeout: 300
+        VPC: !GetAtt VPCStack.Outputs.VPC
