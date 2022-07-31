@@ -6,16 +6,7 @@ Parameters:
     
   ContainerRouteTable:
     Type: String
-    
-  #CachePrimaryEndpointAddress:
-  #  Type: String
-  #  
-  #CacheReaderEndPointAddress:
-  #  Type: String
-  #  
-  #FunctionSecurityGroup:
-  #  Type: String
-  
+
   EIPAllocationId:
     Type: String
 
@@ -24,19 +15,7 @@ Parameters:
     
   IGW:
     Type: String
-    
-  #LambdaLayer:
-  #  Type: String
-  #  
-  #LambdaSubnet:
-  #  Type: String
-    
-  #LayerPackage:
-  #  Type: String
-    
-  #LayerS3Key:
-  #  Type: String
-  
+
   NATGateway:
     Type: String
     
@@ -45,13 +24,7 @@ Parameters:
     
   PublicRouteTable:
     Type: String
-    
-  #RedisPort:
-  #  Type: Number
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
     
@@ -139,12 +112,8 @@ Resources:
             except Exception as e:
               print(e)
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-custom-resource-lambda-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt CustomResourceLambdaFunctionRole.Arn
       Timeout: !Ref Timeout
@@ -189,4 +158,4 @@ Resources:
                 Action:
                   - ec2:ReleaseAddress
                 Resource: "*"
-                  #- !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:eip/${EIPAllocationId}"
+                #Resource: !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:eip/${EIPAllocationId}"
