@@ -1,24 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Architecture:
-  #  Type: String
-  #  
-  #Handler:
-  #  Type: String
-  
   ClusterName:
     Type: String
 
-  #Prefix:
-  #  Type: String
-    
   ServiceName:
     Type: String
-    
-  #Runtime:
-  #  Type: String
-  
+
   TopicArn:
     Type: String
     
@@ -27,19 +15,10 @@ Resources:
   Alarm:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      #ActionsEnabled: true
-      #AlarmDescription: CPU alarm for my instance
       AlarmActions:
         - !Ref TopicArn
-      #ComparisonOperator: GreaterThanThreshold
       ComparisonOperator: LessThanThreshold
-      #Dimensions:
-      #  - Name: ClusterName
-      #    Value: !Ref ClusterName
-      #  - Name: ServiceName
-      #    Value: !Ref ServiceName
       EvaluationPeriods: 1
-      #MetricName: CPUUtilization
       Metrics:
         - Expression: 100 - m1
           Id: it1
@@ -61,109 +40,3 @@ Resources:
             Unit: Percent
           ReturnData: false
       Threshold: 98
-      #Unit: Percent
-
-  #LogGroup:
-  #  Type: AWS::Logs::LogGroup
-  #  Properties: 
-  #    LogGroupName: !Sub "${Prefix}-LogGroup"
-  #    
-  #SubscriptionFilter:
-  #  Type: AWS::Logs::SubscriptionFilter
-  #  Properties:
-  #    DestinationArn: !GetAtt Function.Arn
-  #    FilterPattern: error
-  #    LogGroupName: !Ref LogGroup
-  #    #RoleArn: !GetAtt SubscriptionFilterRole.Arn
-  #    
-  #SubscriptionFilterPermission:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunction
-  #    FunctionName: !Ref Function
-  #    Principal: !Sub "logs.${AWS::Region}.amazonaws.com"
-  #    SourceArn: !GetAtt LogGroup.Arn
-  #    
-  #Function:
-  #  Type: AWS::Lambda::Function
-  #  Properties:
-  #    Architectures:
-  #      - !Ref Architecture
-  #    Environment:
-  #      Variables:
-  #        REGION: !Ref AWS::Region
-  #        TOPIC: !Ref TopicArn
-  #    Code:
-  #      ZipFile: |
-  #        import base64
-  #        import boto3
-  #        import gzip
-  #        import json
-  #        import os
-  #        
-  #        topic = os.environ['TOPIC']
-  #        region = os.environ['REGION']
-  #        
-  #        client = boto3.client('sns', region_name=region)
-  #        subject = 'Error Detection.'
-  #        
-  #        def lambda_handler(event, context):
-  #          subscription_data = event['awslogs']['data']
-  #          #print(subscription_data)
-  #          
-  #          subscription_data_decoded = base64.b64decode(subscription_data)
-  #          #print(subscription_data_decoded)
-  #          
-  #          subscription_data_decompressed = gzip.decompress(subscription_data_decoded)
-  #          #print(subscription_data_decompressed)
-  #          
-  #          subscription_data_loaded = json.loads(subscription_data_decompressed)
-  #          #print(subscription_data_loaded)
-  #          
-  #          response = client.publish(
-  #            TopicArn=topic,
-  #            #Subject=subscription_data_loaded['logStream'],
-  #            Subject=subject,
-  #            Message=subscription_data_loaded['logEvents'][0]['message']
-  #            )
-  #          #print(response)
-  #          
-  #          #return {
-  #          #  'statusCode': 200,
-  #          #  'body': json.dumps(titles, indent=2)
-  #          #}
-  #    FunctionName: !Sub "${Prefix}-function"
-  #    Handler: !Ref Handler
-  #    #Layers:
-  #    #  - !Ref LambdaLayer
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole.Arn
-  #    
-  #FunctionRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - lambda.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  #    Policies:
-  #      - PolicyName: SNSPublishPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - sns:Publish
-  #              Resource:
-  #                - !Ref TopicArn
-      
-      
-#Outputs:
-#  LogGroup:
-#    Value: !Ref LogGroup
