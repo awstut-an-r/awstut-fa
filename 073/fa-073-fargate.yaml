@@ -7,9 +7,6 @@ Parameters:
   ContainerSubnet:
     Type: String
 
-  #LogGroup:
-  #  Type: String
-
   Prefix:
     Type: String
 
@@ -21,19 +18,6 @@ Parameters:
     
 
 Resources:
-  #LogGroup:
-  #  Type: AWS::Logs::LogGroup
-  #  Properties: 
-  #    LogGroupName: !Sub "${Prefix}-FlowLogGroup"
-  #    
-  #SubscriptionFilter:
-  #  Type: AWS::Logs::SubscriptionFilter
-  #  Properties:
-  #    #DestinationArn:
-  #    #FilterPattern:
-  #    #LogGroupName:
-  #    #RoleArn:
-
   Cluster:
     Type: AWS::ECS::Cluster
     Properties:
@@ -53,15 +37,6 @@ Resources:
               - sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-      #Policies:
-      #  - PolicyName: SNSPublishPolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - cloudwatch:PutMetricData
-      #          Resource: "*"
 
   TaskRole:
     Type: AWS::IAM::Role
@@ -75,30 +50,13 @@ Resources:
                 - ecs-tasks.amazonaws.com
             Action:
               - sts:AssumeRole
-      #Policies:
-      #  - PolicyName: SNSPublishPolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - cloudwatch:PutMetricData
-      #          Resource: "*"
         
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
         - Name: !Sub "${Prefix}-container"
-          #Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
           Image: nginx:latest
-          #LogConfiguration:
-          #  LogDriver: awslogs
-          #  Options:
-          #    awslogs-group: !Ref LogGroup
-          #    awslogs-region: !Ref AWS::Region
-          #    awslogs-stream-prefix: !Sub "${Prefix}-container"
-          #  #SecretOptions:
       Cpu: !Ref TaskCpu
       ExecutionRoleArn: !Ref FargateTaskExecutionRole
       Memory: !Ref TaskMemory
@@ -110,7 +68,6 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       LaunchType: FARGATE
       DesiredCount: 1
@@ -118,12 +75,10 @@ Resources:
       ServiceName: !Sub "${Prefix}-service"
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref ContainerSubnet
-            #- !Ref PrivateSubnet1
         
         
 Outputs:
@@ -132,6 +87,3 @@ Outputs:
     
   ServiceName:
     Value: !GetAtt Service.Name
-
-  #FargateTaskExecutionRole:
-  #  Value: !Ref FargateTaskExecutionRole
