@@ -1,0 +1,140 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ContainerSecurityGroup:
+    Type: String
+    
+  ContainerSubnet:
+    Type: String
+
+  #LogGroup:
+  #  Type: String
+
+  Prefix:
+    Type: String
+
+  TaskCpu:
+    Type: Number
+    
+  TaskMemory:
+    Type: Number
+    
+
+Resources:
+  #LogGroup:
+  #  Type: AWS::Logs::LogGroup
+  #  Properties: 
+  #    LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+  #    
+  #SubscriptionFilter:
+  #  Type: AWS::Logs::SubscriptionFilter
+  #  Properties:
+  #    #DestinationArn:
+  #    #FilterPattern:
+  #    #LogGroupName:
+  #    #RoleArn:
+
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${Prefix}-cluster"
+      ClusterSettings:
+        - Name: containerInsights
+          Value: enabled
+      
+  FargateTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      #Policies:
+      #  - PolicyName: SNSPublishPolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - cloudwatch:PutMetricData
+      #          Resource: "*"
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      #Policies:
+      #  - PolicyName: SNSPublishPolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - cloudwatch:PutMetricData
+      #          Resource: "*"
+        
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Name: !Sub "${Prefix}-container"
+          #Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
+          Image: nginx:latest
+          #LogConfiguration:
+          #  LogDriver: awslogs
+          #  Options:
+          #    awslogs-group: !Ref LogGroup
+          #    awslogs-region: !Ref AWS::Region
+          #    awslogs-stream-prefix: !Sub "${Prefix}-container"
+          #  #SecretOptions:
+      Cpu: !Ref TaskCpu
+      ExecutionRoleArn: !Ref FargateTaskExecutionRole
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref TaskRole
+      
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      #Cluster: !Ref Cluster1
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      TaskDefinition: !Ref TaskDefinition
+      ServiceName: !Sub "${Prefix}-service"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          #AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - !Ref ContainerSubnet
+            #- !Ref PrivateSubnet1
+        
+        
+Outputs:
+  ClusterName:
+    Value: !Ref Cluster
+    
+  ServiceName:
+    Value: !GetAtt Service.Name
+
+  #FargateTaskExecutionRole:
+  #  Value: !Ref FargateTaskExecutionRole
