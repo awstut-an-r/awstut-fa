@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: fa-074
+    
+
+Resources:
+  Repository:
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: !Ref Prefix
+
+
+Outputs:
+  RepositoryName:
+    Value: !Ref Repository
+    Export:
+      Name: !Sub "${Prefix}-RepositoryName"

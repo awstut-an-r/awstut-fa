@@ -1,0 +1,192 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  #CachePrimaryEndpointAddress:
+  #  Type: String
+  #  
+  #CacheReaderEndPointAddress:
+  #  Type: String
+  #  
+  #FunctionSecurityGroup:
+  #  Type: String
+  
+  EIPAllocationId:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  IGW:
+    Type: String
+    
+  #LambdaLayer:
+  #  Type: String
+  #  
+  #LambdaSubnet:
+  #  Type: String
+    
+  #LayerPackage:
+  #  Type: String
+    
+  #LayerS3Key:
+  #  Type: String
+  
+  NATGateway:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PrivateRouteTable:
+    Type: String
+    
+  PublicRouteTable:
+    Type: String
+    
+  #RedisPort:
+  #  Type: Number
+    
+  #RequirementsParameter:
+  #  Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+    
+  VPC:
+    Type: String
+    
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt CustomResourceLambdaFunction.Arn
+     
+  CustomResourceLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          EIP_ALLOCATION_ID: !Ref EIPAllocationId
+          INTERNET_GATEWAY: !Ref IGW
+          NAT_GATEWAY: !Ref NATGateway
+          PRIVATE_ROUTE_TABLE: !Ref PrivateRouteTable
+          PUBLIC_ROUTE_TABLE: !Ref PublicRouteTable
+          REGION: !Ref AWS::Region
+          VPC: !Ref VPC
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          import time
+          
+          private_route_table = os.environ['PRIVATE_ROUTE_TABLE']
+          eip_allocation_id = os.environ['EIP_ALLOCATION_ID']
+          internet_gateway = os.environ['INTERNET_GATEWAY']
+          nat_gateway = os.environ['NAT_GATEWAY']
+          public_route_table = os.environ['PUBLIC_ROUTE_TABLE']
+          region = os.environ['REGION']
+          vpc = os.environ['VPC']
+          
+          client = boto3.client('ec2', region_name=region)
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                response1 = client.delete_route(
+                  DestinationCidrBlock='0.0.0.0/0',
+                  RouteTableId=private_route_table)
+                print(response1)
+                
+                response2 = client.delete_route(
+                  DestinationCidrBlock='0.0.0.0/0',
+                  RouteTableId=public_route_table)
+                print(response2)
+                
+                response3 = client.delete_nat_gateway(
+                  NatGatewayId=nat_gateway)
+                print(response3)
+                
+                time.sleep(60)
+                
+                response4 = client.release_address(
+                  AllocationId=eip_allocation_id)
+                print(response4)
+                
+                response5 = client.detach_internet_gateway(
+                  InternetGatewayId=internet_gateway,
+                  VpcId=vpc)
+                print(response5)
+                
+                response6 = client.delete_internet_gateway(
+                  InternetGatewayId=internet_gateway)
+                print(response6)
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-custom-resource-lambda-function"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt CustomResourceLambdaFunctionRole.Arn
+      Timeout: !Ref Timeout
+
+  CustomResourceLambdaFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DeleteTemporaryResourcePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DeleteInternetGateway
+                  - ec2:DetachInternetGateway
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:internet-gateway/${IGW}"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${VPC}"
+              - Effect: Allow
+                Action:
+                  - ec2:DeleteRoute
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:route-table/${PublicRouteTable}"
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:route-table/${PrivateRouteTable}"
+              - Effect: Allow
+                Action:
+                  - ec2:DeleteNatGateway
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:natgateway/${NATGateway}"
+              - Effect: Allow
+                Action:
+                  - ec2:ReleaseAddress
+                Resource: "*"
+                  #- !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:eip/${EIPAllocationId}"
