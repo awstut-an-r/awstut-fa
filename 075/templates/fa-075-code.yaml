@@ -195,8 +195,8 @@ Resources:
             Value: !Ref SSMParameterDockerHubUsername
         Image: !Ref ProjectEnvironmentImage
         ImagePullCredentialsType: CODEBUILD
-        Type: !Ref ProjectEnvironmentType
         PrivilegedMode: true
+        Type: !Ref ProjectEnvironmentType
       LogsConfig: 
         CloudWatchLogs:
           Status: DISABLED
