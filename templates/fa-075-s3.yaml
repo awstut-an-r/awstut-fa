@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Prefix
+      AccessControl: Private
+
+
+Outputs:
+  #BucketArn:
+  #  Value: !GetAtt Bucket.Arn
+    
+  #BucketRegionalDomainName:
+  #  #Value: !GetAtt Bucket.DomainName
+  #  Value: !GetAtt Bucket.RegionalDomainName
+  
+  #BucketWebsiteURL:
+  #  Value: !GetAtt Bucket.WebsiteURL
+    
+  BucketName:
+    Value: !Ref Bucket
