@@ -15,11 +15,11 @@ Parameters:
     
   DockerHubPassword:
     Type: String
-    Default: MPDgonzaresu2
+    Default: [dockerhub-account-password]
     
   DockerHubUsername:
     Type: String
-    Default: tyokunobo
+    Default: [dockerhub-account-username]
     
   ProjectEnvironmentComputeType:
     Type: String
@@ -69,7 +69,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
       Parameters:
         BranchName: !Ref BranchName
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
         BucketName: !GetAtt S3Stack.Outputs.BucketName
         ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
         PipelineBuildArtifact: BuildArtifact
