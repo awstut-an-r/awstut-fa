@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-075
+    
+  BranchName:
+    Type: String
+    Default: master
+    
+  DockerHubPassword:
+    Type: String
+    Default: [dockerhub-account-password]
+    
+  DockerHubUsername:
+    Type: String
+    Default: [dockerhub-account-username]
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_CONTAINER
+    
+    
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        DockerHubPassword: !Ref DockerHubPassword
+        DockerHubUsername: !Ref DockerHubUsername
+        Prefix: !Ref Prefix
+        
+  ECRStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+      - SSMStack
+      - ECRStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        BranchName: !Ref BranchName
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        PipelineBuildArtifact: BuildArtifact
+        PipelineSourceArtifact: SourceArtifact
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        SSMParameterDockerHubPassword: !GetAtt SSMStack.Outputs.SSMParameterDockerHubPassword
+        SSMParameterDockerHubUsername: !GetAtt SSMStack.Outputs.SSMParameterDockerHubUsername
