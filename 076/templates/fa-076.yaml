@@ -97,11 +97,8 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
         AvailabilityZone: a
-        #AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        #CidrIp3: 10.0.3.0/24
-        #CidrIp4: 10.0.4.0/24
         HTTPPort: !Ref HTTPPort
         HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
@@ -118,11 +115,6 @@ Resources:
         EndpointSecurityGroup1: !GetAtt VPCStack.Outputs.EndpointSecurityGroup1
         EndpointSecurityGroup2: !GetAtt VPCStack.Outputs.EndpointSecurityGroup2
         InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
-        #EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-        #Prefix: !Ref Prefix
-        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
         VPC: !GetAtt VPCStack.Outputs.VPC
 
@@ -131,7 +123,6 @@ Resources:
     DependsOn:
       - ECRStack
       - EndpointStack
-      #- CloudWatchStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate.yaml"
       Parameters:
@@ -140,17 +131,13 @@ Resources:
         ContainerSubnet: !GetAtt VPCStack.Outputs.ContainerSubnet
         ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
         HTTPPort: !Ref HTTPPort
-        #LogGroup: !GetAtt CloudWatchStack.Outputs.LogGroup
         Prefix: !Ref Prefix
-        #RepositoryName:
-        #  Fn::ImportValue: !Sub "${Prefix}-RepositoryName"
         TaskCpu: !Ref TaskCpu
         TaskMemory: !Ref TaskMemory
         
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-    #  - EndpointStack
     - VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
@@ -172,7 +159,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
       Parameters:
         BranchName: !Ref BranchName
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
         BucketName: !GetAtt S3Stack.Outputs.BucketName
         ContainerName: !Ref ContainerName
         ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
