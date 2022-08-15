@@ -15,5 +15,3 @@ Resources:
 Outputs:
   ECRRepositoryName:
     Value: !Ref ECRRepository
-    #Export:
-    #  Name: !Sub "${Prefix}-RepositoryName"
