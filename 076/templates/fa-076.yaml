@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-076
+    
+  BranchName:
+    Type: String
+    Default: master
+    
+  ContainerName:
+    Type: String
+    Default: my-container
+    
+  DockerHubPassword:
+    Type: String
+    Default: [dockerhub-account-password]
+    
+  DockerHubUsername:
+    Type: String
+    Default: [dockerhub-account-username]
+    
+  ImageDefinitionFileName:
+    Type: String
+    Default: imagedefinitions.json
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  HTTPPort:
+    Type: Number
+    Default: 8080
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_CONTAINER
+    
+  TaskCpu:
+    Type: Number
+    Default: 512
+    
+  TaskMemory:
+    Type: Number
+    Default: 1024
+
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        DockerHubPassword: !Ref DockerHubPassword
+        DockerHubUsername: !Ref DockerHubUsername
+        Prefix: !Ref Prefix
+        
+  ECRStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+
+
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone: a
+        #AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        #CidrIp3: 10.0.3.0/24
+        #CidrIp4: 10.0.4.0/24
+        HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        ContainerSubnet: !GetAtt VPCStack.Outputs.ContainerSubnet
+        EndpointSecurityGroup1: !GetAtt VPCStack.Outputs.EndpointSecurityGroup1
+        EndpointSecurityGroup2: !GetAtt VPCStack.Outputs.EndpointSecurityGroup2
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        #EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        #Prefix: !Ref Prefix
+        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        VPC: !GetAtt VPCStack.Outputs.VPC
+
+  FargateStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ECRStack
+      - EndpointStack
+      #- CloudWatchStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate.yaml"
+      Parameters:
+        ContainerName: !Ref ContainerName
+        ContainerSecurityGroup: !GetAtt VPCStack.Outputs.ContainerSecurityGroup
+        ContainerSubnet: !GetAtt VPCStack.Outputs.ContainerSubnet
+        ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        HTTPPort: !Ref HTTPPort
+        #LogGroup: !GetAtt CloudWatchStack.Outputs.LogGroup
+        Prefix: !Ref Prefix
+        #RepositoryName:
+        #  Fn::ImportValue: !Sub "${Prefix}-RepositoryName"
+        TaskCpu: !Ref TaskCpu
+        TaskMemory: !Ref TaskMemory
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    #  - EndpointStack
+    - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+  
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+      - SSMStack
+      - ECRStack
+      - FargateStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        BranchName: !Ref BranchName
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ContainerName: !Ref ContainerName
+        ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        ECSClusterName: !GetAtt FargateStack.Outputs.ECSClusterName
+        ECSServiceName: !GetAtt FargateStack.Outputs.ECSServiceName
+        ImageDefinitionFileName: !Ref ImageDefinitionFileName
+        PipelineBuildArtifact: BuildArtifact
+        PipelineSourceArtifact: SourceArtifact
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        SSMParameterDockerHubPassword: !GetAtt SSMStack.Outputs.SSMParameterDockerHubPassword
+        SSMParameterDockerHubUsername: !GetAtt SSMStack.Outputs.SSMParameterDockerHubUsername
