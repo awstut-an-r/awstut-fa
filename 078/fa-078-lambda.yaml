@@ -45,6 +45,10 @@ Resources:
                   
                 image_ids = list_images_response['imageIds']
                 
+                if len(image_ids) == 0:
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                  return
+                
                 batch_delete_image_response = ecr_client.batch_delete_image(
                   registryId=account_id,
                   repositoryName=ecr_repository_name,
