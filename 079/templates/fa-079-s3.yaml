@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Handler:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+
+Resources:
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Prefix
+      AccessControl: Private
+      
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt S3Function.Arn
+      
+  S3Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          bucket_name = os.environ['BUCKET_NAME']
+          
+          s3_client = boto3.client('s3')
+           
+          DELETE = 'Delete'
+          response_data = {}
+          
+          s3_contents_key = 'Contents'
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == DELETE:
+                list_response = s3_client.list_objects_v2(
+                  Bucket=bucket_name)
+                print(list_response)
+                  
+                if s3_contents_key not in list_response or (
+                    len(list_response[s3_contents_key])) == 0:
+                  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                  return
+                  
+                for obj in list_response[s3_contents_key]:
+                  delete_response = s3_client.delete_object(
+                    Bucket=bucket_name,
+                    Key=obj['Key'])
+                  print(delete_response)
+              
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref Bucket
+      FunctionName: !Sub "${Prefix}-function-s3"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt S3FunctionRole.Arn
+
+  S3FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-S3DeleteObjectsPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                  #- s3:GetObject
+                  #- s3:PutObject
+                Resource:
+                  - !GetAtt Bucket.Arn
+                  - !Sub
+                      - "${BucketArn}/*"
+                      - BucketArn: !GetAtt Bucket.Arn
+
+
+Outputs:
+  #BucketArn:
+  #  Value: !GetAtt Bucket.Arn
+    
+  #BucketRegionalDomainName:
+  #  #Value: !GetAtt Bucket.DomainName
+  #  Value: !GetAtt Bucket.RegionalDomainName
+  
+  #BucketWebsiteURL:
+  #  Value: !GetAtt Bucket.WebsiteURL
+    
+  BucketName:
+    Value: !Ref Bucket
