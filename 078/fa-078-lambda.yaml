@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
   ECRRepositoryArn:
     Type: String
   
@@ -66,7 +60,6 @@ Resources:
       Environment:
         Variables:
           ACCOUNT_ID: !Ref AWS::AccountId
-          #BUCKET_NAME: !Ref BucketName
           ECR_REPOSITORY_NAME: !Ref ECRRepositoryName
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
@@ -93,15 +86,9 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- s3:ListBucket
-                  #- s3:GetObject
-                  #- s3:PutObject
-                  #- s3:DeleteObject
                   - ecr:BatchDeleteImage
                   - ecr:ListImages
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
                   - !Ref ECRRepositoryArn
         
         
