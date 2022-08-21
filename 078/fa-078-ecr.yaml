@@ -9,34 +9,6 @@ Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
     Properties: 
-      #LifecyclePolicy:
-      #  LifecyclePolicyText: |
-      #    {
-      #      "rules": [
-      #        {
-      #          "rulePriority": 1,
-      #          "description": "Keep only one untagged image, expire all others",
-      #          "selection": {
-      #            "tagStatus": "untagged",
-      #            "countType": "imageCountMoreThan",
-      #            "countNumber": 1
-      #          },
-      #          "action": {
-      #            "type": "expire"
-      #          }
-      #        }
-      #      ]
-      #    }
-      #  #  rules:
-      #  #    - rulePriority: 1,
-      #  #      description: Keep only one untagged image, expire all others
-      #  #      selection:
-      #  #        tagStatus: untagged
-      #  #        countType: imageCountMoreThan
-      #  #        countNumber: 1
-      #  #      action:
-      #  #        type: expire
-      #  RegistryId: !Ref AWS::AccountId
       RepositoryName: !Ref Prefix
       
 Outputs:
@@ -45,5 +17,3 @@ Outputs:
 
   ECRRepositoryName:
     Value: !Ref ECRRepository
-    #Export:
-    #  Name: !Sub "${Prefix}-RepositoryName"
