@@ -29,10 +29,6 @@ Resources:
           SubnetId: !Ref InstanceSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  yum update -y
-      #  yum install httpd -y
             
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
