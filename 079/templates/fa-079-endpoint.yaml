@@ -21,42 +21,6 @@ Parameters:
     
 
 Resources:
-  #CloudWatchLogsEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.logs"
-  #    SubnetIds:
-  #      - !Ref ContainerSubnet
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-      
-  #CloudWatchMetricsEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.monitoring"
-  #    SubnetIds:
-  #      - !Ref ContainerSubnet
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-  
-  #XRayEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup2
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.xray"
-  #    SubnetIds:
-  #      - !Ref ContainerSubnet
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-
   SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
