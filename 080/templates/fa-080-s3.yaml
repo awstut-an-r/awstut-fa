@@ -94,8 +94,6 @@ Resources:
                 Action:
                   - s3:DeleteObject
                   - s3:ListBucket
-                  #- s3:GetObject
-                  #- s3:PutObject
                 Resource:
                   - !GetAtt Bucket.Arn
                   - !Sub
@@ -104,15 +102,5 @@ Resources:
 
 
 Outputs:
-  #BucketArn:
-  #  Value: !GetAtt Bucket.Arn
-    
-  #BucketRegionalDomainName:
-  #  #Value: !GetAtt Bucket.DomainName
-  #  Value: !GetAtt Bucket.RegionalDomainName
-  
-  #BucketWebsiteURL:
-  #  Value: !GetAtt Bucket.WebsiteURL
-    
   BucketName:
     Value: !Ref Bucket
