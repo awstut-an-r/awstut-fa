@@ -3,9 +3,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   BranchName:
     Type: String
-    
-  #BucketArn:
-  #  Type: String
 
   BucketName:
     Type: String
@@ -59,17 +56,11 @@ Parameters:
 Resources:
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
-    #DependsOn:
-    #  - CodeCommitRepository
     Properties:
       ArtifactStore:
-        #EncryptionKey:
         Location: !Ref BucketName
         Type: S3
-      #ArtifactStores:
-      #DisableInboundStageTransitions:
       Name: !Ref Prefix
-      #RestartExecutionOnUpdate
       RoleArn: !GetAtt CodePipelineRole.Arn
       Stages:
         - Actions:
@@ -83,13 +74,10 @@ Resources:
                 OutputArtifactFormat: CODE_ZIP
                 PollForSourceChanges: false
                 RepositoryName: !GetAtt CodeCommitRepository.Name
-              #InputArtifacts:
               Name: Source
-              #Namespace:
               OutputArtifacts:
                 - Name: !Ref PipelineSourceArtifact
               Region: !Ref AWS::Region
-              #RoleArn:
               RunOrder: 1
           Name: Source
         - Actions:
@@ -103,11 +91,9 @@ Resources:
               InputArtifacts:
                 - Name: !Ref PipelineSourceArtifact
               Name: Build
-              #Namespace:
               OutputArtifacts:
                 - Name: !Ref PipelineBuildArtifact
               Region: !Ref AWS::Region
-              #RoleArn:
               RunOrder: 1
           Name: Build
         - Actions:
@@ -140,7 +126,6 @@ Resources:
                 - Name: !Ref PipelineBuildArtifact
               Name: Deploy
               Region: !Ref AWS::Region
-              #RoleArn: !GetAtt ECSRole.Arn
               RunOrder: 1
           Name: Deploy
         - Actions:
@@ -151,7 +136,6 @@ Resources:
                 Version: 1
               Configuration:
                 FunctionName: !Ref ECSFunctionName
-                #UserParameters:
               InputArtifacts: []
               Name: Invoke
               OutputArtifacts: []
@@ -171,8 +155,6 @@ Resources:
                 - codepipeline.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
         - PolicyName: PipelinePolicy
           PolicyDocument:
@@ -218,14 +200,8 @@ Resources:
                   - !Ref TopicArn
               - Effect: Allow
                 Action:
-                  #- ecs:DescribeServices
-                  #- ecs:CreateTaskSet
-                  #- ecs:UpdateServicePrimaryTaskSet
-                  #- ecs:DeleteTaskSet
                   - ecs:*
                 Resource: "*"
-                  #- !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}"
-                  #- !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}/${ECSServiceName}"
               - Effect: Allow
                 Action:
                   - iam:PassRole
@@ -234,46 +210,14 @@ Resources:
                   StringLike:
                     iam:PassedToService:
                       - ecs-tasks.amazonaws.com
-              
-  #ECSRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Principal:
-  #            Service:
-  #              - ecs-tasks.amazonaws.com
-  #          Action:
-  #            - sts:AssumeRole
-  #    Policies:
-  #      - PolicyName: ECSPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - ecs:DescribeServices
-  #                - ecs:CreateTaskSet
-  #                - ecs:UpdateServicePrimaryTaskSet
-  #                - ecs:DeleteTaskSet
-  #              Resource:
-  #                - !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}"
-  #                - !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}/${ECSServiceName}"
-                  
+
   CodeCommitRepository:
     Type: AWS::CodeCommit::Repository
     Properties: 
-      #Code:
-      #RepositoryDescription:
       RepositoryName: !Ref Prefix
-      #Triggers:
       
   EventsRule:
     Type: AWS::Events::Rule
-    #DependsOn:
-    #  - Pipeline
     Properties: 
       EventPattern:
         source:
@@ -308,8 +252,6 @@ Resources:
                 - events.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
         - PolicyName: PipelineExecutionPolicy
           PolicyDocument:
@@ -325,28 +267,9 @@ Resources:
     Type: AWS::CodeBuild::Project
     Properties: 
       Artifacts:
-        #ArtifactIdentifier: String
-        #EncryptionDisabled: Boolean
-        #Location: String
-        #Name: String
-        #NamespaceType: String
-        #OverrideArtifactName: Boolean
-        #Packaging: String
-        #Path: String
         Type: CODEPIPELINE
-      #BadgeEnabled: Boolean
-      #BuildBatchConfig: 
-      #  BatchReportMode: String
-      #  CombineArtifacts: Boolean
-      #  Restrictions: 
-      #    BatchRestrictions
-      #  ServiceRole: String
-      #  TimeoutInMins: Integer
       Cache: 
         Type: NO_CACHE
-      #ConcurrentBuildLimit: Integer
-      #Description: String
-      #EncryptionKey: String
       Environment: 
         ComputeType: !Ref ProjectEnvironmentComputeType
         EnvironmentVariables:
@@ -366,26 +289,15 @@ Resources:
         ImagePullCredentialsType: CODEBUILD
         Type: !Ref ProjectEnvironmentType
         PrivilegedMode: true
-      #FileSystemLocations: 
-      #  - ProjectFileSystemLocation
       LogsConfig: 
         CloudWatchLogs:
           Status: DISABLED
         S3Logs:
           Status: DISABLED
       Name: !Ref Prefix
-      #QueuedTimeoutInMinutes: 480
-      #ResourceAccessRole: String
-      #SecondaryArtifacts: 
-      #  - Artifacts
-      #SecondarySources: 
-      #  - Source
-      #SecondarySourceVersions: 
-      #  - ProjectSourceVersion
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Source: 
         Type: CODEPIPELINE
-        #Type: NO_SOURCE
         BuildSpec: !Sub |
           version: 0.2
           
@@ -416,15 +328,7 @@ Resources:
                 - printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > $IMAGE_DEFINITION
           artifacts:
             files: $IMAGE_DEFINITION
-      #SourceVersion: String
-      #Tags: 
-      #  - Tag
-      #TimeoutInMinutes: 60
-      #Triggers: 
-      #  ProjectTriggers
       Visibility: PRIVATE
-      #VpcConfig: 
-      #  VpcConfig
         
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -459,22 +363,5 @@ Resources:
                   - s3:GetBucketAcl
                   - s3:GetBucketLocation
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
                   - !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - codebuild:CreateReportGroup
-              #    - codebuild:CreateReport
-              #    - codebuild:UpdateReport
-              #    - codebuild:BatchPutTestCases
-              #    - codebuild:BatchPutCodeCoverages
-              #  Resource:
-              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
-              
-  #CodeDeployApplication:
-  #  Type: AWS::CodeDeploy::Application
-  #  Properties:
-  #    ApplicationName: !Sub Prefix
-  #    ComputePlatform: ECS
