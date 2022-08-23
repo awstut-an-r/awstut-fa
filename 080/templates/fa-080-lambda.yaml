@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketArn:
+  #  Type: String
+  #  
+  #BucketName:
+  #  Type: String
+  
+  ECSClusterName:
+    Type: String
+    
+  #ECSSecurityGroup:
+  #  Type: String
+    
+  ECSServiceName:
+    Type: String
+    
+  #ECSSubnet:
+  #  Type: String
+    
+  #ECSTaskDefinitionArn:
+  #  Type: String
+  #  
+  #ECSTaskExecutionRoleArn:
+  #  Type: String
+  #  
+  #ECSTaskRoleArn:
+  #  Type: String
+  
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+    
+Resources:
+  ECSFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          cluster_name = os.environ['CLUSTER_NAME']
+          count = int(os.environ['COUNT'])
+          service_name = os.environ['SERVICE_NAME']
+          
+          ecs_client = boto3.client('ecs')
+          codepipeline_client = boto3.client('codepipeline')
+           
+          def lambda_handler(event, context):
+            job_id = event['CodePipeline.job']['id']
+          
+            try:
+              describe_services_response = ecs_client.describe_services(
+                cluster=cluster_name,
+                services=[
+                  service_name
+                ]
+              )
+              print(describe_services_response)
+              #print(describe_services_response['services'][0]['desiredCount'])
+              
+              if describe_services_response['services'][0]['desiredCount'] > 0:
+                codepipeline_client.put_job_success_result(
+                  jobId=job_id
+                )
+                return
+                
+              update_service_response = ecs_client.update_service(
+                cluster=cluster_name,
+                service=service_name,
+                desiredCount=count
+              )
+              print(update_service_response)
+              
+              codepipeline_client.put_job_success_result(
+                jobId=job_id
+              )
+            
+            except Exception as e:
+              print(e)
+              codepipeline_client.put_job_failure_result(
+                jobId=job_id,
+                failureDetails={
+                  'type': 'JobFailed',
+                  'message': 'Something happened.'
+                }
+              )
+      Environment:
+        Variables:
+          CLUSTER_NAME: !Ref ECSClusterName
+          COUNT: 1
+          #DESIRED_STATUS: RUNNING
+          #LAUNCH_TYPE: FARGATE
+          #SECURITY_GROUP: !Ref ECSSecurityGroup
+          SERVICE_NAME: !Ref ECSServiceName
+          #SUBNET: !Ref ECSSubnet
+          #TASK_DEFINITION_ARN: !Ref ECSTaskDefinitionArn
+      FunctionName: !Sub "${Prefix}-function-ecs"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt ECSFunctionRole.Arn
+
+  ECSFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-RunECSTaskPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ecs:DescribeServices
+                  - ecs:UpdateService
+                Resource:
+                  - !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:service/${ECSClusterName}/${ECSServiceName}"
+              - Effect: Allow
+                Action:
+                  - codepipeline:PutJobSuccessResult
+                  - codepipeline:PutJobFailureResult
+                Resource: "*"
+        
+        
+Outputs:
+  ECSFunctionName:
+    Value: !Ref ECSFunction
