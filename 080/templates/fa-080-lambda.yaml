@@ -1,33 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
   ECSClusterName:
     Type: String
-    
-  #ECSSecurityGroup:
-  #  Type: String
-    
+
   ECSServiceName:
     Type: String
-    
-  #ECSSubnet:
-  #  Type: String
-    
-  #ECSTaskDefinitionArn:
-  #  Type: String
-  #  
-  #ECSTaskExecutionRoleArn:
-  #  Type: String
-  #  
-  #ECSTaskRoleArn:
-  #  Type: String
-  
+
   Handler:
     Type: String
     
@@ -97,12 +76,7 @@ Resources:
         Variables:
           CLUSTER_NAME: !Ref ECSClusterName
           COUNT: 1
-          #DESIRED_STATUS: RUNNING
-          #LAUNCH_TYPE: FARGATE
-          #SECURITY_GROUP: !Ref ECSSecurityGroup
           SERVICE_NAME: !Ref ECSServiceName
-          #SUBNET: !Ref ECSSubnet
-          #TASK_DEFINITION_ARN: !Ref ECSTaskDefinitionArn
       FunctionName: !Sub "${Prefix}-function-ecs"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
