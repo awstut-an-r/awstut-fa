@@ -4,6 +4,8 @@ https://awstut.com/en/2021/12/11/attaching-instances-in-private-subnet-to-elb/
 
 # Architecture
 
+![fa-001-diagram](https://user-images.githubusercontent.com/84276199/188146332-4695ffb2-1ee1-4e9c-89ab-2d8f8ea5a672.png)
+
 # Requirements
 
 * AWS CLI
