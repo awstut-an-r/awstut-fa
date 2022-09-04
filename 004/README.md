@@ -24,9 +24,10 @@ Parameters:
     Default: my-bucket
 ```
 
-## Upload Template Files to S3 Bucket
+## Upload Playbook and Template Files to S3 Bucket
 
 ```bash
+zip -r playbook.zip playbook.yml
 aws s3 cp . s3://my-bucket/fa-004/ --recursive
 ```
 
