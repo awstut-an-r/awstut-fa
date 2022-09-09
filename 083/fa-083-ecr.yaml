@@ -15,36 +15,6 @@ Resources:
   ECRRepository:
     Type: AWS::ECR::Repository
     Properties: 
-      #ImageScanningConfiguration:
-      #  ScanOnPush: true
-      #LifecyclePolicy:
-      #  LifecyclePolicyText: |
-      #    {
-      #      "rules": [
-      #        {
-      #          "rulePriority": 1,
-      #          "description": "Keep only one untagged image, expire all others",
-      #          "selection": {
-      #            "tagStatus": "untagged",
-      #            "countType": "imageCountMoreThan",
-      #            "countNumber": 1
-      #          },
-      #          "action": {
-      #            "type": "expire"
-      #          }
-      #        }
-      #      ]
-      #    }
-      #  #  rules:
-      #  #    - rulePriority: 1,
-      #  #      description: Keep only one untagged image, expire all others
-      #  #      selection:
-      #  #        tagStatus: untagged
-      #  #        countType: imageCountMoreThan
-      #  #        countNumber: 1
-      #  #      action:
-      #  #        type: expire
-      #  RegistryId: !Ref AWS::AccountId
       RepositoryName: !Ref Prefix
       
   CustomResource:
@@ -123,7 +93,6 @@ Resources:
       Environment:
         Variables:
           ACCOUNT_ID: !Ref AWS::AccountId
-          #BUCKET_NAME: !Ref BucketName
           ECR_REPOSITORY_NAME: !Ref ECRRepository
       FunctionName: !Sub "${Prefix}-function-ecr"
       Handler: !Ref Handler
@@ -154,19 +123,7 @@ Resources:
                 Resource: "*"
               - Effect: Allow
                 Action:
-                  #- s3:ListBucket
-                  #- s3:GetObject
-                  #- s3:PutObject
-                  #- s3:DeleteObject
                   - ecr:BatchDeleteImage
                   - ecr:ListImages
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
                   - !GetAtt ECRRepository.Arn
-      
-#Outputs:
-#  ECRRepositoryName:
-#    Value: !Ref ECRRepository
-#    #Export:
-#    #  Name: !Sub "${Prefix}-RepositoryName"
