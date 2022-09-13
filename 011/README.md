@@ -42,5 +42,5 @@ aws cloudformation create-stack \
 ## Upload HTML files
 
 ```bash
-aws s3 cp ./html s3://fa-011/ --recursive
+aws s3 cp ./html s3://fa-011-bucket/ --recursive
 ```
