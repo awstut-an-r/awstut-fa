@@ -33,13 +33,7 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
       UserData: !Ref UserData
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  yum update -y
-      #  amazon-linux-extras install docker
-      #  systemctl start docker
-      #  usermod -a -G docker ec2-user
-      
+
   Instance2:
     Type: AWS::EC2::Instance
     Properties:
@@ -52,13 +46,7 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
       UserData: !Ref UserData
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  yum update -y
-      #  amazon-linux-extras install docker
-      #  systemctl start docker
-      #  usermod -a -G docker ec2-user
-        
+
   Instance3:
     Type: AWS::EC2::Instance
     Properties:
@@ -71,13 +59,7 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
       UserData: !Ref UserData
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  yum update -y
-      #  amazon-linux-extras install docker
-      #  systemctl start docker
-      #  usermod -a -G docker ec2-user
-            
+
   InstanceProfile1:
     Type: AWS::IAM::InstanceProfile
     Properties:
