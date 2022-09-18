@@ -3,28 +3,13 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   AvailabilityZone:
     Type: String
-  
-  #AvailabilityZone2:
-  #  Type: String
-    
+
   CidrIp1:
     Type: String
     
   CidrIp2:
     Type: String
-   
-  #CidrIp3:
-  #  Type: String
-    
-  #CidrIp4:
-  #  Type: String
-    
-  #HTTPPort:
-  #  Type: Number
-    
-  #HTTPSPort:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
     
@@ -37,8 +22,6 @@ Resources:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VPCCidrBlock
-      EnableDnsHostnames: true
-      EnableDnsSupport: true
 
   IGW:
     Type: AWS::EC2::InternetGateway
@@ -73,21 +56,7 @@ Resources:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
-      
-  #ContainerSubnet:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    CidrBlock: !Ref CidrIp2
-  #    VpcId: !Ref VPC
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
-      
-  #PublicSubnet2:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    CidrBlock: !Ref CidrIp2
-  #    VpcId: !Ref VPC
-  #    AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone2}
-      
+
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -123,146 +92,21 @@ Resources:
     Properties:
       SubnetId: !Ref InstanceSubnet
       RouteTableId: !Ref PrivateRouteTable
-      
-  #ContainerSubnetRouteTableAssociation:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref ContainerSubnet
-  #    RouteTableId: !Ref PrivateRouteTable
-  
-      
-  #PublicSubnetRouteTableAssociation2:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PublicSubnet2
-  #    RouteTableId: !Ref PublicRouteTable
-      
-      
-  #PrivateRouteTable:
-  #  Type: AWS::EC2::RouteTable
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    
-  #PrivateSubnetRouteTableAssociation1:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PrivateSubnet1
-  #    RouteTableId: !Ref PrivateRouteTable
-  #    
-  #PrivateSubnetRouteTableAssociation2:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PrivateSubnet2
-  #    RouteTableId: !Ref PrivateRouteTable
-      
-      
-  #ALBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub ${Prefix}-ALBSecurityGroup
-  #    GroupDescription: Allow HTTP Only.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        CidrIp: 0.0.0.0/0
-  
+
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny all.
       VpcId: !Ref VPC
-      
-  #ContainerSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-ContainerSecurityGroup"
-  #    GroupDescription: Allow HTTP from Instance.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        #CidrIp: 0.0.0.0/0
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
-  #EndpointSecurityGroup2:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup2"
-  #    GroupDescription: Allow HTTPS from ContainerSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref ContainerSecurityGroup
-          
-          
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-  #    GroupDescription: Allow HTTPS from ServiceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref ServiceSecurityGroup
-          
+
           
 Outputs:
   VPC:
     Value: !Ref VPC
-      
-  #PublicSubnet:
-  #  Value: !Ref PublicSubnet
-    
+
   InstanceSubnet:
     Value: !Ref InstanceSubnet
-    
-  #ContainerSubnet:
-  #  Value: !Ref ContainerSubnet
-    
+
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    
-  #ContainerSecurityGroup:
-  #  Value: !Ref ContainerSecurityGroup
-    
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
-    
-  #EndpointSecurityGroup2:
-  #  Value: !Ref EndpointSecurityGroup2
-
-
-  #IGW:
-  #  Value: !Ref IGW
-  #  
-  #EIPAllocationId:
-  #  Value: !GetAtt EIP.AllocationId
-  #  
-  #NATGateway:
-  #  Value: !Ref NATGateway
-    
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-    
-  #PublicRouteTable:
-  #  Value: !Ref PublicRouteTable
