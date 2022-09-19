@@ -35,7 +35,7 @@ Resources:
               - ecr:UploadLayerPart
             Condition:
               ArnLike:
-                aws:SourceArn: CodeBuildRoleArn
+                aws:SourceArn: !Ref CodeBuildRoleArn
           - Effect: Deny
             Principal: "*"
             Action:
@@ -43,7 +43,7 @@ Resources:
               - ecr:GetDownloadUrlForLayer
             Condition:
               ArnLike:
-                aws:SourceArn: FargateTaskExecutionRoleArn
+                aws:SourceArn: !Ref FargateTaskExecutionRoleArn
           - Effect: Deny
             Principal: "*"
             NotAction:
