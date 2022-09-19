@@ -3,10 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   BucketName:
     Type: String
-    
-  #Prefix:
-  #  Type: String
-    
+
   SSMParameterDockerHubPassword:
     Type: String
     
@@ -48,19 +45,8 @@ Resources:
                   - s3:GetBucketAcl
                   - s3:GetBucketLocation
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
                   - !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - codebuild:CreateReportGroup
-              #    - codebuild:CreateReport
-              #    - codebuild:UpdateReport
-              #    - codebuild:BatchPutTestCases
-              #    - codebuild:BatchPutCodeCoverages
-              #  Resource:
-              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
 
   FargateTaskExecutionRole:
     Type: AWS::IAM::Role
