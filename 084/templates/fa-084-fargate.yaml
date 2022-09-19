@@ -9,10 +9,7 @@ Parameters:
     
   ContainerSubnet:
     Type: String
-    
-  #ContainerSubnet2:
-  #  Type: String
-  
+
   ECRRepositoryName:
     Type: String
     
@@ -24,10 +21,7 @@ Parameters:
 
   Prefix:
     Type: String
-    
-  #RepositoryName:
-  #  Type: String
-    
+
   TaskCpu:
     Type: Number
     
@@ -40,22 +34,7 @@ Resources:
     Type: AWS::ECS::Cluster
     Properties:
       ClusterName: !Sub "${Prefix}-cluster"
-      
-  #FargateTaskExecutionRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Principal:
-  #            Service:
-  #              - ecs-tasks.amazonaws.com
-  #          Action:
-  #            - sts:AssumeRole
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-        
+
   TaskRole:
     Type: AWS::IAM::Role
     Properties:
@@ -68,56 +47,16 @@ Resources:
                 - ecs-tasks.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AWSXRayDaemonWriteAccess
-        
-  #TaskDefinition1:
-  #  Type: AWS::ECS::TaskDefinition
-  #  Properties:
-  #    RequiresCompatibilities:
-  #      - FARGATE
-  #    Cpu: !Ref TaskCpu
-  #    Memory: !Ref TaskMemory
-  #    NetworkMode: awsvpc
-  #    ExecutionRoleArn: !Ref FargateTaskExecutionRole
-  #    TaskRoleArn: !Ref TaskRole
-  #    ContainerDefinitions:
-  #      - Name: !Sub "${Prefix}-task1-container"
-  #        Image: nginx:latest
-          
+
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
       ContainerDefinitions:
         - Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
-          #LogConfiguration:
-          #  LogDriver: awslogs
-          #  Options:
-          #    awslogs-group: !Ref LogGroup
-          #    awslogs-region: !Ref AWS::Region
-          #    awslogs-stream-prefix: !Sub "${Prefix}-my-container"
-          #MemoryReservation: 768
           Name: !Ref ContainerName
           PortMappings:
             - ContainerPort: !Ref HTTPPort
-        #- Cpu: 32
-        #  #Environment:
-        #  #  - Name: AWS_XRAY_DAEMON_ADDRESS
-        #  #    Value: xray-daemon:2000
-        #  Image: amazon/aws-xray-daemon
-        #  LogConfiguration:
-        #    LogDriver: awslogs
-        #    Options:
-        #      awslogs-group: !Ref LogGroup
-        #      awslogs-region: !Ref AWS::Region
-        #      awslogs-stream-prefix: !Sub "${Prefix}-x-ray-container"
-        #  MemoryReservation: 256
-        #  Name: !Sub "${Prefix}-xray-container"
-        #  PortMappings:
-        #    - ContainerPort: 2000
-        #      Protocol: udp
       Cpu: !Ref TaskCpu
-      #ExecutionRoleArn: !Ref FargateTaskExecutionRole
       ExecutionRoleArn: !Ref FargateTaskExecutionRoleArn
       Memory: !Ref TaskMemory
       NetworkMode: awsvpc
@@ -131,68 +70,18 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
-      #DesiredCount: 1
       DesiredCount: 0
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref ContainerSubnet
-            #- !Ref PrivateSubnet1
       ServiceName: !Sub "${Prefix}-service"
       TaskDefinition: !Ref TaskDefinition
       
-  #LogGroup:
-  #  Type: AWS::Logs::LogGroup
-  #  Properties: 
-  #    LogGroupName: !Sub "${Prefix}-LogGroup"
-      
-  #FlowLogGroup:
-  #  Type: AWS::Logs::LogGroup
-  #  Properties: 
-  #    LogGroupName: !Sub "${Prefix}-FlowLogGroup2"
-  #    
-  #FlowLogToCloudWatchLogs:
-  #  Type: AWS::EC2::FlowLog
-  #  DependsOn:
-  #    - FlowLogGroup
-  #  Properties:
-  #    DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn
-  #    LogDestinationType: cloud-watch-logs
-  #    LogGroupName: !Sub "${Prefix}-FlowLogGroup2"
-  #    ResourceId: !Ref ContainerSubnet
-  #    ResourceType: Subnet
-  #    TrafficType: ALL
-  #    
-  #DeliverLogRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - vpc-flow-logs.amazonaws.com
-  #    Policies:
-  #      - PolicyName: DeliverToCloudWatchLogPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - logs:CreateLogGroup
-  #                - logs:CreateLogStream
-  #                - logs:PutLogEvents
-  #                - logs:DescribeLogGroups
-  #                - logs:DescribeLogStreams
-  #              Resource: "*"
   
 Outputs:
   ECSClusterName:
