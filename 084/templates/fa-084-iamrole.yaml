@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+    
+  #Prefix:
+  #  Type: String
+    
+  SSMParameterDockerHubPassword:
+    Type: String
+    
+  SSMParameterDockerHubUsername:
+    Type: String
+    
+
+Resources:
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameters
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                Resource:
+                  #- !Ref BucketArn
+                  #- !Sub "${BucketArn}/*"
+                  - !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              #- Effect: Allow
+              #  Action:
+              #    - codebuild:CreateReportGroup
+              #    - codebuild:CreateReport
+              #    - codebuild:UpdateReport
+              #    - codebuild:BatchPutTestCases
+              #    - codebuild:BatchPutCodeCoverages
+              #  Resource:
+              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
+
+  FargateTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        
+        
+Outputs:
+  CodeBuildRoleArn:
+    Value: !GetAtt CodeBuildRole.Arn
+    
+  FargateTaskExecutionRoleArn:
+    Value: !GetAtt FargateTaskExecutionRole.Arn

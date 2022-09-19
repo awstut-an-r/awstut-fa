@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  DockerHubPassword:
+    Type: String
+    
+  DockerHubUsername:
+    Type: String
+    
+    
+Resources:
+  SSMParameterDockerHubPassword:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${Prefix}-DockerHubPassword"
+      Type: String
+      Value: !Ref DockerHubPassword
+      
+  SSMParameterDockerHubUsername:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub "${Prefix}-DockerHubUsername"
+      Type: String
+      Value: !Ref DockerHubUsername
+      
+      
+Outputs:
+  SSMParameterDockerHubPassword:
+    Value: !Ref SSMParameterDockerHubPassword
+    
+  SSMParameterDockerHubUsername:
+    Value: !Ref SSMParameterDockerHubUsername
