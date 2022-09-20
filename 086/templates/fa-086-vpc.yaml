@@ -144,7 +144,6 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref HTTPPort
           ToPort: !Ref HTTPPort
-          #CidrIp: 0.0.0.0/0
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           
   EndpointSecurityGroup:
