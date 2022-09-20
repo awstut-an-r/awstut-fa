@@ -18,10 +18,7 @@ Parameters:
     
   PrivateSubnet2:
     Type: String
-    
-  #RepositoryName:
-  #  Type: String
-  
+
   Repository:
     Type: String
     
@@ -58,22 +55,10 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:latest"
-        #- Image: !Ref Repository
-          #Image: nginx:latest
-          #LogConfiguration:
-          #  LogDriver: awslogs
-          #  Options:
-          #    awslogs-group: !Ref LogGroup
-          #    awslogs-region: !Ref AWS::Region
-          #    awslogs-stream-prefix: !Ref Prefix
           Name: !Sub "${Prefix}-container"
           PortMappings:
             - ContainerPort: !Ref HTTPPort
               HostPort: !Ref HTTPPort
-          #Environment:
-          #  - Name: QueueName
-          #    Value:
-          #      Fn::ImportValue: !Sub ${Prefix}-QueueName
       Cpu: !Ref ServiceCpu
       ExecutionRoleArn: !Ref TaskExecutionRole
       Memory: !Ref ServiceMemory
@@ -85,7 +70,6 @@ Resources:
   Service:
     Type: AWS::ECS::Service
     Properties:
-      #Cluster: !Ref Cluster1
       Cluster: !Ref Cluster
       DesiredCount: 1
       LaunchType: FARGATE
@@ -95,7 +79,6 @@ Resources:
           TargetGroupArn: !Ref ALBTargetGroupFargate
       NetworkConfiguration:
         AwsvpcConfiguration:
-          #AssignPublicIp: ENABLED
           SecurityGroups:
             - !Ref ContainerSecurityGroup
           Subnets:
