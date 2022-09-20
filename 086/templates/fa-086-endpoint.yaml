@@ -21,19 +21,6 @@ Parameters:
     
 
 Resources:
-  #CloudWatchLogsEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.logs"
-  #    SubnetIds:
-  #      - !Ref PrivateSubnet1
-  #      - !Ref PrivateSubnet2
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-        
   ECRDkrEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -63,16 +50,6 @@ Resources:
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      #PolicyDocument:
-      #  Version: 2012-10-17
-      #  Statement:
-      #    - Effect: Allow
-      #      Principal: "*"
-      #      Action:
-      #        - s3:*
-      #      Resource:
-      #        - !Sub "arn:aws:s3:::prod-${AWS::Region}-starport-layer-bucket/*"
-      #        #- !Sub "arn:aws:s3:::prod-ap-northeast-1-starport-layer-bucket/*"
       RouteTableIds:
         - !Ref PrivateRouteTable
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
