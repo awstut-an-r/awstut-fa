@@ -6,19 +6,10 @@ Parameters:
     
   FunctionArn:
     Type: String
-    
-  #FunctionName:
-  #  Type: String
-    
+
   HTTPPort:
     Type: Number
-    
-  #Instance1:
-  #  Type: String
-  #  
-  #Instance2:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -76,28 +67,13 @@ Resources:
       HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
       Matcher: 
         HttpCode: !Ref HttpCode
-      #Targets:
-      #  - Id: !Ref Instance1
-      #  - Id: !Ref Instance2
       TargetType: ip
       
   ALBTargetGroupLambda:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       HealthCheckEnabled: false
-      #VpcId: !Ref VPC
       Name: !Sub "${Prefix}-ALBTargetGroupLambda"
-      #Protocol: HTTP
-      #Port: !Ref HTTPPort
-      #HealthCheckProtocol: HTTP
-      #HealthCheckPath: /
-      #HealthCheckPort: traffic-port
-      #HealthyThresholdCount: !Ref HealthyThresholdCount
-      #UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
-      #HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
-      #HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      #Matcher: 
-      #  HttpCode: !Ref HttpCode
       Targets:
         - Id: !Ref FunctionArn
       TargetType: lambda
