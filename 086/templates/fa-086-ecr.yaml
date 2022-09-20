@@ -64,7 +64,6 @@ Resources:
       Environment:
         Variables:
           ACCOUNT_ID: !Ref AWS::AccountId
-          #BUCKET_NAME: !Ref BucketName
           ECR_REPOSITORY_NAME: !Ref Repository
       FunctionName: !Sub "${Prefix}-function-ecr"
       Handler: !Ref Handler
@@ -91,15 +90,9 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- s3:ListBucket
-                  #- s3:GetObject
-                  #- s3:PutObject
-                  #- s3:DeleteObject
                   - ecr:BatchDeleteImage
                   - ecr:ListImages
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
                   - !GetAtt Repository.Arn
 
 
