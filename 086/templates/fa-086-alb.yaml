@@ -112,7 +112,7 @@ Resources:
         - Field: path-pattern
           PathPatternConfig:
             Values:
-              - !Sub /*
+              - /*
       ListenerArn: !Ref ALBListener
       Priority: 2
 
