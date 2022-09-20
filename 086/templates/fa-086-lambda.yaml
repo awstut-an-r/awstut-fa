@@ -12,10 +12,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #ZipFile:
-  #  Type: String
-    
+
     
 Resources:
   Function:
@@ -24,7 +21,6 @@ Resources:
       Architectures:
         - !Ref Architecture
       Code:
-        #ZipFile: !Ref ZipFile
         ZipFile: |
           import json
           
@@ -40,9 +36,7 @@ Resources:
             }
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Handler: index.lambda_handler
       Runtime: !Ref Runtime
-      #Runtime: python3.8
       Role: !GetAtt FunctionRole.Arn
       
   FunctionRole:
@@ -70,6 +64,3 @@ Resources:
 Outputs:
   FunctionArn:
     Value: !GetAtt Function.Arn
-    
-  #FunctionName:
-  #  Value: !Ref Function
