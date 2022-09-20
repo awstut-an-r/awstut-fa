@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBTargetGroupFargate:
+    Type: String
+    
+  ContainerSecurityGroup:
+    Type: String
+    
+  HTTPPort:
+    Type: Number
+
+  Prefix:
+    Type: String
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+    
+  #RepositoryName:
+  #  Type: String
+  
+  Repository:
+    Type: String
+    
+  ServiceCpu:
+    Type: Number
+    
+  ServiceMemory:
+    Type: Number
+    
+    
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${Prefix}-cluster"
+      
+  TaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      ContainerDefinitions:
+        - Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${Repository}:latest"
+        #- Image: !Ref Repository
+          #Image: nginx:latest
+          #LogConfiguration:
+          #  LogDriver: awslogs
+          #  Options:
+          #    awslogs-group: !Ref LogGroup
+          #    awslogs-region: !Ref AWS::Region
+          #    awslogs-stream-prefix: !Ref Prefix
+          Name: !Sub "${Prefix}-container"
+          PortMappings:
+            - ContainerPort: !Ref HTTPPort
+              HostPort: !Ref HTTPPort
+          #Environment:
+          #  - Name: QueueName
+          #    Value:
+          #      Fn::ImportValue: !Sub ${Prefix}-QueueName
+      Cpu: !Ref ServiceCpu
+      ExecutionRoleArn: !Ref TaskExecutionRole
+      Memory: !Ref ServiceMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      TaskRoleArn: !Ref TaskRole
+      
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      #Cluster: !Ref Cluster1
+      Cluster: !Ref Cluster
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: !Sub "${Prefix}-container"
+          ContainerPort: !Ref HTTPPort
+          TargetGroupArn: !Ref ALBTargetGroupFargate
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          #AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+      ServiceName: !Sub "${Prefix}-service"
+      TaskDefinition: !Ref TaskDefinition
+                
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
