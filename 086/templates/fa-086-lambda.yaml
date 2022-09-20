@@ -31,7 +31,6 @@ Resources:
               'headers': {
                 'Content-Type': 'text/html; charset=utf-8'
               },
-              #'body': json.dumps('path: /lambda, Lambda Function.')
               'body': 'Sorry Contents from Lambda Function.'
             }
       FunctionName: !Sub "${Prefix}-function"
