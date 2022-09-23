@@ -40,6 +40,18 @@ aws cloudformation create-stack \
 --template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-018/fa-018-ecr.yaml
 ```
 
+### Push Image to ECR Repository
+
+```bash
+aws ecr get-login-password --region ap-northeast-1 | docker login --username AWS --password-stdin [account-id].dkr.ecr.ap-northeast-1.amazonaws.com
+
+docker build -t fa-018 .
+
+docker tag fa-018:latest [account-id].dkr.ecr.ap-northeast-1.amazonaws.com/fa-018:latest
+
+docker push [account-id].dkr.ecr.ap-northeast-1.amazonaws.com/fa-018:latest
+```
+
 ### Create other stacks
 
 ```bash
