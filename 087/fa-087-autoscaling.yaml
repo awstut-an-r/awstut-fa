@@ -51,29 +51,33 @@ Parameters:
     
 
 Resources:
-  LaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      IamInstanceProfile: !Ref InstanceProfile
-      ImageId: !Ref ImageId
-      InstanceType: !Ref InstanceType
-      LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-      SecurityGroups: 
-        - !Ref InstanceSecurityGroup
-      UserData: !Base64 |
-        #!/bin/bash -xe
-        yum update -y
-        yum install -y httpd
-        systemctl start httpd
-        systemctl enable httpd
-        ec2-metadata -i > /var/www/html/index.html
+      LaunchTemplateData:
+        IamInstanceProfile:
+          Arn: !GetAtt InstanceProfile.Arn
+        ImageId: !Ref ImageId
+        InstanceType: !Ref InstanceType
+        SecurityGroupIds: 
+          - !Ref InstanceSecurityGroup
+        UserData: !Base64 |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          ec2-metadata -i > /var/www/html/index.html
+      LaunchTemplateName: !Sub "${Prefix}-LaunchTemplate"
         
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup"
       DesiredCapacity: !Ref DesiredCapacity
-      LaunchConfigurationName: !Ref LaunchConfiguration
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MaxSize: !Ref MaxSize
       MinSize: !Ref MinSize
       VPCZoneIdentifier:
