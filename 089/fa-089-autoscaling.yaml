@@ -1,20 +1,8 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  AlarmEvaluationPeriod:
-    Type: Number
-
-  AlarmPeriod:
-    Type: Number
-    
-  AlarmThreshold:
-    Type: Number
-
   ALBTargetGroup:
     Type: String
-    
-  Cooldown:
-    Type: Number
     
   DesiredCapacity:
     Type: Number
@@ -42,12 +30,6 @@ Parameters:
     
   PrivateSubnet2:
     Type: String
-    
-  ScalingAdjustment1:
-    Type: Number
-    
-  ScalingAdjustment2:
-    Type: Number
     
 
 Resources:
