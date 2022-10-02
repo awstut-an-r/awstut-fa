@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
     
   Prefix:
     Type: String
@@ -91,4 +91,3 @@ Resources:
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         ScalingAdjustment1: 1
         ScalingAdjustment2: -1
-        #TargetTrackingConfigurationTargetValue: 50.0
