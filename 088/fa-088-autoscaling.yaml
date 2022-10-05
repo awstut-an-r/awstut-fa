@@ -13,9 +13,6 @@ Parameters:
   ALBTargetGroup:
     Type: String
     
-  #Cooldown:
-  #  Type: Number
-    
   DesiredCapacity:
     Type: Number
     
@@ -70,9 +67,6 @@ Parameters:
   ScalingAdjustment3:
     Type: Number
     
-  #TargetTrackingConfigurationTargetValue:
-  #  Type: Number
-    
 
 Resources:
   LaunchTemplate:
@@ -83,8 +77,6 @@ Resources:
           Arn: !GetAtt InstanceProfile.Arn
         ImageId: !Ref ImageId
         InstanceType: !Ref InstanceType
-        #LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-        #SecurityGroups: 
         SecurityGroupIds: 
           - !Ref InstanceSecurityGroup
         UserData: !Base64 |
@@ -96,29 +88,11 @@ Resources:
           ec2-metadata -i > /var/www/html/index.html
       LaunchTemplateName: !Sub "${Prefix}-LaunchTemplate"
 
-  #LaunchConfiguration:
-  #  Type: AWS::AutoScaling::LaunchConfiguration
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-  #    SecurityGroups: 
-  #      - !Ref InstanceSecurityGroup
-  #    UserData: !Base64 |
-  #      #!/bin/bash -xe
-  #      yum update -y
-  #      yum install -y httpd
-  #      systemctl start httpd
-  #      systemctl enable httpd
-  #      ec2-metadata -i > /var/www/html/index.html
-        
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup"
       DesiredCapacity: !Ref DesiredCapacity
-      #LaunchConfigurationName: !Ref LaunchConfiguration
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
@@ -135,36 +109,24 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AutoScalingGroup
-      #Cooldown: !Ref Cooldown
       EstimatedInstanceWarmup: !Ref EstimatedInstanceWarmup
       MetricAggregationType: Average
-      #MinAdjustmentMagnitude: !Ref MinAdjustmentMagnitude
       PolicyType: StepScaling
-      #PredictiveScalingConfiguration:
-      #ScalingAdjustment: !Ref ScalingAdjustment1
       StepAdjustments:
         - MetricIntervalLowerBound: !Ref MetricIntervalLowerBound1
           MetricIntervalUpperBound: !Ref MetricIntervalUpperBound1
           ScalingAdjustment: !Ref ScalingAdjustment1
         - MetricIntervalLowerBound: !Ref MetricIntervalLowerBound2
           ScalingAdjustment: !Ref ScalingAdjustment2
-      #TargetTrackingConfiguration:
-      #  PredefinedMetricSpecification:
-      #    PredefinedMetricType: ASGAverageCPUUtilization
-      #  TargetValue: !Ref TargetTrackingConfigurationTargetValue
       
   ScalingPolicy2:
     Type: AWS::AutoScaling::ScalingPolicy
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AutoScalingGroup
-      #Cooldown: !Ref Cooldown
       EstimatedInstanceWarmup: !Ref EstimatedInstanceWarmup
       MetricAggregationType: Average
-      #MinAdjustmentMagnitude: !Ref MinAdjustmentMagnitude
       PolicyType: StepScaling
-      #PredictiveScalingConfiguration:
-      #ScalingAdjustment: !Ref ScalingAdjustment1
       StepAdjustments:
         - MetricIntervalUpperBound: !Ref MetricIntervalUpperBound2
           ScalingAdjustment: !Ref ScalingAdjustment3
@@ -172,10 +134,8 @@ Resources:
   Alarm1:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      #ActionsEnabled: true
       AlarmActions:
         - !Ref ScalingPolicy1
-      #AlarmDescription: CPU alarm for my instance
       AlarmName: !Sub "${Prefix}-Alarm1"
       ComparisonOperator: GreaterThanOrEqualToThreshold
       Dimensions:
@@ -187,15 +147,12 @@ Resources:
       Period: !Ref AlarmPeriod
       Statistic: Average
       Threshold: !Ref AlarmThreshold
-      #Unit: Bytes/Second
       
   Alarm2:
     Type: AWS::CloudWatch::Alarm
     Properties:
-      #ActionsEnabled: true
       AlarmActions:
         - !Ref ScalingPolicy2
-      #AlarmDescription: CPU alarm for my instance
       AlarmName: !Sub "${Prefix}-Alarm2"
       ComparisonOperator: LessThanOrEqualToThreshold
       Dimensions:
@@ -207,7 +164,6 @@ Resources:
       Period: !Ref AlarmPeriod
       Statistic: Average
       Threshold: !Ref AlarmThreshold
-      #Unit: Bytes/Second
         
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -238,14 +194,5 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
                   - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:GetObject
-              #    - s3:PutObject
-              #    - s3:PutObjectAcl
-              #    - s3:ListBucket
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${PlaybookBucket}"
-              #    - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
