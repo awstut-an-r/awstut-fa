@@ -77,12 +77,12 @@ Resources:
       Parameters:
         ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup
         DesiredCapacity: 1
-        ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        InstanceType: t3a.micro
-        MaxSize: 2
+        InstanceType: t4g.nano
+        MaxSize: 3
         MinSize: 1
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        TargetTrackingConfigurationTargetValue: 50.0
+        TargetTrackingConfigurationTargetValue: 30.0
