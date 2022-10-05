@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
     
   Prefix:
     Type: String
@@ -79,7 +79,6 @@ Resources:
         AlarmPeriod: 60
         AlarmThreshold: 50.0
         ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup
-        #Cooldown: 300
         DesiredCapacity: 1
         EstimatedInstanceWarmup: 60
         ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
@@ -100,4 +99,3 @@ Resources:
         ScalingAdjustment1: 1
         ScalingAdjustment2: 2
         ScalingAdjustment3: -1
-        #TargetTrackingConfigurationTargetValue: 50.0
