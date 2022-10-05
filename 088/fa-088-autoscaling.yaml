@@ -16,9 +16,6 @@ Parameters:
   DesiredCapacity:
     Type: Number
     
-  EstimatedInstanceWarmup:
-    Type: Number
-    
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
@@ -109,7 +106,6 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AutoScalingGroup
-      EstimatedInstanceWarmup: !Ref EstimatedInstanceWarmup
       MetricAggregationType: Average
       PolicyType: StepScaling
       StepAdjustments:
@@ -124,7 +120,6 @@ Resources:
     Properties:
       AdjustmentType: ChangeInCapacity
       AutoScalingGroupName: !Ref AutoScalingGroup
-      EstimatedInstanceWarmup: !Ref EstimatedInstanceWarmup
       MetricAggregationType: Average
       PolicyType: StepScaling
       StepAdjustments:
