@@ -47,8 +47,6 @@ Resources:
           Arn: !GetAtt InstanceProfile.Arn
         ImageId: !Ref ImageId
         InstanceType: !Ref InstanceType
-        #LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-        #SecurityGroups: 
         SecurityGroupIds: 
           - !Ref InstanceSecurityGroup
         UserData: !Base64 |
@@ -60,31 +58,11 @@ Resources:
           ec2-metadata -i > /var/www/html/index.html
       LaunchTemplateName: !Sub "${Prefix}-LaunchTemplate"
       
-  #LaunchConfiguration:
-  #  Type: AWS::AutoScaling::LaunchConfiguration
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-  #    SecurityGroups: 
-  #      - !Ref InstanceSecurityGroup
-  #    UserData: !Base64 |
-  #      #!/bin/bash -xe
-  #      yum update -y
-  #      yum install -y httpd
-  #      systemctl start httpd
-  #      systemctl enable httpd
-  #      ec2-metadata -i > /var/www/html/index.html
-  #      
-  #      yes > /dev/null
-        
   AutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup"
       DesiredCapacity: !Ref DesiredCapacity
-      #LaunchConfigurationName: !Ref LaunchConfiguration
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
@@ -136,14 +114,5 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
                   - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:GetObject
-              #    - s3:PutObject
-              #    - s3:PutObjectAcl
-              #    - s3:ListBucket
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${PlaybookBucket}"
-              #    - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
