@@ -78,7 +78,9 @@ Resources:
   Service1:
     Type: AWS::ECS::Service
     Properties:
+      #CapacityProviderStrategy:
       Cluster: !Ref Cluster
+      #LaunchType: FARGATE # comment out
       DesiredCount: 7
       TaskDefinition: !Ref TaskDefinition1
       ServiceName: !Sub "${Prefix}-service1"
