@@ -80,8 +80,8 @@ Resources:
     Properties:
       #CapacityProviderStrategy:
       Cluster: !Ref Cluster
-      #LaunchType: FARGATE # comment out
       DesiredCount: 7
+      #LaunchType: FARGATE # comment out
       TaskDefinition: !Ref TaskDefinition1
       ServiceName: !Sub "${Prefix}-service1"
       NetworkConfiguration:
