@@ -9,12 +9,6 @@ Parameters:
     
   PublicSubnet1:
     Type: String
-    
-  #PublicSubnet2:
-  #  Type: String
-  #  
-  #RepositoryName:
-  #  Type: String
 
   TaskCpu:
     Type: Number
@@ -72,9 +66,7 @@ Resources:
     Properties:
       ContainerDefinitions:
         - Name: !Sub "${Prefix}-task1-container"
-          #Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${MyServiceRepository}:latest"
           Image: nginx:latest
-          #LogConfiguration:
       Cpu: !Ref TaskCpu
       ExecutionRoleArn: !Ref FargateTaskExecutionRole
       Memory: !Ref TaskMemory
@@ -82,29 +74,11 @@ Resources:
       RequiresCompatibilities:
         - FARGATE
       TaskRoleArn: !Ref TaskRole
-          
-  #TaskDefinition2:
-  #  Type: AWS::ECS::TaskDefinition
-  #  Properties:
-  #    RequiresCompatibilities:
-  #      - FARGATE
-  #    Cpu: !Ref TaskCpu
-  #    Memory: !Ref TaskMemory
-  #    NetworkMode: awsvpc
-  #    ExecutionRoleArn: !Ref FargateTaskExecutionRole
-  #    TaskRoleArn: !Ref TaskRole
-  #    ContainerDefinitions:
-  #      - Name: !Sub "${Prefix}-task2-container"
-  #        Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepositoryName}:latest"
         
   Service1:
     Type: AWS::ECS::Service
     Properties:
-      #CapacityProviderStrategy:
-      #  - CapacityProvider: FARGATE_SPOT
-      #    Weight: 1
       Cluster: !Ref Cluster
-      #LaunchType: FARGATE # comment out
       DesiredCount: 7
       TaskDefinition: !Ref TaskDefinition1
       ServiceName: !Sub "${Prefix}-service1"
@@ -115,27 +89,3 @@ Resources:
             - !Ref ContainerSecurityGroup
           Subnets:
             - !Ref PublicSubnet1
-            
-  #Service2:
-  #  Type: AWS::ECS::Service
-  #  Properties:
-  #    #Cluster: !Ref Cluster1
-  #    Cluster: !Ref Cluster
-  #    LaunchType: FARGATE
-  #    DesiredCount: 1
-  #    TaskDefinition: !Ref TaskDefinition2
-  #    ServiceName: !Sub "${Prefix}-service2"
-  #    NetworkConfiguration:
-  #      AwsvpcConfiguration:
-  #        AssignPublicIp: ENABLED
-  #        SecurityGroups:
-  #          - !Ref ContainerSecurityGroup
-  #        Subnets:
-  #          - !Ref PublicSubnet2
-        
-#Outputs:
-#  Cluster:
-#    Value: !Ref Cluster
-#
-#  FargateTaskExecutionRole:
-#    Value: !Ref FargateTaskExecutionRole
