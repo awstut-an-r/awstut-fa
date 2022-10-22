@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
     
   Prefix:
     Type: String
@@ -24,11 +24,7 @@ Parameters:
   InstanceType:
     Type: String
     Default: t4g.nano
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-    
+
     
 Resources:
   VPCStack:
@@ -42,8 +38,6 @@ Resources:
         CidrIp2: 10.0.2.0/24
         CidrIp3: 10.0.3.0/24
         CidrIp4: 10.0.4.0/24
-        #HTTPPort: !Ref HTTPPort
-        #HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         
@@ -54,47 +48,17 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
       Parameters:
-        #EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-        #Prefix: !Ref Prefix
         PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         VPC: !GetAtt VPCStack.Outputs.VPC
 
-  #EC2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #    - EndpointStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
-  #    Parameters:
-  #      ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
-  #      InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-  #      InstanceType: t3a.micro
-  #      Prefix: !Ref Prefix
-  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      UserData: !Base64 |
-  #        #!/bin/bash -xe
-  #        yum update -y
-  #        yum install -y httpd
-  #        systemctl start httpd
-  #        systemctl enable httpd
-  #        ec2-metadata -i > /var/www/html/index.html
-          
   NLBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
-      #- EC2Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-nlb.yaml"
       Parameters:
-        #ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
         HTTPPort: !Ref HTTPPort
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
@@ -103,18 +67,14 @@ Resources:
         HealthyThresholdCount: 2
         UnhealthyThresholdCount: 2
         HealthCheckIntervalSeconds: 10
-        #HttpCode: 200
         
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- S3Stack
       - NLBStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         Handler: index.lambda_handler
         NLBLoadBalancerName: !GetAtt NLBStack.Outputs.NLBLoadBalancerName
         Prefix: !Ref Prefix
@@ -128,14 +88,9 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
       Parameters:
-        #AlarmEvaluationPeriod: 2
-        #AlarmPeriod: 60
-        #AlarmThreshold: 30
-        #Cooldown: 300
         DesiredCapacity: !Ref InstanceSize
         HTTPPort: !Ref HTTPPort
         ImageId: !Ref ImageId
-        #InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
         MaxSize: !Ref InstanceSize
         MinSize: !Ref InstanceSize
@@ -145,8 +100,5 @@ Resources:
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        #ScalingAdjustment1: 1
-        #ScalingAdjustment2: -1
-        #TargetTrackingConfigurationTargetValue: 50.0
         VPC: !GetAtt VPCStack.Outputs.VPC
         
