@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-    
   Handler:
     Type: String
     
@@ -95,10 +89,7 @@ Resources:
                 Action:
                   - ec2:DescribeNetworkInterfaces
                 Resource: "*"
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
-                  #- !Ref ECRRepositoryArn
-        
+
         
 Outputs:
   NLBPrivateAddress1:
@@ -106,6 +97,3 @@ Outputs:
     
   NLBPrivateAddress2:
     Value: !Select [1, !GetAtt CustomResource.PrivateAddresses]
-
-  #FunctionArn:
-  #  Value: !GetAtt Function.Arn
