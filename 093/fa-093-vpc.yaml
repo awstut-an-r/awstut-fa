@@ -17,13 +17,7 @@ Parameters:
     
   CidrIp4:
     Type: String
-    
-  #HTTPPort:
-  #  Type: Number
-  #  
-  #HTTPSPort:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
     
@@ -119,43 +113,6 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       
       
-  #ALBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub ${Prefix}-ALBSecurityGroup
-  #    GroupDescription: Allow HTTP Only.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        CidrIp: 0.0.0.0/0
-          
-  #InstanceSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub ${Prefix}-InstanceSecurityGroup
-  #    GroupDescription: Allow HTTP from ALBSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        SourceSecurityGroupId: !Ref ALBSecurityGroup
-  #        
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
-          
 Outputs:
   VPC:
     Value: !Ref VPC
@@ -174,18 +131,3 @@ Outputs:
       
   PrivateRouteTable:
     Value: !Ref PrivateRouteTable
-      
-  #ALBSecurityGroup:
-  #  Value: !Ref ALBSecurityGroup
-  #  Export:
-  #    Name: !Sub ${Prefix}-ALBSecurityGroup
-  #
-  #InstanceSecurityGroup:
-  #  Value: !Ref InstanceSecurityGroup
-  #  Export:
-  #    Name: !Sub ${Prefix}-InstanceSecurityGroup
-  #    
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
-  #  Export:
-  #    Name: !Sub ${Prefix}-EndpointSecurityGroup
