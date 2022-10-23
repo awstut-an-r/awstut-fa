@@ -12,7 +12,7 @@ Parameters:
   HTTPPort:
     Type: Number
     Default: 80
-    z
+
   ImageId:
     Type: String
     Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
