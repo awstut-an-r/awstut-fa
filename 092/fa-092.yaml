@@ -33,10 +33,6 @@ Parameters:
     Type: String
     Default: ApacheWeb
     
-  InstanceTagValueWeb2:
-    Type: String
-    Default: NginxWeb
-    
   InstanceType:
     Type: String
     Default: t4g.micro
