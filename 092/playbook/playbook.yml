@@ -1,23 +1,8 @@
 - hosts: all
   gather_facts: no
   become: yes
-  #become_user: ec2-user
-  #become_user: ssm-user
-  
-  #vars:
-  #  root_user: root
-  #  root_password: P@ssw0rd
-  #  wordpress_user: wordpress-user
-  #  wordpress_password: P@ssw0rd
-  #  wordpress_db: wordpress-db
 
   tasks:
-    #- name: download wordpress.
-    #  shell: wget -P /home/ssm-user https://wordpress.org/latest.tar.gz
-
-    #- name: test variable.
-    #  shell: echo "{{hoge}}"
-    
     - name: update yum.
       yum: name=*
     
