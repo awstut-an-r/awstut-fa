@@ -9,44 +9,21 @@ Parameters:
     Type: String
     Default: fa-092
     
-  #PublicCidrIp1:
-  #  Type: String
-  #  Default: 10.0.1.0/24
-  #  
-  #PublicCidrIp2:
-  #  Type: String
-  #  Default: 10.0.2.0/24
-  #  
-  #PrivateCidrIp1:
-  #  Type: String
-  #  Default: 10.0.3.0/24
-  #  
-  #PrivateCidrIp2:
-  #  Type: String
-  #  Default: 10.0.4.0/24
-    
   HTTPPort:
     Type: Number
     Default: 80
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-  
+    z
   ImageId:
-    #Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Type: String
     Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
     
   InstanceSize:
     Type: Number
     Default: 2
-    #Default: 1
     
   InstanceTagKey:
     Type: String
     Default: Server
-    
     
   InstanceTagValueApp:
     Type: String
@@ -62,7 +39,6 @@ Parameters:
     
   InstanceType:
     Type: String
-    #Default: t4g.nano
     Default: t4g.micro
   
   UWSGIPort:
@@ -86,10 +62,7 @@ Resources:
         CidrIp2: 10.0.2.0/24
         CidrIp3: 10.0.3.0/24
         CidrIp4: 10.0.4.0/24
-        #HTTPPort: !Ref HTTPPort
-        #HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
-        #UWSGIPort: !Ref UWSGIPort
         VPCCidrBlock: !Ref VPCCidrBlock
         
   IAMStack:
@@ -108,8 +81,6 @@ Resources:
       Parameters:
         HTTPPort: !Ref HTTPPort
         ImageId: !Ref ImageId
-        #InstanceSecurityGroup1: !GetAtt VPCStack.Outputs.InstanceSecurityGroup1
-        #InstanceSecurityGroup2: !GetAtt VPCStack.Outputs.InstanceSecurityGroup2
         InstanceProfile: !GetAtt IAMStack.Outputs.InstanceProfile
         InstanceTagKey: !Ref InstanceTagKey
         InstanceTagValueWeb1: !Ref InstanceTagValueWeb1
@@ -119,8 +90,6 @@ Resources:
         Prefix: !Ref Prefix
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         VPC: !GetAtt VPCStack.Outputs.VPC
   
   NLBStack:
@@ -130,8 +99,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-nlb.yaml"
       Parameters:
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
@@ -144,13 +111,10 @@ Resources:
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- S3Stack
       - NLBStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         Handler: index.lambda_handler
         NLBLoadBalancerName: !GetAtt NLBStack.Outputs.NLBLoadBalancerName
         Prefix: !Ref Prefix
@@ -164,13 +128,8 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
       Parameters:
-        #AlarmEvaluationPeriod: 2
-        #AlarmPeriod: 60
-        #AlarmThreshold: 30
-        #Cooldown: 300
         DesiredCapacity: !Ref InstanceSize
         ImageId: !Ref ImageId
-        #InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceProfileArn: !GetAtt IAMStack.Outputs.InstanceProfileArn
         InstanceTagKey: !Ref InstanceTagKey
         InstanceTagValueApp: !Ref InstanceTagValueApp
@@ -181,26 +140,19 @@ Resources:
         NLBPrivateAddress2: !GetAtt LambdaStack.Outputs.NLBPrivateAddress2
         NLBTargetGroup: !GetAtt NLBStack.Outputs.NLBTargetGroup
         Prefix: !Ref Prefix
-        #PrivateCidrIp1: !Ref PrivateCidrIp1
-        #PrivateCidrIp2: !Ref PrivateCidrIp2
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         UWSGIPort: !Ref UWSGIPort
-        #ScalingAdjustment1: 1
-        #ScalingAdjustment2: -1
-        #TargetTrackingConfigurationTargetValue: 50.0
         VPC: !GetAtt VPCStack.Outputs.VPC
         
   SSMStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- VPCStack
       - EC2Stack
       - AutoScalingStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
-        #Instance: !GetAtt EC2Stack.Outputs.Instance
         InstanceTagKey: !Ref InstanceTagKey
         InstanceTagValueApp: !Ref InstanceTagValueApp
         InstanceTagValueWeb1: !Ref InstanceTagValueWeb1
