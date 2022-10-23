@@ -17,19 +17,10 @@ Parameters:
     
   CidrIp4:
     Type: String
-    
-  #HTTPPort:
-  #  Type: Number
-    
-  #HTTPSPort:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
-    
-  #UWSGIPort:
-  #  Type: Number
-    
+
   VPCCidrBlock:
     Type: String
 
@@ -141,67 +132,6 @@ Resources:
       SubnetId: !Ref PrivateSubnet2
       RouteTableId: !Ref PrivateRouteTable
       
-      
-  #ALBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-ALBSecurityGroup"
-  #    GroupDescription: Allow HTTP Only.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        CidrIp: 0.0.0.0/0
-          
-  #InstanceSecurityGroup1:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
-  #    GroupDescription: Allow HTTP.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        CidrIp: 0.0.0.0/0
-  #        #SourceSecurityGroupId: !Ref ALBSecurityGroup
-  #      - IpProtocol: icmp
-  #        FromPort: -1
-  #        ToPort: -1
-  #        CidrIp: 0.0.0.0/0
-          
-  #InstanceSecurityGroup2:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
-  #    GroupDescription: Allow HTTP from InstanceSecurityGroup1.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        #FromPort: 0
-  #        #ToPort: 65535
-  #        FromPort: !Ref UWSGIPort
-  #        ToPort: !Ref UWSGIPort
-  #        CidrIp: 0.0.0.0/0
-  #        #SourceSecurityGroupId: !Ref InstanceSecurityGroup1
-  #      - IpProtocol: icmp
-  #        FromPort: -1
-  #        ToPort: -1
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup1
-          
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
           
 Outputs:
   VPC:
@@ -218,18 +148,3 @@ Outputs:
       
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-      
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-      
-  #ALBSecurityGroup:
-  #  Value: !Ref ALBSecurityGroup
-  
-  #InstanceSecurityGroup1:
-  #  Value: !Ref InstanceSecurityGroup1
-  #  
-  #InstanceSecurityGroup2:
-  #  Value: !Ref InstanceSecurityGroup2
-  
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
