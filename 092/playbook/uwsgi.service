@@ -4,7 +4,6 @@ After = syslog.target
 
 [Service]
 WorkingDirectory = /home/ec2-user/myapp/
-#ExecStart = /home/ec2-user/.local/bin/uwsgi --ini /home/ec2-user/myapp/uwsgi.ini
 ExecStart = /usr/local/bin/uwsgi --ini /home/ec2-user/myapp/uwsgi.ini
 
 Restart = on-failure
