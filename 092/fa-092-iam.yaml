@@ -39,14 +39,6 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:s3:::${PlaybookBucket}"
                   - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
-                  #- !Sub
-                  #  - ${S3Bucket}
-                  #  - S3Bucket:
-                  #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
-                  #- !Sub
-                  #  - ${S3Bucket}/*
-                  #  - S3Bucket:
-                  #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
             
@@ -57,9 +49,3 @@ Outputs:
     
   InstanceProfileArn:
     Value: !GetAtt InstanceProfile.Arn
-
-  #Instance1:
-  #  Value: !Ref Instance1
-    
-  #Instance2:
-  #  Value: !Ref Instance2
