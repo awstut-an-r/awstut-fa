@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Instance1:
-  #  Type: String
-  #  
-  #Instance2:
-  #  Type: String
-  
   InstanceTagKey:
     Type: String
     
@@ -27,22 +21,18 @@ Parameters:
     
   PlaybookFileName:
     Type: String
-    #Default: playbook.yml
     
   PlaybookPackageName:
     Type: String
-    #Default: playbook.zip
 
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   UWSGIPort:
     Type: Number
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
-    #Default: 60
     
     
 Resources:
@@ -71,8 +61,6 @@ Resources:
         
   ApplyAnsiblePlaybooksAssociation:
     Type: AWS::SSM::Association
-    #DependsOn:
-    #  - RunShellScriptAssociation
     Properties:
       AssociationName: !Sub "${Prefix}-apply-ansible-playbook-association"
       Name: AWS-ApplyAnsiblePlaybooks
@@ -85,10 +73,8 @@ Resources:
           - "False"
         ExtraVariables:
           - SSM=True
-            #hoge=HOGE
         InstallDependencies:
           - "True"
-          #- "False"
         PlaybookFile:
           - !Ref PlaybookFileName
         SourceInfo:
