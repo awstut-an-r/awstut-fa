@@ -61,7 +61,6 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref UWSGIPort
           ToPort: !Ref UWSGIPort
-          CidrIp: !Ref PrivateCidrIp1
           CidrIp: !Sub "${NLBPrivateAddress1}/32"
         - IpProtocol: tcp
           FromPort: !Ref UWSGIPort
