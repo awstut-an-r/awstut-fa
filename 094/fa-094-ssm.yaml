@@ -1,0 +1,138 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DBName:
+    Type: String
+    
+  DBPassword:
+    Type: String
+    
+  DBReadEndpointAddress:
+    Type: String
+    
+  DBTableName:
+    Type: String
+    
+  DBUser:
+    Type: String
+    
+  DBWriteEndpointAddress:
+    Type: String
+
+  #Instance1:
+  #  Type: String
+  #  
+  #Instance2:
+  #  Type: String
+  
+  InstanceTagKey:
+    Type: String
+    
+  InstanceTagValueApp:
+    Type: String
+    
+  InstanceTagValueWeb:
+    Type: String
+    
+  MySQLPort:
+    Type: Number
+    
+  NLBDNSName:
+    Type: String
+    
+  PlaybookBucket:
+    Type: String
+    
+  PlaybookFileName:
+    Type: String
+    #Default: playbook.yml
+    
+  PlaybookPackageName:
+    Type: String
+    #Default: playbook.zip
+
+  Prefix:
+    Type: String
+    #Default: soa-04-002
+    
+  UWSGIPort:
+    Type: Number
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    #Default: 60
+    
+    
+Resources:
+  WebServerAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-run-shellscript-association"
+      Name: AWS-RunShellScript
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref PlaybookBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      Parameters:
+        commands:
+          - yum update -y
+          - yum install -y httpd
+          - !Sub "echo 'ProxyPass / uwsgi://${NLBDNSName}:${UWSGIPort}/' >> /etc/httpd/conf/httpd.conf"
+          - !Sub "echo 'ProxyPassReverse / uwsgi://${NLBDNSName}:${UWSGIPort}/' >> /etc/httpd/conf/httpd.conf"
+          - systemctl start httpd
+          - systemctl enable httpd
+      Targets:
+        - Key: !Sub "tag:${InstanceTagKey}"
+          Values:
+            - !Ref InstanceTagValueWeb
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+        
+  AppServerAssociation:
+    Type: AWS::SSM::Association
+    #DependsOn:
+    #  - RunShellScriptAssociation
+    Properties:
+      AssociationName: !Sub "${Prefix}-apply-ansible-playbook-association"
+      Name: AWS-ApplyAnsiblePlaybooks
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref PlaybookBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/playbook-association-log"
+      Parameters:
+        Check:
+          - "False"
+        ExtraVariables:
+          - !Sub >-
+              SSM=True
+              DB_NAME=${DBName}
+              DB_PASSWORD=${DBPassword}
+              DB_READ_ENDPOINT_ADDRESS=${DBReadEndpointAddress}
+              DB_TABLENAME=${DBTableName}
+              DB_USER=${DBUser}
+              DB_WRITE_ENDPOINT_ADDRESS=${DBWriteEndpointAddress}
+              MYSQL_PORT=${MySQLPort}
+          #- SSM=True
+          #  #hoge=HOGE
+          #  !Sub "DB_NAME=${DBName}"
+          #  !Sub "DB_PASSWORD=${DBPassword}"
+          #  !Sub "DB_READ_ENDPOINT_ADDRESS=${DBReadEndpointAddress}"
+          #  !Sub "DB_TABLENAME=${DBTableName}"
+          #  !Sub "DB_USER=${DBUser}"
+          #  !Sub "DB_WRITE_ENDPOINT_ADDRESS=${DBWriteEndpointAddress}"
+          #  !Sub "MYSQL_PORT=${MySQLPort}"
+        InstallDependencies:
+          - "True"
+          #- "False"
+        PlaybookFile:
+          - !Ref PlaybookFileName
+        SourceInfo:
+          - !Sub '{"path": "https://${PlaybookBucket}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${PlaybookPackageName}"}'
+        SourceType:
+          - S3
+        Verbose:
+          - -v
+      Targets:
+        - Key: !Sub "tag:${InstanceTagKey}"
+          Values:
+            - !Ref InstanceTagValueApp
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

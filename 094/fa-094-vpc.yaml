@@ -1,0 +1,329 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  AvailabilityZone1:
+    Type: String
+  
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  CidrIp3:
+    Type: String
+    
+  CidrIp4:
+    Type: String
+    
+  CidrIp5:
+    Type: String
+    
+  CidrIp6:
+    Type: String
+    
+  CidrIp7:
+    Type: String
+    
+  CidrIp8:
+    Type: String
+    
+  CidrIp9:
+    Type: String
+    
+  HTTPPort:
+    Type: Number
+    
+  MySQLPort:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  #UWSGIPort:
+  #  Type: Number
+    
+  VPCCidrBlock:
+    Type: String
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+  
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+      
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+          
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      
+      
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+  WebSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp3
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  WebSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp4
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+  AppSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp5
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  AppSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp6
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+  DBSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp7
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  DBSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp8
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+  FunctionSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp9
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+      
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToInternet:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+      
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+      
+      
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToNATGateway:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+      
+  WebSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WebSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+      
+  WebSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref WebSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+      
+  AppSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref AppSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+      
+  AppSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref AppSubnet2
+      RouteTableId: !Ref PrivateRouteTable
+      
+  FunctionSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref FunctionSubnet
+      RouteTableId: !Ref PrivateRouteTable
+      
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-ALBSecurityGroup"
+      GroupDescription: Allow HTTP Only.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPPort
+          ToPort: !Ref HTTPPort
+          CidrIp: 0.0.0.0/0
+          
+  WebSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-WebSecurityGroup"
+      GroupDescription: Allow HTTP from ALBSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPPort
+          ToPort: !Ref HTTPPort
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+          
+  AppSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-AppSecurityGroup"
+      GroupDescription: Allow uWSGI from NLB.
+      VpcId: !Ref VPC
+      #SecurityGroupIngress:
+      #  - IpProtocol: tcp
+      #    FromPort: !Ref HTTPPort
+      #    ToPort: !Ref HTTPPort
+      #    SourceSecurityGroupId: !Ref ALBSecurityGroup
+      
+  FunctionSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-DBSecurityGroup"
+      GroupDescription: Allow MySQL from AppSecurityGroup and FunctionSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref AppSecurityGroup
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref FunctionSecurityGroup
+          
+  #EndpointSecurityGroup:
+  #  Type: AWS::EC2::SecurityGroup
+  #  Properties:
+  #    GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+  #    VpcId: !Ref VPC
+  #    SecurityGroupIngress:
+  #      - IpProtocol: tcp
+  #        FromPort: !Ref HTTPSPort
+  #        ToPort: !Ref HTTPSPort
+  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+          
+Outputs:
+  VPC:
+    Value: !Ref VPC
+      
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
+      
+  PublicSubnet2:
+    Value: !Ref PublicSubnet2
+    
+  WebSubnet1:
+    Value: !Ref WebSubnet1
+    
+  WebSubnet2:
+    Value: !Ref WebSubnet2
+    
+  AppSubnet1:
+    Value: !Ref AppSubnet1
+    
+  AppSubnet2:
+    Value: !Ref AppSubnet2
+    
+  FunctionSubnet:
+    Value: !Ref FunctionSubnet
+    
+  DBSubnet1:
+    Value: !Ref DBSubnet1
+    
+  DBSubnet2:
+    Value: !Ref DBSubnet2
+    
+  ALBSecurityGroup:
+    Value: !Ref ALBSecurityGroup
+  
+  WebSecurityGroup:
+    Value: !Ref WebSecurityGroup
+    
+  AppSecurityGroup:
+    Value: !Ref AppSecurityGroup
+    
+  #AppSecurityGroupGroupId:
+  #  Value: !GetAtt AppSecurityGroup.GroupId
+
+  FunctionSecurityGroup:
+    Value: !Ref FunctionSecurityGroup
+    
+  DBSecurityGroup:
+    Value: !Ref DBSecurityGroup

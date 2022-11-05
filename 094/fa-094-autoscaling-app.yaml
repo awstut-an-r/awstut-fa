@@ -1,0 +1,363 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AppSecurityGroup:
+    Type: String
+    
+  #AppSecurityGroupGroupId:
+  #  Type: String
+    
+  AppSubnet1:
+    Type: String
+    
+  AppSubnet2:
+    Type: String
+    
+  DesiredCapacity:
+    Type: Number
+    
+  FunctionHandler:
+    Type: String
+    
+  FunctionRuntime:
+    Type: String
+    
+  InstanceImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceProfileArn:
+    Type: String
+  
+  InstanceTagKey:
+    Type: String
+    
+  InstanceTagValueApp:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  MaxSize:
+    Type: Number
+    
+  MinSize:
+    Type: Number
+    
+  NLBLoadBalancerName:
+    Type: String
+    
+  #NLBPrivateAddress1:
+  #  Type: String
+  #  
+  #NLBPrivateAddress2:
+  #  Type: String
+    
+  NLBTargetGroup:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  UWSGIPort:
+    Type: Number
+    
+
+Resources:
+  #WebServerSecurityGroup:
+  #  Type: AWS::EC2::SecurityGroup
+  #  Properties:
+  #    GroupName: !Sub "${Prefix}-WebServerSecurityGroup"
+  #    GroupDescription: Allow HTTP.
+  #    VpcId: !Ref VPC
+  #    SecurityGroupIngress:
+  #      - IpProtocol: tcp
+  #        FromPort: !Ref HTTPPort
+  #        ToPort: !Ref HTTPPort
+  #        #CidrIp: 0.0.0.0/0
+  #        SourceSecurityGroupId: !Ref ALBSecurityGroup
+
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateData:
+        IamInstanceProfile:
+          #Arn: !GetAtt InstanceProfile.Arn
+          Arn: !Ref InstanceProfileArn
+        ImageId: !Ref InstanceImageId
+        InstanceType: !Ref InstanceType
+        #LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
+        #SecurityGroups: 
+        SecurityGroupIds: 
+          #- !Ref InstanceSecurityGroup
+          - !Ref AppSecurityGroup
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: !Ref InstanceTagKey
+                Value: !Ref InstanceTagValueApp
+        #UserData: !Base64 |
+        #  #!/bin/bash -xe
+        #  yum update -y
+        #  yum install -y httpd
+        #  systemctl start httpd
+        #  systemctl enable httpd
+        #  ec2-metadata -i > /var/www/html/index.html
+      LaunchTemplateName: !Sub "${Prefix}-LaunchTemplate-App"
+      #TagSpecifications:
+      #VersionDescription: String
+  
+  #LaunchConfiguration:
+  #  Type: AWS::AutoScaling::LaunchConfiguration
+  #  Properties:
+  #    IamInstanceProfile: !Ref InstanceProfile
+  #    ImageId: !Ref ImageId
+  #    InstanceType: !Ref InstanceType
+  #    LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
+  #    SecurityGroups: 
+  #      - !Ref InstanceSecurityGroup
+  #    UserData: !Base64 |
+  #      #!/bin/bash -xe
+  #      yum update -y
+  #      yum install -y httpd
+  #      systemctl start httpd
+  #      systemctl enable httpd
+  #      ec2-metadata -i > /var/www/html/index.html
+        
+  AppAutoScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup-App"
+      DesiredCapacity: !Ref DesiredCapacity
+      #LaunchConfigurationName: !Ref LaunchConfiguration
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      MaxSize: !Ref MaxSize
+      MinSize: !Ref MinSize
+      VPCZoneIdentifier:
+        - !Ref AppSubnet1
+        - !Ref AppSubnet2
+      TargetGroupARNs:
+        - !Ref NLBTargetGroup
+        
+  #ScalingPolicy1:
+  #  Type: AWS::AutoScaling::ScalingPolicy
+  #  Properties:
+  #    AdjustmentType: ChangeInCapacity
+  #    AutoScalingGroupName: !Ref AutoScalingGroup
+  #    Cooldown: !Ref Cooldown
+  #    #EstimatedInstanceWarmup:
+  #    #MetricAggregationType:
+  #    #MinAdjustmentMagnitude:
+  #    PolicyType: SimpleScaling
+  #    #PredictiveScalingConfiguration:
+  #    ScalingAdjustment: !Ref ScalingAdjustment1
+  #    #StepAdjustments:
+  #    #TargetTrackingConfiguration:
+  #    #  PredefinedMetricSpecification:
+  #    #    PredefinedMetricType: ASGAverageCPUUtilization
+  #    #  TargetValue: !Ref TargetTrackingConfigurationTargetValue
+  #    
+  #ScalingPolicy2:
+  #  Type: AWS::AutoScaling::ScalingPolicy
+  #  Properties:
+  #    AdjustmentType: ChangeInCapacity
+  #    AutoScalingGroupName: !Ref AutoScalingGroup
+  #    Cooldown: !Ref Cooldown
+  #    #EstimatedInstanceWarmup:
+  #    #MetricAggregationType:
+  #    #MinAdjustmentMagnitude:
+  #    PolicyType: SimpleScaling
+  #    #PredictiveScalingConfiguration:
+  #    ScalingAdjustment: !Ref ScalingAdjustment2
+  #    #StepAdjustments:
+  #    #TargetTrackingConfiguration:
+  #    #  PredefinedMetricSpecification:
+  #    #    PredefinedMetricType: ASGAverageCPUUtilization
+  #    #  TargetValue: !Ref TargetTrackingConfigurationTargetValue
+  #    
+  #Alarm1:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    #ActionsEnabled: true
+  #    AlarmActions:
+  #      - !Ref ScalingPolicy1
+  #    #AlarmDescription: CPU alarm for my instance
+  #    AlarmName: !Sub "${Prefix}-Alarm1"
+  #    ComparisonOperator: GreaterThanOrEqualToThreshold
+  #    Dimensions:
+  #      - Name: AutoScalingGroupName
+  #        Value: !Ref AutoScalingGroup
+  #    EvaluationPeriods: !Ref AlarmEvaluationPeriod
+  #    MetricName: CPUUtilization
+  #    Namespace: AWS/EC2
+  #    Period: !Ref AlarmPeriod
+  #    Statistic: Average
+  #    Threshold: !Ref AlarmThreshold
+  #    #Unit: Bytes/Second
+  #    
+  #Alarm2:
+  #  Type: AWS::CloudWatch::Alarm
+  #  Properties:
+  #    #ActionsEnabled: true
+  #    AlarmActions:
+  #      - !Ref ScalingPolicy2
+  #    #AlarmDescription: CPU alarm for my instance
+  #    AlarmName: !Sub "${Prefix}-Alarm2"
+  #    ComparisonOperator: LessThanOrEqualToThreshold
+  #    Dimensions:
+  #      - Name: AutoScalingGroupName
+  #        Value: !Ref AutoScalingGroup
+  #    EvaluationPeriods: !Ref AlarmEvaluationPeriod
+  #    MetricName: CPUUtilization
+  #    Namespace: AWS/EC2
+  #    Period: !Ref AlarmPeriod
+  #    Statistic: Average
+  #    Threshold: !Ref AlarmThreshold
+  #    #Unit: Bytes/Second
+        
+  #InstanceProfile:
+  #  Type: AWS::IAM::InstanceProfile
+  #  Properties:
+  #    Path: /
+  #    Roles:
+  #      - !Ref InstanceRole
+  
+  #InstanceRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - ec2.amazonaws.com
+  #    Policies:
+  #      - PolicyName: SSMStateManagerPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - s3:GetObject
+  #              Resource:
+  #                - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
+  #                - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - s3:GetObject
+  #            #    - s3:PutObject
+  #            #    - s3:PutObjectAcl
+  #            #    - s3:ListBucket
+  #            #  Resource:
+  #            #    - !Sub "arn:aws:s3:::${PlaybookBucket}"
+  #            #    - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
+  #    #ManagedPolicyArns:
+  #    #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+  
+  
+  
+  AppSecurityGroupCustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt AppSecurityGroupFunction.Arn
+      
+  AppSecurityGroupFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          nlb_loadbalancer_name = os.environ['NLB_LOADBALANCER_NAME']
+          security_group_id = os.environ['SECURITY_GROUP']
+          uwsgi_port = int(os.environ['UWSGI_PORT'])
+          
+          filter_value = '*{nlb}*'.format(nlb=nlb_loadbalancer_name)
+          
+          client = boto3.client('ec2')
+           
+          CREATE = 'Create'
+          #UPDATE = 'Update'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              #if event['RequestType'] == CREATE or event['RequestType'] == UPDATE:
+              if event['RequestType'] == CREATE:
+                describe_network_interfaces_response = client.describe_network_interfaces(
+                  Filters=[
+                    {
+                      'Name':'description',
+                      'Values':[
+                        filter_value
+                      ]
+                    }
+                  ]
+                )
+                #private_addresses = [interface['PrivateIpAddress'] for interface in response['NetworkInterfaces']]
+                #response_data['PrivateAddresses'] = private_addresses
+                
+                for interface in describe_network_interfaces_response['NetworkInterfaces']:
+                  private_address = interface['PrivateIpAddress']
+                  authorize_security_group_ingress_response = client.authorize_security_group_ingress(
+                    GroupId=security_group_id,
+                    IpPermissions=[
+                      {
+                        'FromPort': uwsgi_port,
+                        'IpProtocol': 'tcp',
+                        'IpRanges': [
+                          {
+                            'CidrIp': '{address}/32'.format(address=private_address)
+                          }
+                        ],
+                        'ToPort': uwsgi_port
+                      }
+                    ]
+                  )
+                  print(authorize_security_group_ingress_response)
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      Environment:
+        Variables:
+          NLB_LOADBALANCER_NAME: !Ref NLBLoadBalancerName
+          SECURITY_GROUP: !Ref AppSecurityGroup
+          UWSGI_PORT: !Ref UWSGIPort
+      FunctionName: !Sub "${Prefix}-AppSecurityGroupFunction"
+      Handler: !Ref FunctionHandler
+      Runtime: !Ref FunctionRuntime
+      Role: !GetAtt AppSecurityGroupFunctionRole.Arn
+
+  AppSecurityGroupFunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-AuthorizeSecurityGroupPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:AuthorizeSecurityGroupIngress
+                Resource: "*"
+                  #- !Ref BucketArn
+                  #- !Sub "${BucketArn}/*"
+                  #- !Ref ECRRepositoryArn
