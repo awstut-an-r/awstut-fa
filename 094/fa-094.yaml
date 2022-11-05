@@ -113,9 +113,7 @@ Resources:
         CidrIp9: 10.0.9.0/24
         HTTPPort: !Ref HTTPPort
         MySQLPort: !Ref MySQLPort
-        #HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
-        #UWSGIPort: !Ref UWSGIPort
         VPCCidrBlock: 10.0.0.0/16
         
   AuroraStack:
@@ -137,7 +135,6 @@ Resources:
         DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
         DBTableName: testtable
         DBUser: !Ref DBUser
-        #DBFamily: aurora5.7
         
         FunctionArchitecture: !Ref FunctionArchitecture
         FunctionEphemeralStorageSize: !Ref FunctionEphemeralStorageSize
@@ -149,63 +146,8 @@ Resources:
         FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         FunctionSubnet: !GetAtt VPCStack.Outputs.FunctionSubnet
         FunctionTimeout: !Ref FunctionTimeout
-        
         MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
-        
-  #LambdaStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - AuroraStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
-  #    Parameters:
-  #      Architecture: !Ref FunctionArchitecture
-  #      DBName: !Ref DBName
-  #      DBPassword: !Ref DBPassword
-  #      DBTableName: !Ref DBTableName
-  #      DBUser: !Ref DBUser
-  #      DBWriteEndpointAddress: !GetAtt AuroraStack.Outputs.DBWriteEndpointAddress
-  #      EphemeralStorageSize: !Ref FunctionEphemeralStorageSize
-  #      FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
-  #      FunctionSubnet: !GetAtt VPCStack.Outputs.FunctionSubnet
-  #      Handler: !Ref FunctionHandler
-  #      LayerBucket: !Ref TemplateBucketName
-  #      LayerBucketFolder: !Ref Prefix
-  #      LayerPackage: !Ref FunctionLayerPackage
-  #      MySQLPort: !Ref MySQLPort
-  #      Prefix: !Ref Prefix
-  #      Runtime: !Ref FunctionRuntime
-  #      Timeout: !Ref FunctionTimeout
-        
-  # test stack
-  #EC2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - LambdaStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
-  #    Parameters:
-  #      AppSecurityGroup: !GetAtt VPCStack.Outputs.AppSecurityGroup
-  #      AppSubnet: !GetAtt VPCStack.Outputs.AppSubnet1
-  #      HTTPPort: !Ref HTTPPort
-  #      InstanceImageId: !Ref InstanceImageId
-  #      #InstanceSecurityGroup1: !GetAtt VPCStack.Outputs.InstanceSecurityGroup1
-  #      #InstanceSecurityGroup2: !GetAtt VPCStack.Outputs.InstanceSecurityGroup2
-  #      InstanceProfile: !GetAtt IAMStack.Outputs.InstanceProfile
-  #      #InstanceTagKey: !Ref InstanceTagKey
-  #      #InstanceTagValueWeb1: !Ref InstanceTagValueWeb1
-  #      #InstanceTagValueWeb2: !Ref InstanceTagValueWeb2
-  #      InstanceType: !Ref InstanceType
-  #      #PlaybookBucket: !Ref TemplateBucketName
-  #      Prefix: !Ref Prefix
-  #      #PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-  #      #PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
-  #      #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      VPC: !GetAtt VPCStack.Outputs.VPC
-  
-  
   
   NLBStack:
     Type: AWS::CloudFormation::Stack
@@ -216,11 +158,7 @@ Resources:
       Parameters:
         AppSubnet1: !GetAtt VPCStack.Outputs.AppSubnet1
         AppSubnet2: !GetAtt VPCStack.Outputs.AppSubnet2
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         UWSGIPort: !Ref UWSGIPort
         VPC: !GetAtt VPCStack.Outputs.VPC
         HealthyThresholdCount: 2
@@ -243,7 +181,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling-app.yaml"
       Parameters:
         AppSecurityGroup: !GetAtt VPCStack.Outputs.AppSecurityGroup
-        #AppSecurityGroupGroupId: !GetAtt VPCStack.Outputs.AppSecurityGroupGroupId
         AppSubnet1: !GetAtt VPCStack.Outputs.AppSubnet1
         AppSubnet2: !GetAtt VPCStack.Outputs.AppSubnet2
         DesiredCapacity: !Ref InstanceSize
@@ -257,12 +194,9 @@ Resources:
         MaxSize: !Ref InstanceSize
         MinSize: !Ref InstanceSize
         NLBLoadBalancerName: !GetAtt NLBStack.Outputs.NLBLoadBalancerName
-        #NLBPrivateAddress1: !GetAtt LambdaStack.Outputs.NLBPrivateAddress1
-        #NLBPrivateAddress2: !GetAtt LambdaStack.Outputs.NLBPrivateAddress2
         NLBTargetGroup: !GetAtt NLBStack.Outputs.NLBTargetGroup
         Prefix: !Ref Prefix
         UWSGIPort: !Ref UWSGIPort
-        #VPC: !GetAtt VPCStack.Outputs.VPC
 
   ALBStack:
     Type: AWS::CloudFormation::Stack
@@ -292,28 +226,16 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling-web.yaml"
       Parameters:
-        #AlarmEvaluationPeriod: 2
-        #AlarmPeriod: 60
-        #AlarmThreshold: 30
-        #ALBSecurityGroup: !GetAtt ALBStack.Outputs.ALBSecurityGroup
         ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup
-        #Cooldown: 300
         DesiredCapacity: !Ref InstanceSize
-        #HTTPPort: !Ref HTTPPort
         InstanceImageId: !Ref InstanceImageId
         InstanceProfileArn: !GetAtt IAMStack.Outputs.InstanceProfileArn
-        #InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceTagKey: !Ref InstanceTagKey
         InstanceTagValueWeb: !Ref InstanceTagValueWeb
         InstanceType: !Ref InstanceType
         MaxSize: !Ref InstanceSize
         MinSize: !Ref InstanceSize
         Prefix: !Ref Prefix
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        #ScalingAdjustment1: 1
-        #ScalingAdjustment2: -1
-        #TargetTrackingConfigurationTargetValue: 50.0
         WebSecurityGroup: !GetAtt VPCStack.Outputs.WebSecurityGroup
         WebSubnet1: !GetAtt VPCStack.Outputs.WebSubnet1
         WebSubnet2: !GetAtt VPCStack.Outputs.WebSubnet2
@@ -332,7 +254,6 @@ Resources:
         DBTableName: testtable
         DBUser: !Ref DBUser
         DBWriteEndpointAddress: !GetAtt AuroraStack.Outputs.DBWriteEndpointAddress
-        #Instance: !GetAtt EC2Stack.Outputs.Instance
         InstanceTagKey: !Ref InstanceTagKey
         InstanceTagValueApp: !Ref InstanceTagValueApp
         InstanceTagValueWeb: !Ref InstanceTagValueWeb
