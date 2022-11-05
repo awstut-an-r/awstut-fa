@@ -1,33 +1,8 @@
 - hosts: all
   gather_facts: no
   become: yes
-  #become_user: ec2-user
-  #become_user: ssm-user
-  
-  #vars:
-  #  root_user: root
-  #  root_password: P@ssw0rd
-  #  wordpress_user: wordpress-user
-  #  wordpress_password: P@ssw0rd
-  #  wordpress_db: wordpress-db
 
   tasks:
-    #- name: download wordpress.
-    #  shell: wget -P /home/ssm-user https://wordpress.org/latest.tar.gz
-
-    #- name: test variable.
-    #  shell: echo "{{hoge}}"
-    
-    #- name: set environment variables.
-    #  shell: >-
-    #    export DB_NAME={{DB_NAME}};
-    #    export DB_PASSWORD={{DB_PASSWORD}};
-    #    export DB_READ_ENDPOINT_ADDRESS={{DB_READ_ENDPOINT_ADDRESS}};
-    #    export DB_TABLENAME={{DB_TABLENAME}};
-    #    export DB_USER={{DB_USER}};
-    #    export DB_WRITE_ENDPOINT_ADDRESS={{DB_WRITE_ENDPOINT_ADDRESS}};
-    #    export MYSQL_PORT={{MYSQL_PORT}};
-    
     - name: update yum.
       yum: name=*
     
@@ -86,11 +61,3 @@
         name: uwsgi
         state: started
         enabled: yes
-      #environment:
-      #  DB_NAME: "{{DB_NAME}}"
-      #  DB_PASSWORD: "{{DB_PASSWORD}}"
-      #  DB_READ_ENDPOINT_ADDRESS: "{{DB_READ_ENDPOINT_ADDRESS}}"
-      #  DB_TABLENAME: "{{DB_TABLENAME}}"
-      #  DB_USER: "{{DB_USER}}"
-      #  DB_WRITE_ENDPOINT_ADDRESS: "{{DB_WRITE_ENDPOINT_ADDRESS}}"
-      #  MYSQL_PORT: "{{MYSQL_PORT}}"
