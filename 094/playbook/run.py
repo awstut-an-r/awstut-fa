@@ -2,7 +2,6 @@ import datetime
 import json
 import mysql.connector
 import os
-#import urllib.request
 from flask import Flask
 
 db_name = os.environ['DB_NAME']
@@ -16,16 +15,10 @@ mysql_port = int(os.environ['MYSQL_PORT'])
 str_format = '%Y-%m-%d %H:%M:%S'
 
 app = Flask(__name__)
-#url = 'http://169.254.169.254/latest/meta-data/instance-id'
 
 @app.route('/')
 @app.route('/read')
 def read():
-  #request = urllib.request.Request(url)
-  #with urllib.request.urlopen(request) as response:
-  #  data = response.read().decode('utf-8')
-  #  return data
-  
   conn = mysql.connector.connect(
     host=db_read_endpoint_address,
     port=mysql_port,
