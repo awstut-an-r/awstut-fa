@@ -41,10 +41,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  #UWSGIPort:
-  #  Type: Number
-    
+
   VPCCidrBlock:
     Type: String
 
@@ -237,11 +234,6 @@ Resources:
       GroupName: !Sub "${Prefix}-AppSecurityGroup"
       GroupDescription: Allow uWSGI from NLB.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: tcp
-      #    FromPort: !Ref HTTPPort
-      #    ToPort: !Ref HTTPPort
-      #    SourceSecurityGroupId: !Ref ALBSecurityGroup
       
   FunctionSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -265,18 +257,6 @@ Resources:
           FromPort: !Ref MySQLPort
           ToPort: !Ref MySQLPort
           SourceSecurityGroupId: !Ref FunctionSecurityGroup
-          
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
           
 Outputs:
@@ -318,9 +298,6 @@ Outputs:
     
   AppSecurityGroup:
     Value: !Ref AppSecurityGroup
-    
-  #AppSecurityGroupGroupId:
-  #  Value: !GetAtt AppSecurityGroup.GroupId
 
   FunctionSecurityGroup:
     Value: !Ref FunctionSecurityGroup
