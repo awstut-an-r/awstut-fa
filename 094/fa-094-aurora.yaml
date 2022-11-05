@@ -36,9 +36,6 @@ Parameters:
     
   DBUser:
     Type: String
-    
-  #DBFamily:
-  #  Type: String
   
   FunctionArchitecture:
     Type: String
@@ -78,28 +75,11 @@ Parameters:
     
     
 Resources:
-  #DBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-DBSecurityGroup"
-  #    GroupDescription: Allow MySQL from Instance and Function.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref MySQLPort
-  #        ToPort: !Ref MySQLPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-  #      #- IpProtocol: tcp
-  #      #  FromPort: !Ref MySQLPort
-  #      #  ToPort: !Ref MySQLPort
-  #      #  SourceSecurityGroupId: !Ref FunctionSecurityGroup
-
   DBCluster:
     Type: AWS::RDS::DBCluster
     Properties:
       DatabaseName: !Ref DBName
       DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
-      #DBClusterParameterGroupName: !Ref DBClusterParameterGroup
       DBSubnetGroupName: !Ref DBSubnetGroup
       Engine: !Ref DBEngine
       EngineVersion: !Ref DBEngineVersion
@@ -123,43 +103,24 @@ Resources:
     Properties:
       DBClusterIdentifier: !Ref DBCluster
       DBSubnetGroupName: !Ref DBSubnetGroup
-      #DBParameterGroupName: !Ref DBParameterGroup
       DBInstanceIdentifier: !Sub "${Prefix}-dbinstance1"
       DBInstanceClass: !Ref DBInstanceClass
       Engine: !Ref DBEngine
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       PubliclyAccessible: false
-      #PromotionTier: 1
       
   DBInstance2:
     Type: AWS::RDS::DBInstance
     Properties:
       DBClusterIdentifier: !Ref DBCluster
       DBSubnetGroupName: !Ref DBSubnetGroup
-      #DBParameterGroupName: !Ref DBParameterGroup
       DBInstanceIdentifier: !Sub "${Prefix}-dbinstance2"
       DBInstanceClass: !Ref DBInstanceClass
       Engine: !Ref DBEngine
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       PubliclyAccessible: false
-      #PromotionTier: 2
-      
-  #DBClusterParameterGroup:
-  #  Type: AWS::RDS::DBClusterParameterGroup
-  #  Properties:
-  #    Description: Test DBClusterParameterGroup for Aurora.
-  #    Family: !Ref DBFamily
-  #    Parameters:
-  #      character_set_database: utf8
-    
-  #DBParameterGroup:
-  #  Type: AWS::RDS::DBParameterGroup
-  #  Properties:
-  #    Description: Test DBParameterGroup for Aurora.
-  #    Family: !Ref DBFamily
-  
-  # ---DB initialization resource---
-  
+
+
   RequirementsParameter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -251,16 +212,9 @@ Resources:
         Size: !Ref FunctionEphemeralStorageSize
       FunctionName: !Sub "${Prefix}-LambdaLayerFunction"
       Handler: !Ref FunctionHandler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref FunctionRuntime
       Role: !GetAtt LambdaLayerFunctionRole.Arn
       Timeout: !Ref FunctionTimeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   LambdaLayerFunctionRole:
     Type: AWS::IAM::Role
@@ -338,8 +292,6 @@ Resources:
       - LambdaLayer
     Properties:
       Code:
-        #S3Bucket: !Ref CodeS3Bucket
-        #S3Key: !Ref CodeS3Key
         ZipFile: |
           import boto3
           import cfnresponse
@@ -367,7 +319,6 @@ Resources:
                 client = boto3.client('ssm', region_name=region)
                 response = client.get_parameter(Name=sql_parameter)
                 sql_statements = response['Parameter']['Value']
-                #print(sql_statements)
                 
                 conn = mysql.connector.connect(
                   host=db_endpoint_address,
@@ -391,12 +342,9 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
       Environment:
         Variables:
-          #DB_NAME: !Ref DBName
-          #DB_PROXY_ENDPOINT_ADDRESS: !Ref DBProxyEndpointAddress
           DB_ENDPOINT_ADDRESS: !GetAtt DBCluster.Endpoint.Address
           DB_ENDPOINT_PORT: !Ref MySQLPort
           DB_PASSWORD: !Ref DBPassword
-          #DB_TABLENAME: !Ref DBTableName
           DB_USER: !Ref DBUser
           REGION: !Ref AWS::Region
           SQL_PARAMETER: !Ref SQLParameter
@@ -445,6 +393,3 @@ Outputs:
     
   DBReadEndpointAddress:
     Value: !GetAtt DBCluster.ReadEndpoint.Address
-      
-  #AuroraEndpointPort:
-  #  Value: !GetAtt DBCluster.Endpoint.Port
