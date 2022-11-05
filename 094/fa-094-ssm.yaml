@@ -19,12 +19,6 @@ Parameters:
   DBWriteEndpointAddress:
     Type: String
 
-  #Instance1:
-  #  Type: String
-  #  
-  #Instance2:
-  #  Type: String
-  
   InstanceTagKey:
     Type: String
     
@@ -45,22 +39,18 @@ Parameters:
     
   PlaybookFileName:
     Type: String
-    #Default: playbook.yml
     
   PlaybookPackageName:
     Type: String
-    #Default: playbook.zip
 
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   UWSGIPort:
     Type: Number
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
-    #Default: 60
     
     
 Resources:
@@ -89,8 +79,6 @@ Resources:
         
   AppServerAssociation:
     Type: AWS::SSM::Association
-    #DependsOn:
-    #  - RunShellScriptAssociation
     Properties:
       AssociationName: !Sub "${Prefix}-apply-ansible-playbook-association"
       Name: AWS-ApplyAnsiblePlaybooks
@@ -111,18 +99,8 @@ Resources:
               DB_USER=${DBUser}
               DB_WRITE_ENDPOINT_ADDRESS=${DBWriteEndpointAddress}
               MYSQL_PORT=${MySQLPort}
-          #- SSM=True
-          #  #hoge=HOGE
-          #  !Sub "DB_NAME=${DBName}"
-          #  !Sub "DB_PASSWORD=${DBPassword}"
-          #  !Sub "DB_READ_ENDPOINT_ADDRESS=${DBReadEndpointAddress}"
-          #  !Sub "DB_TABLENAME=${DBTableName}"
-          #  !Sub "DB_USER=${DBUser}"
-          #  !Sub "DB_WRITE_ENDPOINT_ADDRESS=${DBWriteEndpointAddress}"
-          #  !Sub "MYSQL_PORT=${MySQLPort}"
         InstallDependencies:
           - "True"
-          #- "False"
         PlaybookFile:
           - !Ref PlaybookFileName
         SourceInfo:
