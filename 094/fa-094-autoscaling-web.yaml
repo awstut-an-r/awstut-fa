@@ -1,29 +1,11 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AlarmEvaluationPeriod:
-  #  Type: Number
-
-  #AlarmPeriod:
-  #  Type: Number
-    
-  #AlarmThreshold:
-  #  Type: Number
-  
-  #ALBSecurityGroup:
-  #  Type: String
-
   ALBTargetGroup:
     Type: String
     
-  #Cooldown:
-  #  Type: Number
-    
   DesiredCapacity:
     Type: Number
-    
-  #HTTPPort:
-  #  Type: Number
     
   InstanceImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
@@ -31,9 +13,6 @@ Parameters:
   InstanceProfileArn:
     Type: String
     
-  #InstanceSecurityGroup:
-  #  Type: String
-  
   InstanceTagKey:
     Type: String
     
@@ -52,21 +31,6 @@ Parameters:
   Prefix:
     Type: String
     
-  #PrivateSubnet1:
-  #  Type: String
-  #  
-  #PrivateSubnet2:
-  #  Type: String
-    
-  #ScalingAdjustment1:
-  #  Type: Number
-  #  
-  #ScalingAdjustment2:
-  #  Type: Number
-    
-  #TargetTrackingConfigurationTargetValue:
-  #  Type: Number
-  
   WebSecurityGroup:
     Type: String
     
@@ -78,198 +42,35 @@ Parameters:
     
 
 Resources:
-  #WebServerSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-WebServerSecurityGroup"
-  #    GroupDescription: Allow HTTP.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPPort
-  #        ToPort: !Ref HTTPPort
-  #        #CidrIp: 0.0.0.0/0
-  #        SourceSecurityGroupId: !Ref ALBSecurityGroup
-
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
     Properties:
       LaunchTemplateData:
         IamInstanceProfile:
-          #Arn: !GetAtt InstanceProfile.Arn
           Arn: !Ref InstanceProfileArn
         ImageId: !Ref InstanceImageId
         InstanceType: !Ref InstanceType
-        #LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-        #SecurityGroups: 
         SecurityGroupIds: 
-          #- !Ref InstanceSecurityGroup
           - !Ref WebSecurityGroup
         TagSpecifications:
           - ResourceType: instance
             Tags:
               - Key: !Ref InstanceTagKey
                 Value: !Ref InstanceTagValueWeb
-        #UserData: !Base64 |
-        #  #!/bin/bash -xe
-        #  yum update -y
-        #  yum install -y httpd
-        #  systemctl start httpd
-        #  systemctl enable httpd
-        #  ec2-metadata -i > /var/www/html/index.html
       LaunchTemplateName: !Sub "${Prefix}-LaunchTemplate-Web"
-      #TagSpecifications:
-      #VersionDescription: String
-  
-  #LaunchConfiguration:
-  #  Type: AWS::AutoScaling::LaunchConfiguration
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    LaunchConfigurationName: !Sub "${Prefix}-LaunchConfiguration"
-  #    SecurityGroups: 
-  #      - !Ref InstanceSecurityGroup
-  #    UserData: !Base64 |
-  #      #!/bin/bash -xe
-  #      yum update -y
-  #      yum install -y httpd
-  #      systemctl start httpd
-  #      systemctl enable httpd
-  #      ec2-metadata -i > /var/www/html/index.html
-        
+
   WebAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       AutoScalingGroupName: !Sub "${Prefix}-AutoScalingGroup-Web"
       DesiredCapacity: !Ref DesiredCapacity
-      #LaunchConfigurationName: !Ref LaunchConfiguration
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !GetAtt LaunchTemplate.LatestVersionNumber
       MaxSize: !Ref MaxSize
       MinSize: !Ref MinSize
       VPCZoneIdentifier:
-        #- !Ref PrivateSubnet1
-        #- !Ref PrivateSubnet2
         - !Ref WebSubnet1
         - !Ref WebSubnet2
       TargetGroupARNs:
         - !Ref ALBTargetGroup
-        
-  #ScalingPolicy1:
-  #  Type: AWS::AutoScaling::ScalingPolicy
-  #  Properties:
-  #    AdjustmentType: ChangeInCapacity
-  #    AutoScalingGroupName: !Ref AutoScalingGroup
-  #    Cooldown: !Ref Cooldown
-  #    #EstimatedInstanceWarmup:
-  #    #MetricAggregationType:
-  #    #MinAdjustmentMagnitude:
-  #    PolicyType: SimpleScaling
-  #    #PredictiveScalingConfiguration:
-  #    ScalingAdjustment: !Ref ScalingAdjustment1
-  #    #StepAdjustments:
-  #    #TargetTrackingConfiguration:
-  #    #  PredefinedMetricSpecification:
-  #    #    PredefinedMetricType: ASGAverageCPUUtilization
-  #    #  TargetValue: !Ref TargetTrackingConfigurationTargetValue
-  #    
-  #ScalingPolicy2:
-  #  Type: AWS::AutoScaling::ScalingPolicy
-  #  Properties:
-  #    AdjustmentType: ChangeInCapacity
-  #    AutoScalingGroupName: !Ref AutoScalingGroup
-  #    Cooldown: !Ref Cooldown
-  #    #EstimatedInstanceWarmup:
-  #    #MetricAggregationType:
-  #    #MinAdjustmentMagnitude:
-  #    PolicyType: SimpleScaling
-  #    #PredictiveScalingConfiguration:
-  #    ScalingAdjustment: !Ref ScalingAdjustment2
-  #    #StepAdjustments:
-  #    #TargetTrackingConfiguration:
-  #    #  PredefinedMetricSpecification:
-  #    #    PredefinedMetricType: ASGAverageCPUUtilization
-  #    #  TargetValue: !Ref TargetTrackingConfigurationTargetValue
-  #    
-  #Alarm1:
-  #  Type: AWS::CloudWatch::Alarm
-  #  Properties:
-  #    #ActionsEnabled: true
-  #    AlarmActions:
-  #      - !Ref ScalingPolicy1
-  #    #AlarmDescription: CPU alarm for my instance
-  #    AlarmName: !Sub "${Prefix}-Alarm1"
-  #    ComparisonOperator: GreaterThanOrEqualToThreshold
-  #    Dimensions:
-  #      - Name: AutoScalingGroupName
-  #        Value: !Ref AutoScalingGroup
-  #    EvaluationPeriods: !Ref AlarmEvaluationPeriod
-  #    MetricName: CPUUtilization
-  #    Namespace: AWS/EC2
-  #    Period: !Ref AlarmPeriod
-  #    Statistic: Average
-  #    Threshold: !Ref AlarmThreshold
-  #    #Unit: Bytes/Second
-  #    
-  #Alarm2:
-  #  Type: AWS::CloudWatch::Alarm
-  #  Properties:
-  #    #ActionsEnabled: true
-  #    AlarmActions:
-  #      - !Ref ScalingPolicy2
-  #    #AlarmDescription: CPU alarm for my instance
-  #    AlarmName: !Sub "${Prefix}-Alarm2"
-  #    ComparisonOperator: LessThanOrEqualToThreshold
-  #    Dimensions:
-  #      - Name: AutoScalingGroupName
-  #        Value: !Ref AutoScalingGroup
-  #    EvaluationPeriods: !Ref AlarmEvaluationPeriod
-  #    MetricName: CPUUtilization
-  #    Namespace: AWS/EC2
-  #    Period: !Ref AlarmPeriod
-  #    Statistic: Average
-  #    Threshold: !Ref AlarmThreshold
-  #    #Unit: Bytes/Second
-        
-  #InstanceProfile:
-  #  Type: AWS::IAM::InstanceProfile
-  #  Properties:
-  #    Path: /
-  #    Roles:
-  #      - !Ref InstanceRole
-  
-  #InstanceRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - ec2.amazonaws.com
-  #    Policies:
-  #      - PolicyName: SSMStateManagerPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - s3:GetObject
-  #              Resource:
-  #                - !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
-  #                - !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
-  #            #- Effect: Allow
-  #            #  Action:
-  #            #    - s3:GetObject
-  #            #    - s3:PutObject
-  #            #    - s3:PutObjectAcl
-  #            #    - s3:ListBucket
-  #            #  Resource:
-  #            #    - !Sub "arn:aws:s3:::${PlaybookBucket}"
-  #            #    - !Sub "arn:aws:s3:::${PlaybookBucket}/*"
-  #    #ManagedPolicyArns:
-  #    #  - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
