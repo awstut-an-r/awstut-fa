@@ -6,21 +6,9 @@ Parameters:
   AppSubnet2:
     Type: String
 
-  #Instance1:
-  #  Type: String
-  #  
-  #Instance2:
-  #  Type: String
-
   Prefix:
     Type: String
-    
-  #PrivateSubnet1:
-  #  Type: String
-  #  
-  #PrivateSubnet2:
-  #  Type: String
-    
+
   UWSGIPort:
     Type: Number
     
@@ -43,8 +31,6 @@ Resources:
     Properties:
       Name: !Sub "${Prefix}-NLB"
       Scheme: internal
-      #SecurityGroups:
-      #  - Fn::ImportValue: !Sub ${Prefix}-WebSecurityGroup
       Subnets:
         - !Ref AppSubnet1
         - !Ref AppSubnet2
@@ -54,7 +40,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       Name: !Sub "${Prefix}-NLBTargetGroup"
-      #Protocol: HTTP
       Protocol: TCP
       Port: !Ref UWSGIPort
       TargetGroupAttributes:
@@ -65,8 +50,6 @@ Resources:
       HealthyThresholdCount: !Ref HealthyThresholdCount
       UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
       HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
-      #Targets:
-      #  - Id: !Ref Instance2
         
   NLBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
@@ -82,13 +65,9 @@ Resources:
 Outputs:
   NLBDNSName:
     Value: !GetAtt NLB.DNSName
-    #Export:
-    #  Name: !Sub ${Prefix}-ALBDNSName
-    
+
   NLBLoadBalancerName:
     Value: !GetAtt NLB.LoadBalancerName
       
   NLBTargetGroup:
     Value: !Ref NLBTargetGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-NLBTargetGroup
