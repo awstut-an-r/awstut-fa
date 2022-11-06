@@ -304,12 +304,7 @@ Resources:
           db_user = os.environ['DB_USER']
           region = os.environ['REGION']
           sql_parameter = os.environ['SQL_PARAMETER']
-          
-          print(db_endpoint_address)
-          print(db_endpoint_port)
-          print(db_password)
-          print(db_user)
-          
+
           CREATE = 'Create'
           response_data = {}
           
