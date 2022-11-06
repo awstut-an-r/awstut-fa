@@ -21,7 +21,7 @@ Modify the following locations in fa-025.yaml.
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: [bucket-name]
+    Default: my-bucket
 ```
 
 ## Prepare Ansible Playbook
