@@ -7,7 +7,7 @@ Parameters:
     
   Prefix:
     Type: String
-    Default: fa-031
+    Default: [bucket-name]
     
   HTTPSPort:
     Type: Number
