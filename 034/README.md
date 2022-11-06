@@ -39,6 +39,10 @@ aws cloudformation create-stack \
 --capabilities CAPABILITY_IAM
 ```
 
+## Build main.js
+
+https://awstut.com/en/2022/03/27/using-aws-sdk-for-javascript-v3-in-browser/
+
 ## Upload index.html and main.js
 
 ```bash
