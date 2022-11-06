@@ -46,7 +46,7 @@ https://awstut.com/en/2022/04/03/oauth-scopes-for-cognito-user-pool/
 ## Upload index.html and main.js
 
 ```bash
-aws s3 cp index.html s3://fa-036/
+aws s3 cp ./html s3://fa-036/
 
 aws s3 cp main.js s3://fa-036/
 ```
