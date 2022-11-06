@@ -35,6 +35,6 @@ aws s3 cp . s3://my-bucket/fa-032/ --recursive
 ```bash
 aws cloudformation create-stack \
 --stack-name fa-032 \
---template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-031/fa-032.yaml \
+--template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-032/fa-032.yaml \
 --capabilities CAPABILITY_IAM
 ```
