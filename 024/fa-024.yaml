@@ -11,7 +11,7 @@ Parameters:
     
   ALBHostedZoneId:
     Type: String
-    Default: Z14GRHDCWA56QT
+    Default: [alb-hosted-zone-id]
     
   DomainName:
     Type: String
