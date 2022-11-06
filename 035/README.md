@@ -46,7 +46,7 @@ https://awstut.com/en/2022/04/02/authorization-by-cognito-id-pool-after-authenti
 ## Upload index.html and main.js
 
 ```bash
-aws s3 cp ./index s3://fa-035/
+aws s3 cp ./html s3://fa-035/
 
 aws s3 cp main.js s3://fa-035/
 ```
