@@ -49,11 +49,6 @@ Resources:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: tcp
-      #    FromPort: !Ref RDPPort
-      #    ToPort: !Ref RDPPort
-      #    CidrIp: 0.0.0.0/0
           
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
