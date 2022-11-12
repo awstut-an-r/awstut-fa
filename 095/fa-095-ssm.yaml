@@ -1,0 +1,94 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  FileSystem:
+    Type: String
+
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  LogBucket:
+    Type: String
+  
+  MountPoint:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  #VolumeLabel:
+  #  Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+
+
+Resources:
+  RunShellScriptAssociation1:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-run-shellscript-association1"
+      Name: AWS-RunShellScript
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref LogBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/run-powershellscript-association"
+      Parameters:
+        commands:
+          - !Sub |
+              mount_point="${MountPoint}"
+              file_system="${FileSystem}"
+          
+              for d in $(lsblk -n -r -p | grep disk | awk '{ print $1 }' )
+              do
+                if  [ "$(sudo file -s -b $d)" == data ]; then
+                  sudo mkfs -t $file_system $d
+                fi
+                
+                if [[ "$(sudo file -s -b $d | tr '[:upper:]' '[:lower:]')" =~ $file_system ]]; then
+                  sudo mkdir $mount_point
+                  sudo mount $d $mount_point
+                  
+                  uuid=$(sudo blkid $d -o export | grep ^UUID)
+                  echo -e "$uuid\t/data\t$file_system\tdefaults,nofail\t0\t2" >> /etc/fstab
+                fi
+              done
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance1
+            - !Ref Instance2
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+      
+  #RunShellScriptAssociation2:
+  #  Type: AWS::SSM::Association
+  #  Properties:
+  #    AssociationName: !Sub "${Prefix}-run-shellscript-association2"
+  #    Name: AWS-RunShellScript
+  #    OutputLocation:
+  #      S3Location:
+  #        OutputS3BucketName: !Ref LogBucket
+  #        OutputS3KeyPrefix: !Sub "${Prefix}/run-powershellscript-association"
+  #    Parameters:
+  #      commands:
+  #        - !Sub |
+  #            for d in $(lsblk -n -r -p | grep disk | awk '{ print $1 }' )
+  #            do
+  #              if  [ "$(sudo file -s -b $d)" == data ]; then
+  #                sudo mkfs -t ${FileSystem} $d
+  #                sudo mkdir ${MountPoint}
+  #                sudo mount $d ${MountPoint}
+  #                
+  #                uuid=$(sudo blkid $d -o export | grep ^UUID)
+  #                echo -e "$uuid\t/data\t${FileSystem}\tdefaults,nofail\t0\t2" >> /etc/fstab
+  #              fi
+  #            done
+  #    Targets:
+  #      - Key: InstanceIds
+  #        Values:
+  #          - !Ref Instance1
+  #          #- !Ref Instance2
+  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
