@@ -24,10 +24,10 @@ Parameters:
 
 
 Resources:
-  RunShellScriptAssociation1:
+  RunShellScriptAssociation:
     Type: AWS::SSM::Association
     Properties:
-      AssociationName: !Sub "${Prefix}-run-shellscript-association1"
+      AssociationName: !Sub "${Prefix}-run-shellscript-association"
       Name: AWS-RunShellScript
       OutputLocation:
         S3Location:
