@@ -58,13 +58,9 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-        #ImageId2: /aws/service/ami-windows-latest/Windows_Server-2019-Japanese-Full-Base
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType1: t2.nano
         InstanceType: t4g.nano
-        #KeyName: MyKeyPair
         LogBucket: !Ref TemplateBucketName
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
@@ -83,7 +79,6 @@ Resources:
         EBSVolumeType: !Ref EBSVolumeType
         Instance1: !GetAtt EC2Stack.Outputs.Instance1
         Instance2: !GetAtt EC2Stack.Outputs.Instance2
-        #Prefix: !Ref Prefix
         
   SSMStack:
     Type: AWS::CloudFormation::Stack
@@ -95,9 +90,7 @@ Resources:
         FileSystem: xfs
         Instance1: !GetAtt EC2Stack.Outputs.Instance1
         Instance2: !GetAtt EC2Stack.Outputs.Instance2
-        #Instance: !GetAtt EC2Stack.Outputs.Instance3
         LogBucket: !Ref TemplateBucketName
         MountPoint: /data
         Prefix: !Ref Prefix
-        #VolumeLabel: D
         WaitForSuccessTimeoutSeconds: 300
