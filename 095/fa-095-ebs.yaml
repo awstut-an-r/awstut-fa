@@ -21,9 +21,6 @@ Parameters:
     
   Instance2:
     Type: String
-    
-  #Prefix:
-  #  Type: String
 
 
 Resources:
