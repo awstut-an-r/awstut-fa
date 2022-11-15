@@ -26,7 +26,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
       Parameters:
         BucketName: !GetAtt S3Stack1.Outputs.BucketName
-        #BucketWebsiteURL: !GetAtt S3Stack1.Outputs.BucketWebsiteURL
         BucketRegionalDomainName: !GetAtt S3Stack1.Outputs.BucketRegionalDomainName
         Prefix: !Ref Prefix
         
@@ -39,9 +38,6 @@ Resources:
       Parameters:
         BucketName: !GetAtt S3Stack1.Outputs.BucketName
         Distribution: !GetAtt CloudFrontStack.Outputs.Distribution
-        #DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
-        #OAI: !GetAtt CloudFrontStack.Outputs.OAI
-        #Prefix: !Ref Prefix
         
   CustomResourceStack:
     Type: AWS::CloudFormation::Stack
@@ -55,5 +51,3 @@ Resources:
         Handler: index.lambda_handler
         Prefix: !Ref Prefix
         Runtime: python3.8
-        #FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
-        #Prefix: !Ref Prefix
