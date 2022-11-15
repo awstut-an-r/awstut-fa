@@ -1,4 +1,4 @@
-# Create and Delete S3 Object by CFN Custom Resource
+# Create and Delete S3 Object by CloudFormation Custom Resource
 
 https://awstut.com/en/2022/05/08/create-and-delete-s3-object-by-cfn-custom-resource-en/
 
