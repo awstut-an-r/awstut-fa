@@ -3,9 +3,6 @@ Parameters:
   BucketName:
     Type: String
 
-  #BucketWebsiteURL:
-  #  Type: String
-  
   BucketRegionalDomainName:
     Type: String
     
@@ -18,18 +15,11 @@ Resources:
     Type: AWS::CloudFront::OriginAccessControl
     Properties: 
       OriginAccessControlConfig:
-        #Description: Access Control
         Name: !Ref Prefix
         OriginAccessControlOriginType: s3
         SigningBehavior: always
         SigningProtocol: sigv4
 
-  #OAI:
-  #  Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
-  #  Properties:
-  #    CloudFrontOriginAccessIdentityConfig:
-  #      Comment: !Ref Prefix
-        
   Distribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -48,33 +38,18 @@ Resources:
             QueryString: false
           TargetOriginId: !Ref BucketName
           ViewerProtocolPolicy: allow-all
-          #DefaultTTL: !Ref CacheTTL
-          #MaxTTL: !Ref CacheTTL
-          #MinTTL: !Ref CacheTTL
         DefaultRootObject: index.html
         Enabled: true
         Origins:
           - DomainName: !Ref BucketRegionalDomainName
-            #DomainName: !Select
-            #  - 2
-            #  - !Split
-            #      - /
-            #      - !Ref BucketWebsiteURL
             Id: !Ref BucketName
             OriginAccessControlId: !GetAtt OAC.Id
             S3OriginConfig:
               OriginAccessIdentity: ""
             #CustomOriginConfig:
-            #  OriginProtocolPolicy: http-only
-            #OriginCustomHeaders:
-            #  - HeaderName: Referer
-            #    HeaderValue: !Ref Prefix
         PriceClass: PriceClass_All
         
         
 Outputs:
   Distribution:
     Value: !Ref Distribution
-
-  #OAI:
-  #  Value: !Ref OAI
