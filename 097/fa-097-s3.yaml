@@ -67,14 +67,5 @@ Resources:
 
 
 Outputs:
-  #Bucket1:
-  #  Value: !Ref Bucket1
-  #  
-  #Bucket2:
-  #  Value: !Ref Bucket2
-  #  
-  #LogBucket:
-  #  Value: !Ref LogBucket
-  
   ConfigBucket:
     Value: !Ref ConfigBucket
