@@ -9,7 +9,7 @@ https://awstut.com/en/2022/05/22/apply-waf-web-acl-to-cloudfront-en/
 # Requirements
 
 * AWS CLI
-* S3 Bucket(Here, the bucket name is *my-bucket* and region is *us-east-1*)
+* S3 Bucket(Here, the bucket name is *my-bucket* and region is *ap-northeast-1*)
 
 # Usage
 
@@ -36,5 +36,6 @@ aws s3 cp . s3://my-bucket/fa-051/ --recursive
 aws cloudformation create-stack \
 --stack-name fa-051 \
 --template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-051/fa-051.yaml \
---capabilities CAPABILITY_IAM
+--capabilities CAPABILITY_IAM \
+--region us-east-1
 ```
