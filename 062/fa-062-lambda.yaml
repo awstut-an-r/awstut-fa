@@ -68,7 +68,7 @@ Resources:
           import mysql.connector
           import os
           
-          db_endpoint_port = os.environ['DB_ENDPOINT_PORT']
+          db_endpoint_port = int(os.environ['DB_ENDPOINT_PORT'])
           db_endpoint_address = os.environ['DB_ENDPOINT_ADDRESS']
           db_password = os.environ['DB_PASSWORD']
           db_user = os.environ['DB_USER']
