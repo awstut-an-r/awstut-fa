@@ -13,7 +13,6 @@ Resources:
       AccessControl: Private
       LoggingConfiguration:
         DestinationBucketName: !Ref LogBucket
-        LogFilePrefix: bucket1-log
       
   Bucket2:
     Type: AWS::S3::Bucket
