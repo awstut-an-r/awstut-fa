@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EventBusName:
+    Type: String
+    
+  Function2:
+    Type: String
+
+  FunctionArn2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - !Ref Prefix
+      Name: !Sub "${Prefix}-EventsRule"
+      #RoleArn: String
+      #ScheduleExpression: String
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref FunctionArn2
+          Id: !Ref Function2
+          
+  EventsRulePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref Function2
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventsRule.Arn

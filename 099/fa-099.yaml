@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-099
+    
+  EventBusName:
+    Type: String
+    Default: default
+  
+
+Resources:
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        EventBusName: !Ref EventBusName
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        EventBusName: !Ref EventBusName
+        Function2: !GetAtt LambdaStack.Outputs.Function2
+        FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
+        Prefix: !Ref Prefix
