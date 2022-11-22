@@ -112,12 +112,6 @@ Resources:
         
         
 Outputs:
-  #NLBPrivateAddress1:
-  #  Value: !Select [0, !GetAtt CustomResource.PrivateAddresses]
-  #  
-  #NLBPrivateAddress2:
-  #  Value: !Select [1, !GetAtt CustomResource.PrivateAddresses]
-  
   Function2:
     Value: !Ref Function2
 
