@@ -49,8 +49,7 @@ Resources:
               'Resources': [],
               'DetailType': detail_type,
               'Detail': detail,
-              'EventBusName': event_bus_name,
-              #'TraceHeader': ''
+              'EventBusName': event_bus_name
             }
           
             response = client.put_events(
