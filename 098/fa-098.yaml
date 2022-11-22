@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-098
+  
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  ConfigStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-config.yaml"
+      Parameters:
+        #Bucket1: !GetAtt S3Stack.Outputs.Bucket1
+        #Bucket2: !GetAtt S3Stack.Outputs.Bucket2
+        #LogBucket: !GetAtt S3Stack.Outputs.LogBucket
+        ConfigBucket: !GetAtt S3Stack.Outputs.ConfigBucket
+        Prefix: !Ref Prefix
