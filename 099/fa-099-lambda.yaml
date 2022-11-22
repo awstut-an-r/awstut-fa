@@ -51,6 +51,7 @@ Resources:
               'Detail': detail,
               'EventBusName': event_bus_name
             }
+            print(entry)
           
             response = client.put_events(
               Entries=[entry,]
