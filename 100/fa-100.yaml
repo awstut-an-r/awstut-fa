@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-100
+    
+  Architecture:
+    Type: String
+    Default: arm64
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+    
+Resources:
+  LambdaStack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
+      Parameters:
+        Architecture: !Ref Architecture
+        Handler: !Ref Handler
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        Function1: !GetAtt LambdaStack1.Outputs.Function1
+        FunctionArn1: !GetAtt LambdaStack1.Outputs.FunctionArn1
+        #MailAddress: !Ref MailAddress
+        Prefix: !Ref Prefix
+        
+  LambdaStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SNSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
+      Parameters:
+        Architecture: !Ref Architecture
+        Handler: !Ref Handler
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        TopicArn: !GetAtt SNSStack.Outputs.TopicArn

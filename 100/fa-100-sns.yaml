@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Function1:
+    Type: String
+
+  FunctionArn1:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      #ContentBasedDeduplication: Boolean
+      #DisplayName: String
+      #FifoTopic: Boolean
+      #KmsMasterKeyId: String
+      Subscription: 
+        - Endpoint: !Ref FunctionArn1
+          Protocol: lambda
+      #Tags: 
+      #  - Tag
+      TopicName: !Ref Prefix
+      
+  SNSPermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref Function1
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref Topic
+      
+      
+Outputs:
+  TopicArn:
+    Value: !Ref Topic

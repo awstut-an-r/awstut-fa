@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  TopicArn:
+    Type: String
+    
+    
+Resources:
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          TOPIC: !Ref TopicArn
+      Code:
+        ZipFile: |
+          import boto3
+          import datetime
+          import os
+          import time
+          
+          topic = os.environ['TOPIC']
+          region = os.environ['REGION']
+          
+          client = boto3.client('sns', region_name=region)
+          
+          def lambda_handler(event, context):
+            now = datetime.datetime.now()
+            now_str = now.strftime('%Y-%m-%d %H:%M:%S.%f')
+            unix_time = str(time.mktime(now.timetuple()))
+            print(now_str, unix_time)
+            
+            response = client.publish(
+              TopicArn=topic,
+              Subject=now_str,
+              Message=unix_time
+              )
+            print(response)
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      #Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SNSPublishPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Ref TopicArn
