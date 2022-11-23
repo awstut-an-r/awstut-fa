@@ -23,7 +23,6 @@ Resources:
       Code:
         ZipFile: |
           def lambda_handler(event, context):
-            #print(event)
             subject = event['Records'][0]['Sns']['Subject']
             message = event['Records'][0]['Sns']['Message']
             print(subject, message)
