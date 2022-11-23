@@ -51,20 +51,10 @@ Resources:
               Message=unix_time
               )
             print(response)
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-02"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   FunctionRole2:
     Type: AWS::IAM::Role
