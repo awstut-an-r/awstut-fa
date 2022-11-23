@@ -12,10 +12,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #TopicArn:
-  #  Type: String
-    
+
     
 Resources:
   Function1:
@@ -23,9 +20,6 @@ Resources:
     Properties:
       Architectures:
         - !Ref Architecture
-      #Environment:
-      #  Variables:
-      #    REGION: !Ref AWS::Region
       Code:
         ZipFile: |
           def lambda_handler(event, context):
@@ -40,20 +34,10 @@ Resources:
               print('{int} is even !'.format(int=unix_time))
             else:
               print('{int} is odd !'.format(int=unix_time))
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-01"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
   
   FunctionRole1:
     Type: AWS::IAM::Role
@@ -69,16 +53,6 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: SNSPublishPolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - sns:Publish
-      #          Resource:
-      #            - !Ref TopicArn
       
       
 Outputs:
