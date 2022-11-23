@@ -42,7 +42,6 @@ Resources:
       Parameters:
         Function1: !GetAtt LambdaStack1.Outputs.Function1
         FunctionArn1: !GetAtt LambdaStack1.Outputs.FunctionArn1
-        #MailAddress: !Ref MailAddress
         Prefix: !Ref Prefix
         
   LambdaStack2:
