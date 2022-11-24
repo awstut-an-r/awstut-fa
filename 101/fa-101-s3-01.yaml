@@ -6,30 +6,6 @@ Parameters:
     
 
 Resources:
-  #Bucket:
-  #  Type: AWS::S3::Bucket
-  #  Properties:
-  #    BucketName: !Sub "${Prefix}-logging-enable"
-  #    AccessControl: Private
-  #    BucketEncryption:
-  #      ServerSideEncryptionConfiguration:
-  #        BucketKeyEnabled: true
-  #    #LoggingConfiguration:
-  #    #  DestinationBucketName: !Ref LogBucket
-  #    #  LogFilePrefix: bucket1-log
-      
-  #Bucket2:
-  #  Type: AWS::S3::Bucket
-  #  Properties:
-  #    BucketName: !Sub "${Prefix}-logging-disable"
-  #    AccessControl: Private
-      
-  #LogBucket:
-  #  Type: AWS::S3::Bucket
-  #  Properties:
-  #    BucketName: !Sub "${Prefix}-log-bucket"
-  #    AccessControl: LogDeliveryWrite
-      
   ConfigBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -70,14 +46,5 @@ Resources:
 
 
 Outputs:
-  #Bucket1:
-  #  Value: !Ref Bucket1
-  #  
-  #Bucket2:
-  #  Value: !Ref Bucket2
-  #  
-  #LogBucket:
-  #  Value: !Ref LogBucket
-  
   ConfigBucket:
     Value: !Ref ConfigBucket
