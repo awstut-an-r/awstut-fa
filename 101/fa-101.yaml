@@ -8,26 +8,10 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-101
-    
-  #Architecture:
-  #  Type: String
-  #  Default: arm64
-    
-  #Handler:
-  #  Type: String
-  #  Default: index.lambda_handler
-    
+
   MailAddress:
     Type: String
     Default: [email-address]
-    
-  #Runtime:
-  #  Type: String
-  #  Default: python3.8
-  
-  #EventBusName:
-  #  Type: String
-  #  Default: default
     
 
 Resources:
@@ -45,31 +29,7 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
       Parameters:
         Prefix: !Ref Prefix
-        
-  #LambdaStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
-  #    Parameters:
-  #      Architecture: !Ref Architecture
-  #      Handler: !Ref Handler
-  #      Prefix: !Ref Prefix
-  #      Runtime: !Ref Runtime
-  
-  #SNSStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - LambdaStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
-  #    Parameters:
-  #      Function1: !GetAtt LambdaStack1.Outputs.Function1
-  #      FunctionArn1: !GetAtt LambdaStack1.Outputs.FunctionArn1
-  #      #Function2: !GetAtt LambdaStack2.Outputs.Function2
-  #      #FunctionArn2: !GetAtt LambdaStack2.Outputs.FunctionArn2
-  #      #MailAddress: !Ref MailAddress
-  #      Prefix: !Ref Prefix
-        
+
   ConfigStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -78,9 +38,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-config.yaml"
       Parameters:
-        #Bucket1: !GetAtt S3Stack.Outputs.Bucket1
-        #Bucket2: !GetAtt S3Stack.Outputs.Bucket2
-        #LogBucket: !GetAtt S3Stack.Outputs.LogBucket
         ConfigBucket: !GetAtt S3Stack1.Outputs.ConfigBucket
         Prefix: !Ref Prefix
         TopicArn: !GetAtt SNSStack.Outputs.TopicArn
@@ -93,15 +50,3 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-02.yaml"
       Parameters:
         Prefix: !Ref Prefix
-        
-  #EventBridgeStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - LambdaStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
-  #    Parameters:
-  #      EventBusName: !Ref EventBusName
-  #      Function2: !GetAtt LambdaStack.Outputs.Function2
-  #      FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
-  #      Prefix: !Ref Prefix
