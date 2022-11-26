@@ -56,6 +56,8 @@ aws s3 cp deploy2.zip s3://my-bucket/fa-056/
 ## Prepare Lambda Layer Package
 
 ```bash
+mkdir python
+
 sudo pip3 install requests -t python
 
 sudo pip3 install requests-aws4auth -t python
