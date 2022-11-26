@@ -35,6 +35,8 @@ aws s3 cp deploy.zip s3://my-bucket/fa-055/
 ## Prepare Lambda Layer Package
 
 ```bash
+mkdir python
+
 sudo pip3 install --pre gql[all] -t python
 
 zip -r layer.zip python
