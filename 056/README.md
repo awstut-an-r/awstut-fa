@@ -66,7 +66,7 @@ sudo pip3 install --pre gql[all] -t python
 
 zip -r layer.zip python
 
-aws s3 cp layer.zip s3://my-bucket/fa-055/
+aws s3 cp layer.zip s3://my-bucket/fa-056/
 ```
 
 https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-lambda-function-code-cfnresponsemodule.html
