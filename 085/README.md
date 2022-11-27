@@ -4,7 +4,7 @@ https://awstut.com/en/2022/09/24/introduction-to-ecr-repository-policies-using-c
 
 # Architecture
 
-![fa-084-diagram](https://user-images.githubusercontent.com/84276199/204130502-6b18bb61-86cf-444c-bff9-c020a9c56088.png)
+![fa-085-diagram](https://user-images.githubusercontent.com/84276199/204131589-8a946ae1-7264-460a-9659-a2e5650d804c.png)
 
 # Requirements
 
