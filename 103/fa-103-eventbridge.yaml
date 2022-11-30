@@ -32,7 +32,6 @@ Resources:
               SupplementaryConfiguration.ServerSideEncryptionConfiguration:
                 changeType:
                   - DELETE
-              
       Name: !Sub "${Prefix}-EventsRule"
       State: ENABLED
       Targets: 
