@@ -27,6 +27,9 @@ Resources:
         detail:
           messageType:
             - ConfigurationItemChangeNotification
+          configurationItem:
+            resourceType:
+              - AWS::S3::Bucket
           configurationItemDiff:
             changedProperties:
               SupplementaryConfiguration.ServerSideEncryptionConfiguration:
