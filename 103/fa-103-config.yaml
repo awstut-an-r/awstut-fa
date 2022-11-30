@@ -1,36 +1,19 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Bucket1:
-  #  Type: String
-  
-  #Bucket2:
-  #  Type: String
-  
-  #LogBucket:
-  #  Type: String
-  
   ConfigBucket:
     Type: String
 
   Prefix:
     Type: String
-    
-  #TopicArn:
-  #  Type: String
-    
+
 
 Resources:
   DeliveryChannel:
     Type: AWS::Config::DeliveryChannel
     Properties: 
-      #ConfigSnapshotDeliveryProperties: 
-      #  ConfigSnapshotDeliveryProperties
       Name: !Sub "${Prefix}-DeliveryChannel"
       S3BucketName: !Ref ConfigBucket
-      #S3KeyPrefix: aws-config
-      #S3KmsKeyArn: String
-      #SnsTopicARN: !Ref TopicArn
       
   ConfigurationRecorder:
     Type: AWS::Config::ConfigurationRecorder
@@ -41,7 +24,6 @@ Resources:
         IncludeGlobalResourceTypes: false
         ResourceTypes: 
           - AWS::S3::Bucket
-      #RoleARN: !GetAtt ConfigRole.Arn
       RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/config.amazonaws.com/${AWSServiceRoleForConfig}"
         
   AWSServiceRoleForConfig:
@@ -49,53 +31,3 @@ Resources:
     DeletionPolicy: Delete
     Properties: 
       AWSServiceName: config.amazonaws.com
-      #CustomSuffix: String
-      #Description: String
-  
-  #ConfigRole:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - config.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AWS_ConfigRole
-  #    Policies:
-  #      - PolicyName: SNSPublishPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - sns:Publish
-  #              Resource:
-  #                - !Ref TopicArn
-        
-  #S3BucketLoggingEnabledConfigRule:
-  #  Type: AWS::Config::ConfigRule
-  #  DependsOn:
-  #    - ConfigurationRecorder
-  #  Properties: 
-  #    ConfigRuleName: !Sub "${Prefix}-S3-Bucket-Logging-Enabled"
-  #    #Description: String
-  #    #InputParameters: Json
-  #    #MaximumExecutionFrequency: String
-  #    Scope: 
-  #      #ComplianceResourceId: String
-  #      ComplianceResourceTypes: 
-  #        - AWS::S3::Bucket
-  #      #TagKey: String
-  #      #TagValue: String
-  #    Source: 
-  #      #CustomPolicyDetails: 
-  #      #  CustomPolicyDetails
-  #      Owner: AWS
-  #      #SourceDetails: 
-  #      #  - SourceDetail
-  #      SourceIdentifier: S3_BUCKET_LOGGING_ENABLED
