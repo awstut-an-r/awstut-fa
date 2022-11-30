@@ -1,0 +1,134 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EventBusName:
+    Type: String
+    
+  #Function2:
+  #  Type: String
+  
+  #FunctionArn2:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  #QueueArn:
+  #  Type: String
+  #  
+  #QueueUrl:
+  #  Type: String
+    
+  TopicArn:
+    Type: String
+    
+  TopicName:
+    Type: String
+    
+    
+Resources:
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - aws.config
+        detail-type:
+          - Config Configuration Item Change
+        detail:
+          messageType:
+            - ConfigurationItemChangeNotification
+          configurationItemDiff:
+            changedProperties:
+              SupplementaryConfiguration.ServerSideEncryptionConfiguration:
+                changeType:
+                  - DELETE
+              
+      Name: !Sub "${Prefix}-EventsRule"
+      #RoleArn: !GetAtt EventBridgeRole.Arn
+      #ScheduleExpression: String
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref TopicArn
+          #DeadLetterConfig:
+          #  Arn: !Ref QueueArn
+          Id: !Ref TopicName
+          InputTransformer: 
+            InputPathsMap: 
+              "awsRegion": "$.detail.configurationItem.awsRegion"
+              "awsAccountId": "$.detail.configurationItem.awsAccountId"
+              "resource_ID": "$.detail.configurationItem.resourceId"
+              "configurationItemCaptureTime": "$.detail.configurationItem.configurationItemCaptureTime"
+            InputTemplate: |
+              "On <configurationItemCaptureTime> S3 Bucket <resource_ID> recorded a deletion of ServerSideEncryptionConfiguration in the account <awsAccountId> region <awsRegion>."
+          
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      PolicyDocument:
+        Statement:
+          - Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Effect: Allow
+            Resource: !Ref TopicArn
+      Topics: 
+        - !Ref TopicArn
+        
+  #QueuePolicy: 
+  #  Type: AWS::SQS::QueuePolicy
+  #  Properties: 
+  #    Queues: 
+  #      - !Ref QueueUrl
+  #    PolicyDocument: 
+  #      Statement: 
+  #        - Principal:  
+  #            Service: events.amazonaws.com
+  #          Action: sqs:SendMessage
+  #          Effect: Allow
+  #          Resource: !Ref QueueArn
+  #          Condition:
+  #            ArnEquals:
+  #              aws:SourceArn: !GetAtt EventsRule.Arn
+          
+  #EventsRulePermission: 
+  #  Type: AWS::Lambda::Permission
+  #  Properties: 
+  #    FunctionName: !Ref Function2
+  #    Action: lambda:InvokeFunction
+  #    Principal: events.amazonaws.com
+  #    SourceArn: !GetAtt EventsRule.Arn
+  
+  #EventBridgeRole:
+  #  Type: AWS::IAM::Role
+  #  DeletionPolicy: Delete
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - events.amazonaws.com
+  #    #Policies:
+  #    #  - PolicyName: !Sub "${Prefix}-PublishSNSMessagePolicy"
+  #    #    PolicyDocument:
+  #    #      Version: 2012-10-17
+  #    #      Statement:
+  #    #        - Effect: Allow
+  #    #          Action:
+  #    #            - sns:Publish
+  #    #          Resource:
+  #    #            - !Ref TopicArn
+  #    #  - PolicyName: !Sub "${Prefix}-SendSQSMessagePolicy"
+  #    #    PolicyDocument:
+  #    #      Version: 2012-10-17
+  #    #      Statement:
+  #    #        - Effect: Allow
+  #    #          Action:
+  #    #            - sqs:SendMessage
+  #    #          Resource:
+  #    #            - !Ref QueueArn
