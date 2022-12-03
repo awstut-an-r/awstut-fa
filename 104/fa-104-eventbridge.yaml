@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EventBusName:
+    Type: String
+    
+  #Function2:
+  #  Type: String
+  
+  #FunctionArn2:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  #QueueArn:
+  #  Type: String
+  #  
+  #QueueUrl:
+  #  Type: String
+  
+  S3BucketSSEEnabledConfigRule:
+    Type: String
+    
+  TopicArn:
+    Type: String
+    
+  TopicName:
+    Type: String
+    
+    
+Resources:
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - aws.config
+        detail-type:
+          - Config Rules Compliance Change
+        detail:
+          messageType:
+            - ComplianceChangeNotification
+          configRuleName:
+            #- s3-bucket-server-side-encryption-enabled
+            - !Ref S3BucketSSEEnabledConfigRule
+          resourceType:
+            - AWS::S3::Bucket
+          newEvaluationResult:
+            complianceType:
+              - NON_COMPLIANT
+      Name: !Sub "${Prefix}-EventsRule"
+      #RoleArn: !GetAtt EventBridgeRole.Arn
+      #ScheduleExpression: String
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref TopicArn
+          #DeadLetterConfig:
+          #  Arn: !Ref QueueArn
+          Id: !Ref TopicName
+          InputTransformer: 
+            InputPathsMap: 
+              "awsRegion": "$.detail.awsRegion"
+              "resourceId": "$.detail.resourceId"
+              "awsAccountId": "$.detail.awsAccountId"
+              "compliance": "$.detail.newEvaluationResult.complianceType"
+              "rule": "$.detail.configRuleName"
+              "time": "$.detail.newEvaluationResult.resultRecordedTime"
+              "resourceType": "$.detail.resourceType"
+            InputTemplate: |
+              "On <time> AWS Config rule <rule> evaluated the <resourceType> with Id <resourceId> in the account <awsAccountId> region <awsRegion> as <compliance> For more details open the AWS Config console at https://console.aws.amazon.com/config/home?region=<awsRegion>#/timeline/<resourceType>/<resourceId>/configuration"
+          
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      PolicyDocument:
+        Statement:
+          - Principal:
+              Service: events.amazonaws.com
+            Action: sns:Publish
+            Effect: Allow
+            Resource: !Ref TopicArn
+      Topics: 
+        - !Ref TopicArn
+        
+  #QueuePolicy: 
+  #  Type: AWS::SQS::QueuePolicy
+  #  Properties: 
+  #    Queues: 
+  #      - !Ref QueueUrl
+  #    PolicyDocument: 
+  #      Statement: 
+  #        - Principal:  
+  #            Service: events.amazonaws.com
+  #          Action: sqs:SendMessage
+  #          Effect: Allow
+  #          Resource: !Ref QueueArn
+  #          Condition:
+  #            ArnEquals:
+  #              aws:SourceArn: !GetAtt EventsRule.Arn
+          
+  #EventsRulePermission: 
+  #  Type: AWS::Lambda::Permission
+  #  Properties: 
+  #    FunctionName: !Ref Function2
+  #    Action: lambda:InvokeFunction
+  #    Principal: events.amazonaws.com
+  #    SourceArn: !GetAtt EventsRule.Arn
+  
+  #EventBridgeRole:
+  #  Type: AWS::IAM::Role
+  #  DeletionPolicy: Delete
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - events.amazonaws.com
+  #    #Policies:
+  #    #  - PolicyName: !Sub "${Prefix}-PublishSNSMessagePolicy"
+  #    #    PolicyDocument:
+  #    #      Version: 2012-10-17
+  #    #      Statement:
+  #    #        - Effect: Allow
+  #    #          Action:
+  #    #            - sns:Publish
+  #    #          Resource:
+  #    #            - !Ref TopicArn
+  #    #  - PolicyName: !Sub "${Prefix}-SendSQSMessagePolicy"
+  #    #    PolicyDocument:
+  #    #      Version: 2012-10-17
+  #    #      Statement:
+  #    #        - Effect: Allow
+  #    #          Action:
+  #    #            - sqs:SendMessage
+  #    #          Resource:
+  #    #            - !Ref QueueArn
