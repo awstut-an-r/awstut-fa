@@ -19,15 +19,6 @@ Parameters:
     
 
 Resources:
-  #SQSStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sqs.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
-  #      #ReceiveMessageWaitTimeSeconds: 20
-  #      #VisibilityTimeout: 90
-        
   SNSStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -42,33 +33,16 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
       Parameters:
         Prefix: !Ref Prefix
-        
-  #LambdaStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
-  #    Parameters:
-  #      #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-  #      #BucketName: !GetAtt S3Stack.Outputs.BucketName
-  #      EventBusName: !Ref EventBusName
-  #      Handler: index.lambda_handler
-  #      Prefix: !Ref Prefix
-  #      Runtime: python3.8
-  
+
   ConfigStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - S3Stack1
-      #- SNSStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-config.yaml"
       Parameters:
-        #Bucket1: !GetAtt S3Stack.Outputs.Bucket1
-        #Bucket2: !GetAtt S3Stack.Outputs.Bucket2
-        #LogBucket: !GetAtt S3Stack.Outputs.LogBucket
         ConfigBucket: !GetAtt S3Stack1.Outputs.ConfigBucket
         Prefix: !Ref Prefix
-        #TopicArn: !GetAtt SNSStack.Outputs.TopicArn
         
   S3Stack2:
     Type: AWS::CloudFormation::Stack
@@ -82,19 +56,13 @@ Resources:
   EventBridgeStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- LambdaStack
       - SNSStack
       - S3Stack2
-      #- SQSStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
       Parameters:
         EventBusName: !Ref EventBusName
-        #Function2: !GetAtt LambdaStack.Outputs.Function2
-        #FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
         Prefix: !Ref Prefix
-        #QueueArn: !GetAtt SQSStack.Outputs.QueueArn
-        #QueueUrl: !GetAtt SQSStack.Outputs.QueueUrl
         S3BucketSSEEnabledConfigRule: !GetAtt ConfigStack.Outputs.S3BucketSSEEnabledConfigRule
         TopicArn: !GetAtt SNSStack.Outputs.TopicArn
         TopicName: !GetAtt SNSStack.Outputs.TopicName
