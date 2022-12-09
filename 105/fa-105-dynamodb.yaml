@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  ReadCapacityUnits:
+    Type: Number
+    
+  WriteCapacityUnits:
+    Type: Number
+
+
+Resources:
+  Table:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: Artist
+          AttributeType: S
+        - AttributeName: SongTitle
+          AttributeType: S
+      BillingMode: PROVISIONED
+      #GlobalSecondaryIndexes:
+      #  - IndexName: gsi-service-rating
+      #    KeySchema:
+      #      - AttributeName: service
+      #        KeyType: HASH
+      #      - AttributeName: rating
+      #        KeyType: RANGE
+      #    Projection:
+      #      NonKeyAttributes:
+      #        - user
+      #        - comment
+      #      ProjectionType: INCLUDE
+      KeySchema:
+        - AttributeName: Artist
+          KeyType: HASH
+        - AttributeName: SongTitle
+          KeyType: RANGE
+      #LocalSecondaryIndexes:
+      #  - IndexName: lsi-user-datetime
+      #    KeySchema:
+      #      - AttributeName: user
+      #        KeyType: HASH
+      #      - AttributeName: datetime
+      #        KeyType: RANGE
+      #    Projection:
+      #      NonKeyAttributes:
+      #        - service
+      #        - comment
+      #      ProjectionType: INCLUDE
+      ProvisionedThroughput:
+        ReadCapacityUnits: !Ref ReadCapacityUnits
+        WriteCapacityUnits: !Ref WriteCapacityUnits
+      TableClass: STANDARD
+      TableName: !Sub "${Prefix}-Music"
+
+
+Outputs:
+  Table:
+    Value: !Ref Table

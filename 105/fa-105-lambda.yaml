@@ -1,0 +1,195 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketArn:
+  #  Type: String
+  #  
+  #BucketName:
+  #  Type: String
+  
+  #BulkFile:
+  #  Type: String
+  
+  JsonS3Bucket:
+    Type: String
+    
+  JsonS3Key:
+    Type: String
+    
+  #CodeS3Bucket:
+  #  Type: String
+  #  
+  #CodeS3Key:
+  #  Type: String
+    
+  #DomainEndpoint:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  #LayerS3Key:
+  #  Type: String
+  #  
+  #MasterUserName:
+  #  Type: String
+  #  
+  #MasterUserPassword:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Table:
+    Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  #LambdaLayer:
+  #  Type: AWS::Lambda::LayerVersion
+  #  Properties:
+  #    #CompatibleArchitectures:
+  #    #  - arm64
+  #    #  - x86_64
+  #    CompatibleRuntimes:
+  #      - !Ref Runtime
+  #    Content:
+  #      S3Bucket: !Ref CodeS3Bucket
+  #      S3Key: !Ref LayerS3Key
+  #    Description: !Ref Prefix
+  #    LayerName: !Ref Prefix
+      
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          #BUCKET_NAME: !Ref BucketName
+          #BULK_ENDPOINT: !Sub "https://${DomainEndpoint}/_bulk"
+          #BULK_S3_BUCKET: !Ref BulkS3Bucket
+          #BULK_S3_KEY: !Ref BulkS3Key
+          #BULK_FILE: !Ref BulkFile
+          JSON_S3_BUCKET: !Ref JsonS3Bucket
+          JSON_S3_KEY: !Ref JsonS3Key
+          TABLE_NAME: !Ref Table
+          #DOMAIN_ENDPOINT: !Ref DomainEndpoint
+          #MASTER_USERNAME: !Ref MasterUserName
+          #MASTER_PASSWORD: !Ref MasterUserPassword
+      Code:
+        #S3Bucket: !Ref CodeS3Bucket
+        #S3Key: !Ref CodeS3Key
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import json
+          import os
+          
+          JSON_S3_BUCKET = os.environ['JSON_S3_BUCKET']
+          JSON_S3_KEY = os.environ['JSON_S3_KEY']
+          TABLE_NAME = os.environ['TABLE_NAME']
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          s3_client = boto3.client('s3')
+          dynamodb_client = boto3.client('dynamodb')
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                s3_response = s3_client.get_object(
+                  Bucket=JSON_S3_BUCKET,
+                  Key=JSON_S3_KEY)
+                  
+                # binary
+                body = s3_response['Body'].read()
+                print(body)
+                
+                json_data = json.loads(body.decode('utf-8'))
+                print(json_data)
+                
+                for item in json_data:
+                  dynamodb_response = dynamodb_client.put_item(
+                    TableName=TABLE_NAME,
+                    Item=item
+                  )
+                  print(dynamodb_response)
+                
+                #requests_response = requests.post(
+                #  BULK_ENDPOINT,
+                #  data=bulk,
+                #  auth=HTTPBasicAuth(MASTER_USERNAME, MASTER_PASSWORD),
+                #  headers={'Content-Type': 'application/json'}
+                #  )
+                #print(requests_response.text)
+                
+                #with open(BULK_FILE) as f:
+                #  bulk = f.read()
+                #  #print(s)
+                #  #print(requests.get('https://www.google.com/?hl=ja'))
+                #  
+                #  response = requests.post(
+                #    BULK_ENDPOINT,
+                #    #headers={
+                #    #  'Content-Type': 'application/json'
+                #    #},
+                #    json=bulk,
+                #    auth=HTTPBasicAuth(MASTER_USERNAME, MASTER_PASSWORD)
+                #    )
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+                  
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-S3GetObjectPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${JsonS3Bucket}/*"
+        - PolicyName: !Sub "${Prefix}-DynamodbPutItemPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
+        
+      
+Outputs:
+  FunctionArn:
+    Value: !GetAtt Function.Arn
