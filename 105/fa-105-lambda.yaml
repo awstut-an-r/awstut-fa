@@ -56,10 +56,7 @@ Resources:
                   Bucket=JSON_S3_BUCKET,
                   Key=JSON_S3_KEY)
                   
-                # binary
                 body = s3_response['Body'].read()
-                print(body)
-                
                 json_data = json.loads(body.decode('utf-8'))
                 print(json_data)
                 
