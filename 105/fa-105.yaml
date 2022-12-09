@@ -12,11 +12,7 @@ Parameters:
   JsonFile:
     Type: String
     Default: music.json
-    
-  #BulkFile:
-  #  Type: String
-  #  Default: bulk_movies.json
-  #  
+
   LambdaHandler:
     Type: String
     Default: index.lambda_handler
@@ -28,16 +24,7 @@ Parameters:
   LambdaTimeout:
     Type: Number
     Default: 10
-    
-  #MasterUserName:
-  #  Type: String
-  #  Default: test
-  #  
-  #MasterUserPassword:
-  #  Type: String
-  #  Default: P@ssw0rd
-  #  
-    
+
   ProvisionedThroughputReadCapacityUnits:
     Type: Number
     Default: 5
@@ -48,19 +35,6 @@ Parameters:
     
     
 Resources:
-  #OpenSearchStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-opensearch.yaml"
-  #    Parameters:
-  #      DomainName: !Ref Prefix
-  #      EngineVersion: OpenSearch_1.2
-  #      InstanceCount: 1
-  #      InstanceType: t3.small.search
-  #      MasterUserName: !Ref MasterUserName
-  #      MasterUserPassword: !Ref MasterUserPassword
-  #      VolumeSize: 10
-  
   DynamodbStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -77,18 +51,9 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #BulkFile: !Ref BulkFile
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/deploy.zip"
-        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
         JsonS3Bucket: !Ref TemplateBucketName
         JsonS3Key: !Sub "${Prefix}/${JsonFile}"
         Handler: !Ref LambdaHandler
-        #LayerS3Key: !Sub "${Prefix}/layer.zip"
-        #MasterUserName: !Ref MasterUserName
-        #MasterUserPassword: !Ref MasterUserPassword
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
         Table: !GetAtt DynamodbStack.Outputs.Table
@@ -100,8 +65,6 @@ Resources:
     DependsOn:
       - LambdaStack
     Properties:
-      #TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
       Parameters:
         FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
-        #Prefix: !Ref Prefix
