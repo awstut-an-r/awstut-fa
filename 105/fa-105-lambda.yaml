@@ -1,42 +1,15 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
-  #BulkFile:
-  #  Type: String
-  
   JsonS3Bucket:
     Type: String
     
   JsonS3Key:
     Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-  #  
-  #CodeS3Key:
-  #  Type: String
-    
-  #DomainEndpoint:
-  #  Type: String
-    
+
   Handler:
     Type: String
-    
-  #LayerS3Key:
-  #  Type: String
-  #  
-  #MasterUserName:
-  #  Type: String
-  #  
-  #MasterUserPassword:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -51,39 +24,15 @@ Parameters:
 
 
 Resources:
-  #LambdaLayer:
-  #  Type: AWS::Lambda::LayerVersion
-  #  Properties:
-  #    #CompatibleArchitectures:
-  #    #  - arm64
-  #    #  - x86_64
-  #    CompatibleRuntimes:
-  #      - !Ref Runtime
-  #    Content:
-  #      S3Bucket: !Ref CodeS3Bucket
-  #      S3Key: !Ref LayerS3Key
-  #    Description: !Ref Prefix
-  #    LayerName: !Ref Prefix
-      
   Function:
     Type: AWS::Lambda::Function
     Properties:
       Environment:
         Variables:
-          #BUCKET_NAME: !Ref BucketName
-          #BULK_ENDPOINT: !Sub "https://${DomainEndpoint}/_bulk"
-          #BULK_S3_BUCKET: !Ref BulkS3Bucket
-          #BULK_S3_KEY: !Ref BulkS3Key
-          #BULK_FILE: !Ref BulkFile
           JSON_S3_BUCKET: !Ref JsonS3Bucket
           JSON_S3_KEY: !Ref JsonS3Key
           TABLE_NAME: !Ref Table
-          #DOMAIN_ENDPOINT: !Ref DomainEndpoint
-          #MASTER_USERNAME: !Ref MasterUserName
-          #MASTER_PASSWORD: !Ref MasterUserPassword
       Code:
-        #S3Bucket: !Ref CodeS3Bucket
-        #S3Key: !Ref CodeS3Key
         ZipFile: |
           import boto3
           import cfnresponse
@@ -120,29 +69,7 @@ Resources:
                     Item=item
                   )
                   print(dynamodb_response)
-                
-                #requests_response = requests.post(
-                #  BULK_ENDPOINT,
-                #  data=bulk,
-                #  auth=HTTPBasicAuth(MASTER_USERNAME, MASTER_PASSWORD),
-                #  headers={'Content-Type': 'application/json'}
-                #  )
-                #print(requests_response.text)
-                
-                #with open(BULK_FILE) as f:
-                #  bulk = f.read()
-                #  #print(s)
-                #  #print(requests.get('https://www.google.com/?hl=ja'))
-                #  
-                #  response = requests.post(
-                #    BULK_ENDPOINT,
-                #    #headers={
-                #    #  'Content-Type': 'application/json'
-                #    #},
-                #    json=bulk,
-                #    auth=HTTPBasicAuth(MASTER_USERNAME, MASTER_PASSWORD)
-                #    )
-                
+                  
               cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
                   
             except Exception as e:
@@ -150,8 +77,6 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
       Timeout: !Ref Timeout
