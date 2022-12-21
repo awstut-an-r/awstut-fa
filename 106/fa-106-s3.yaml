@@ -11,25 +11,8 @@ Resources:
     Properties:
       BucketName: !Ref Prefix
       AccessControl: Private
-      #WebsiteConfiguration:
-      #  IndexDocument: index.html
-      
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !Ref Prefix
-  #    PolicyDocument:
-  #      Statement:
-  #        Action:
-  #          - s3:GetObject
-  #        Effect: Allow
-  #        Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
-  #        Principal: "*"
           
           
 Outputs:
   BucketName:
     Value: !Ref Bucket
-
-  #BucketWesSiteEndpointUrl:
-  #  Value: !Sub "https://s3-ap-northeast-1.amazonaws.com/${S3Bucket}" 
