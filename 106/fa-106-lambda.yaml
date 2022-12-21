@@ -1,40 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  #  
-  
-  #BulkFile:
-  #  Type: String
-  
-  #JsonS3Bucket:
-  #  Type: String
-  #  
-  #JsonS3Key:
-  #  Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-  #  
-  #CodeS3Key:
-  #  Type: String
-    
-  #DomainEndpoint:
-  #  Type: String
-    
   Handler:
     Type: String
-    
-  #LayerS3Key:
-  #  Type: String
-  #  
-  #MasterUserName:
-  #  Type: String
-  #  
-  #MasterUserPassword:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -49,29 +18,12 @@ Parameters:
     
   S3PresignedUrlExpire:
     Type: Number
-    
-  #Table:
-  #  Type: String
-    
+
   Timeout:
     Type: Number
 
 
 Resources:
-  #LambdaLayer:
-  #  Type: AWS::Lambda::LayerVersion
-  #  Properties:
-  #    #CompatibleArchitectures:
-  #    #  - arm64
-  #    #  - x86_64
-  #    CompatibleRuntimes:
-  #      - !Ref Runtime
-  #    Content:
-  #      S3Bucket: !Ref CodeS3Bucket
-  #      S3Key: !Ref LayerS3Key
-  #    Description: !Ref Prefix
-  #    LayerName: !Ref Prefix
-  
   Function1:
     Type: AWS::Lambda::Function
     Properties:
@@ -85,7 +37,6 @@ Resources:
         ZipFile: |
           import boto3
           import os
-          #from botocore.client import Config
           
           bucket_name = os.environ['BUCKET_NAME']
           expire = os.environ['EXPIRE']
@@ -112,8 +63,6 @@ Resources:
             return url
       FunctionName: !Sub "${Prefix}-function1"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
       Timeout: !Ref Timeout
@@ -131,7 +80,6 @@ Resources:
         ZipFile: |
           import boto3
           import os
-          from botocore.client import Config
           
           bucket_name = os.environ['BUCKET_NAME']
           expire = os.environ['EXPIRE']
@@ -158,8 +106,6 @@ Resources:
             return url
       FunctionName: !Sub "${Prefix}-function2"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
       Timeout: !Ref Timeout
@@ -184,14 +130,10 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                #Principal: "*"
                 Action:
-                  #- s3:GetObject
                   - s3:PutObject
-                  #- s3:PutObjectAcl
                 Resource:
                   - !Sub "arn:aws:s3:::${S3BucketName}/*"
-                  #- !Sub "arn:aws:s3:::${S3BucketName}"
                   
   FunctionRole2:
     Type: AWS::IAM::Role
@@ -213,16 +155,7 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
-                #Principal: "*"
                 Action:
                   - s3:GetObject
-                  #- s3:PutObject
-                  #- s3:PutObjectAcl
                 Resource:
                   - !Sub "arn:aws:s3:::${S3BucketName}/*"
-                  #- !Sub "arn:aws:s3:::${S3BucketName}"
-        
-      
-#Outputs:
-#  FunctionArn:
-#    Value: !GetAtt Function.Arn
