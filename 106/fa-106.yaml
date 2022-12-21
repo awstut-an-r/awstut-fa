@@ -3,20 +3,11 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
     
   Prefix:
     Type: String
     Default: fa-106
-    
-  #JsonFile:
-  #  Type: String
-  #  Default: music.json
-    
-  #BulkFile:
-  #  Type: String
-  #  Default: bulk_movies.json
-  #  
   
   LambdaHandler:
     Type: String
@@ -29,16 +20,7 @@ Parameters:
   LambdaTimeout:
     Type: Number
     Default: 10
-    
-  #MasterUserName:
-  #  Type: String
-  #  Default: test
-  #  
-  #MasterUserPassword:
-  #  Type: String
-  #  Default: P@ssw0rd
-  #  
-  
+
   S3ObjectKey:
     Type: String
     Default: sample.txt
@@ -46,15 +28,7 @@ Parameters:
   S3PresignedUrlExpire:
     Type: Number
     Default: 3600
-    
-  #ProvisionedThroughputReadCapacityUnits:
-  #  Type: Number
-  #  Default: 5
-  #  
-  #ProvisionedThroughputWriteCapacityUnits:
-  #  Type: Number
-  #  Default: 5
-    
+
     
 Resources:
   S3Stack:
@@ -71,15 +45,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BulkFile: !Ref BulkFile
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/deploy.zip"
-        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
         Handler: !Ref LambdaHandler
-        #LayerS3Key: !Sub "${Prefix}/layer.zip"
-        #MasterUserName: !Ref MasterUserName
-        #MasterUserPassword: !Ref MasterUserPassword
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
         S3BucketName: !GetAtt S3Stack.Outputs.BucketName
