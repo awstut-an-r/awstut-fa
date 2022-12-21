@@ -59,7 +59,6 @@ Resources:
               Params=params,
               ExpiresIn=expire
             )
-            print(url)
             return url
       FunctionName: !Sub "${Prefix}-function1"
       Handler: !Ref Handler
@@ -102,7 +101,6 @@ Resources:
               Params=params,
               ExpiresIn=expire
             )
-            print(url)
             return url
       FunctionName: !Sub "${Prefix}-function2"
       Handler: !Ref Handler
