@@ -1,0 +1,228 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketArn:
+  #  Type: String
+  #  
+  
+  #BulkFile:
+  #  Type: String
+  
+  #JsonS3Bucket:
+  #  Type: String
+  #  
+  #JsonS3Key:
+  #  Type: String
+    
+  #CodeS3Bucket:
+  #  Type: String
+  #  
+  #CodeS3Key:
+  #  Type: String
+    
+  #DomainEndpoint:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  #LayerS3Key:
+  #  Type: String
+  #  
+  #MasterUserName:
+  #  Type: String
+  #  
+  #MasterUserPassword:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  S3BucketName:
+    Type: String
+    
+  S3ObjectKey:
+    Type: String
+    
+  S3PresignedUrlExpire:
+    Type: Number
+    
+  #Table:
+  #  Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  #LambdaLayer:
+  #  Type: AWS::Lambda::LayerVersion
+  #  Properties:
+  #    #CompatibleArchitectures:
+  #    #  - arm64
+  #    #  - x86_64
+  #    CompatibleRuntimes:
+  #      - !Ref Runtime
+  #    Content:
+  #      S3Bucket: !Ref CodeS3Bucket
+  #      S3Key: !Ref LayerS3Key
+  #    Description: !Ref Prefix
+  #    LayerName: !Ref Prefix
+  
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3BucketName
+          EXPIRE: !Ref S3PresignedUrlExpire
+          OBJECT_KEY: !Ref S3ObjectKey
+          REGION: !Ref AWS::Region
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          #from botocore.client import Config
+          
+          bucket_name = os.environ['BUCKET_NAME']
+          expire = os.environ['EXPIRE']
+          object_key = os.environ['OBJECT_KEY']
+          region = os.environ['REGION']
+          
+          client_method = 'put_object'
+          http_method = 'PUT'
+          params = {
+            'Bucket': bucket_name,
+            'Key': object_key
+          }
+          
+          s3_client = boto3.client('s3', region_name=region)
+          
+          def lambda_handler(event, context):
+            url = s3_client.generate_presigned_url(
+              ClientMethod=client_method,
+              HttpMethod=http_method,
+              Params=params,
+              ExpiresIn=expire
+            )
+            print(url)
+            return url
+      FunctionName: !Sub "${Prefix}-function1"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole1.Arn
+      Timeout: !Ref Timeout
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref S3BucketName
+          EXPIRE: !Ref S3PresignedUrlExpire
+          OBJECT_KEY: !Ref S3ObjectKey
+          REGION: !Ref AWS::Region
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          from botocore.client import Config
+          
+          bucket_name = os.environ['BUCKET_NAME']
+          expire = os.environ['EXPIRE']
+          object_key = os.environ['OBJECT_KEY']
+          region = os.environ['REGION']
+          
+          client_method = 'get_object'
+          http_method = 'GET'
+          params = {
+            'Bucket': bucket_name,
+            'Key': object_key
+          }
+          
+          s3_client = boto3.client('s3', region_name=region)
+          
+          def lambda_handler(event, context):
+            url = s3_client.generate_presigned_url(
+              ClientMethod=client_method,
+              HttpMethod=http_method,
+              Params=params,
+              ExpiresIn=expire
+            )
+            print(url)
+            return url
+      FunctionName: !Sub "${Prefix}-function2"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      Timeout: !Ref Timeout
+            
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-S3PutObjectPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                #Principal: "*"
+                Action:
+                  #- s3:GetObject
+                  - s3:PutObject
+                  #- s3:PutObjectAcl
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3BucketName}/*"
+                  #- !Sub "arn:aws:s3:::${S3BucketName}"
+                  
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-S3GetObjectPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                #Principal: "*"
+                Action:
+                  - s3:GetObject
+                  #- s3:PutObject
+                  #- s3:PutObjectAcl
+                Resource:
+                  - !Sub "arn:aws:s3:::${S3BucketName}/*"
+                  #- !Sub "arn:aws:s3:::${S3BucketName}"
+        
+      
+#Outputs:
+#  FunctionArn:
+#    Value: !GetAtt Function.Arn
