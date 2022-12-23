@@ -63,8 +63,6 @@ Resources:
               print(dynamodb_response)
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
       Timeout: !Ref Timeout
@@ -92,8 +90,3 @@ Resources:
                   - dynamodb:PutItem
                 Resource:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
-        
-      
-#Outputs:
-#  FunctionArn:
-#    Value: !GetAtt Function.Arn
