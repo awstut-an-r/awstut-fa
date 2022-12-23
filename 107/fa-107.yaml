@@ -1,0 +1,57 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-107
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+  LambdaTimeout:
+    Type: Number
+    Default: 10
+
+
+Resources:
+  #OpenSearchStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-opensearch.yaml"
+  #    Parameters:
+  #      DomainName: !Ref Prefix
+  #      EngineVersion: OpenSearch_1.2
+  #      InstanceCount: 1
+  #      InstanceType: t3.small.search
+  #      MasterUserName: !Ref MasterUserName
+  #      MasterUserPassword: !Ref MasterUserPassword
+  #      VolumeSize: 10
+  
+  DynamodbStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-dynamodb.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - DynamodbStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        Table: !GetAtt DynamodbStack.Outputs.Table
+        Timeout: !Ref LambdaTimeout

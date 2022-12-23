@@ -1,0 +1,99 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Table:
+    Type: String
+    
+  Timeout:
+    Type: Number
+
+
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Environment:
+        Variables:
+          TABLE_NAME: !Ref Table
+      Code:
+        ZipFile: |
+          import boto3
+          import datetime
+          import json
+          import os
+          import random
+          import string
+          import time
+          
+          TABLE_NAME = os.environ['TABLE_NAME']
+          
+          dynamodb_client = boto3.client('dynamodb')
+          
+          def lambda_handler(event, context):
+            now = datetime.datetime.now()
+          
+            for i in range(10):
+              username = 'user' + str(i)
+              sessionid = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+              
+              ttl = now + datetime.timedelta(minutes=i+5)
+              ttl_str = ttl.strftime('%Y-%m-%d %H:%M:%S.%f')
+              ttl_unix = str(time.mktime(ttl.timetuple()))
+              
+              item = {
+                'UserName': {'S': username},
+                'SessionId': {'S': sessionid},
+                'TTL_str': {'S': ttl_str},
+                'TTL': {'N': ttl_unix}
+              }
+              
+              dynamodb_response = dynamodb_client.put_item(
+                TableName=TABLE_NAME,
+                Item=item
+              )
+              print(dynamodb_response)
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DynamodbPutItemPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
+        
+      
+#Outputs:
+#  FunctionArn:
+#    Value: !GetAtt Function.Arn
