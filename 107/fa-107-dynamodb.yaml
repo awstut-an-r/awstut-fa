@@ -15,39 +15,11 @@ Resources:
         - AttributeName: SessionId
           AttributeType: S
       BillingMode: PAY_PER_REQUEST
-      #BillingMode: PROVISIONED
-      #GlobalSecondaryIndexes:
-      #  - IndexName: gsi-service-rating
-      #    KeySchema:
-      #      - AttributeName: service
-      #        KeyType: HASH
-      #      - AttributeName: rating
-      #        KeyType: RANGE
-      #    Projection:
-      #      NonKeyAttributes:
-      #        - user
-      #        - comment
-      #      ProjectionType: INCLUDE
       KeySchema:
         - AttributeName: UserName
           KeyType: HASH
         - AttributeName: SessionId
           KeyType: RANGE
-      #LocalSecondaryIndexes:
-      #  - IndexName: lsi-user-datetime
-      #    KeySchema:
-      #      - AttributeName: user
-      #        KeyType: HASH
-      #      - AttributeName: datetime
-      #        KeyType: RANGE
-      #    Projection:
-      #      NonKeyAttributes:
-      #        - service
-      #        - comment
-      #      ProjectionType: INCLUDE
-      #ProvisionedThroughput:
-      #  ReadCapacityUnits: !Ref ReadCapacityUnits
-      #  WriteCapacityUnits: !Ref WriteCapacityUnits
       TableClass: STANDARD
       TableName: !Ref Prefix
       TimeToLiveSpecification:
