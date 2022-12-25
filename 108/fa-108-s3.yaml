@@ -16,48 +16,6 @@ Resources:
       BucketName: !Ref Prefix
       LifecycleConfiguration:
         Rules:
-          - #AbortIncompleteMultipartUpload: 
-            #  AbortIncompleteMultipartUpload
-            #ExpirationDate: Timestamp
-            ExpirationInDays: !Ref ExpirationInDays
-            #ExpiredObjectDeleteMarker: Boolean
+          - ExpirationInDays: !Ref ExpirationInDays
             Id: !Sub "${Prefix}-Lifecyclerule"
-            #NoncurrentVersionExpiration: 
-            #  NoncurrentVersionExpiration
-            #NoncurrentVersionExpirationInDays: Integer
-            #NoncurrentVersionTransition: 
-            #  NoncurrentVersionTransition
-            #NoncurrentVersionTransitions: 
-            #  - NoncurrentVersionTransition
-            #ObjectSizeGreaterThan: Long
-            #ObjectSizeLessThan: Long
-            #Prefix: String
             Status: Enabled
-            #TagFilters: 
-            #  - TagFilter
-            #Transition: 
-            #  Transition
-            #Transitions: 
-            #  - Transition
-      #WebsiteConfiguration:
-      #  IndexDocument: index.html
-      
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !Ref Prefix
-  #    PolicyDocument:
-  #      Statement:
-  #        Action:
-  #          - s3:GetObject
-  #        Effect: Allow
-  #        Resource: !Sub "arn:aws:s3:::${S3Bucket}/*"
-  #        Principal: "*"
-          
-          
-#Outputs:
-#  BucketName:
-#    Value: !Ref Bucket
-#
-#  #BucketWesSiteEndpointUrl:
-#  #  Value: !Sub "https://s3-ap-northeast-1.amazonaws.com/${S3Bucket}" 
