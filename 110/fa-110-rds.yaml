@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AvailabilityZone:
-  #  Type: String
-    
   DBAllocatedStorage:
     Type: Number
     
@@ -15,9 +12,6 @@ Parameters:
     
   DBInstanceClass:
     Type: String
-    
-  #DBName:
-  #  Type: String
     
   DBMasterUsername:
     Type: String
@@ -44,10 +38,9 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       AllocatedStorage: !Ref DBAllocatedStorage
-      #AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      #AvailabilityZone:
       DBInstanceClass: !Ref DBInstanceClass
       DBInstanceIdentifier: dbinstance
-      #DBName: !Ref DBName
       DBSubnetGroupName: !Ref DBSubnetGroup
       Engine: !Ref DBEngine
       EngineVersion: !Ref DBEngineVersion
@@ -65,8 +58,3 @@ Resources:
       SubnetIds:
         - !Ref DBSubnet1
         - !Ref DBSubnet2
-
-
-#Outputs:
-#  DBInstanceEndpointAddress:
-#    Value: !GetAtt DBInstance.Endpoint.Address
