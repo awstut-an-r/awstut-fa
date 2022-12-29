@@ -40,11 +40,7 @@ Parameters:
   DBMasterUserPassword:
     Type: String
     Default: Passw0rd
-    
-  #DBName:
-  #  Type: String
-  #  Default: testdb
-    
+
   HTTPSPort:
     Type: Number
     Default: 443
@@ -56,11 +52,7 @@ Parameters:
   InstanceType:
     Type: String
     Default: t4g.nano
-    
-  #LambdaPackage:
-  #  Type: String
-  #  Default: deploy.zip
-    
+
   MySQLPort:
     Type: Number
     Default: 3306
@@ -116,12 +108,10 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
       Parameters:
-        #AvailabilityZone: !Ref AvailabilityZone1
         DBAllocatedStorage: !Ref DBAllocatedStorage
         DBEngine: !Ref DBEngine
         DBEngineVersion: !Ref DBEngineVersion
         DBInstanceClass: !Ref DBInstanceClass
-        #DBName: !Ref DBName
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
         DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
