@@ -75,14 +75,7 @@ Resources:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      
-  #FunctionSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-FunctionSecurityGroup"
-  #    GroupDescription: Deny All.
-  #    VpcId: !Ref VPC
-      
+
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -94,11 +87,7 @@ Resources:
           FromPort: !Ref MySQLPort
           ToPort: !Ref MySQLPort
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
-        #- IpProtocol: tcp
-        #  FromPort: !Ref MySQLPort
-        #  ToPort: !Ref MySQLPort
-        #  SourceSecurityGroupId: !Ref FunctionSecurityGroup
-          
+
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -110,11 +99,7 @@ Resources:
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
-        #- IpProtocol: tcp
-        #  FromPort: !Ref HTTPSPort
-        #  ToPort: !Ref HTTPSPort
-        #  SourceSecurityGroupId: !Ref FunctionSecurityGroup
-          
+
           
 Outputs:
   InstanceSubnet:
@@ -131,10 +116,7 @@ Outputs:
     
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    
-  #FunctionSecurityGroup:
-  #  Value: !Ref FunctionSecurityGroup
-    
+
   DBSecurityGroup:
     Value: !Ref DBSecurityGroup
     
