@@ -24,11 +24,7 @@ Parameters:
   DBAllocatedStorage:
     Type: Number
     Default: 100
-    
-  #DBBackupRetentionPeriod:
-  #  Type: Number
-  #  Default: 1
-    
+
   DBClusterInstanceClass:
     Type: String
     Default: db.m6gd.large
@@ -72,19 +68,7 @@ Parameters:
   InstanceType:
     Type: String
     Default: t4g.nano
-    
-  #LambdaHandler:
-  #  Type: String
-  #  Default: index.lambda_handler
-  #  
-  #LambdaRuntime:
-  #  Type: String
-  #  Default: python3.8
-  #  
-  #LambdaTimeout:
-  #  Type: Number
-  #  Default: 10
-    
+
   MySQLPort:
     Type: Number
     Default: 3306
@@ -142,9 +126,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
       Parameters:
-        #AvailabilityZone: !Ref AvailabilityZone1
         DBAllocatedStorage: !Ref DBAllocatedStorage
-        #DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
         DBClusterInstanceClass: !Ref DBClusterInstanceClass
         DBEngine: !Ref DBEngine
         DBEngineVersion: !Ref DBEngineVersion
@@ -158,27 +140,4 @@ Resources:
         DBSubnet1: !GetAtt VPCStack.Outputs.DBSubnet1
         DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
         DBSubnet3: !GetAtt VPCStack.Outputs.DBSubnet3
-        #LambdaHandler: !Ref LambdaHandler
-        #LambdaRuntime: !Ref LambdaRuntime
-        #LambdaTimeout: !Ref LambdaTimeout
         Prefix: !Ref Prefix
-        
-  #RDSStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
-  #    Parameters:
-  #      #AvailabilityZone: !Ref AvailabilityZone1
-  #      DBAllocatedStorage: !Ref DBAllocatedStorage
-  #      DBEngine: !Ref DBEngine
-  #      DBEngineVersion: !Ref DBEngineVersion
-  #      DBInstanceClass: !Ref DBInstanceClass
-  #      #DBName: !Ref DBName
-  #      DBMasterUsername: !Ref DBMasterUsername
-  #      DBMasterUserPassword: !Ref DBMasterUserPassword
-  #      DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
-  #      DBSubnet1: !GetAtt VPCStack.Outputs.DBSubnet1
-  #      DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
-  #      Prefix: !Ref Prefix
