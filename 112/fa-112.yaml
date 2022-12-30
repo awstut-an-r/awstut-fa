@@ -1,0 +1,184 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-112
+    
+  AvailabilityZone1:
+    Type: String
+    Default: a
+    
+  AvailabilityZone2:
+    Type: String
+    Default: c
+    
+  AvailabilityZone3:
+    Type: String
+    Default: d
+    
+  DBAllocatedStorage:
+    Type: Number
+    Default: 100
+    
+  #DBBackupRetentionPeriod:
+  #  Type: Number
+  #  Default: 1
+    
+  DBClusterInstanceClass:
+    Type: String
+    Default: db.m6gd.large
+    
+  DBEngine:
+    Type: String
+    Default: mysql
+    
+  DBEngineVersion:
+    Type: String
+    Default: 8.0.28
+    
+  DBFamily:
+    Type: String
+    Default: mysql8.0
+    
+  DBIops:
+    Type: Number
+    Default: 1000
+    
+  DBMasterUsername:
+    Type: String
+    Default: testuser
+    
+  DBMasterUserPassword:
+    Type: String
+    Default: Passw0rd
+    
+  DBName:
+    Type: String
+    Default: testdb
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  #LambdaHandler:
+  #  Type: String
+  #  Default: index.lambda_handler
+  #  
+  #LambdaRuntime:
+  #  Type: String
+  #  Default: python3.8
+  #  
+  #LambdaTimeout:
+  #  Type: Number
+  #  Default: 10
+    
+  MySQLPort:
+    Type: Number
+    Default: 3306
+    
+    
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        AvailabilityZone2: !Ref AvailabilityZone2
+        AvailabilityZone3: !Ref AvailabilityZone3
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        CidrIp4: 10.0.4.0/24
+        HTTPSPort: !Ref HTTPSPort
+        MySQLPort: !Ref MySQLPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        InstanceSubnetRouteTable: !GetAtt VPCStack.Outputs.InstanceSubnetRouteTable
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        Prefix: !Ref Prefix
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+      - EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        
+  RDSStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
+      Parameters:
+        #AvailabilityZone: !Ref AvailabilityZone1
+        DBAllocatedStorage: !Ref DBAllocatedStorage
+        #DBBackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+        DBClusterInstanceClass: !Ref DBClusterInstanceClass
+        DBEngine: !Ref DBEngine
+        DBEngineVersion: !Ref DBEngineVersion
+        DBFamily: !Ref DBFamily
+        DBIops: !Ref DBIops
+        DBMasterUsername: !Ref DBMasterUsername
+        DBMasterUserPassword: !Ref DBMasterUserPassword
+        DBName: !Ref DBName
+        DBPort: !Ref MySQLPort
+        DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
+        DBSubnet1: !GetAtt VPCStack.Outputs.DBSubnet1
+        DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
+        DBSubnet3: !GetAtt VPCStack.Outputs.DBSubnet3
+        #LambdaHandler: !Ref LambdaHandler
+        #LambdaRuntime: !Ref LambdaRuntime
+        #LambdaTimeout: !Ref LambdaTimeout
+        Prefix: !Ref Prefix
+        
+  #RDSStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  DependsOn:
+  #    - VPCStack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
+  #    Parameters:
+  #      #AvailabilityZone: !Ref AvailabilityZone1
+  #      DBAllocatedStorage: !Ref DBAllocatedStorage
+  #      DBEngine: !Ref DBEngine
+  #      DBEngineVersion: !Ref DBEngineVersion
+  #      DBInstanceClass: !Ref DBInstanceClass
+  #      #DBName: !Ref DBName
+  #      DBMasterUsername: !Ref DBMasterUsername
+  #      DBMasterUserPassword: !Ref DBMasterUserPassword
+  #      DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
+  #      DBSubnet1: !GetAtt VPCStack.Outputs.DBSubnet1
+  #      DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
+  #      Prefix: !Ref Prefix

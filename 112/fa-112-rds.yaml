@@ -1,0 +1,181 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #AvailabilityZone:
+  #  Type: String
+    
+  DBAllocatedStorage:
+    Type: Number
+    
+  #DBBackupRetentionPeriod:
+  #  Type: Number
+    
+  DBClusterInstanceClass:
+    Type: String
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBFamily:
+    Type: String
+    
+  DBIops:
+    Type: Number
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBPort:
+    Type: Number
+    
+  DBSecurityGroup:
+    Type: String
+    
+  DBSubnet1:
+    Type: String
+    
+  DBSubnet2:
+    Type: String
+    
+  DBSubnet3:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+
+Resources:
+  DBCluster:
+    Type: AWS::RDS::DBCluster
+    DeletionPolicy: Delete
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      #AssociatedRoles: 
+      #  - DBClusterRole
+      AutoMinorVersionUpgrade: true
+      #AvailabilityZones: 
+      #  - String
+      #BacktrackWindow: Integer
+      #BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+      #CopyTagsToSnapshot: Boolean
+      DatabaseName: !Ref DBName
+      DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
+      DBClusterInstanceClass: !Ref DBClusterInstanceClass
+      DBClusterParameterGroupName: !Ref DBClusterParameterGroup
+      #DBInstanceParameterGroupName: String
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      #DBSystemId: String
+      #DeletionProtection: Boolean
+      #Domain: String
+      #DomainIAMRoleName: String
+      #EnableCloudwatchLogsExports: 
+      #  - String
+      #EnableHttpEndpoint: Boolean
+      #EnableIAMDatabaseAuthentication: Boolean
+      Engine: !Ref DBEngine
+      #EngineMode: String
+      EngineVersion: !Ref DBEngineVersion
+      #GlobalClusterIdentifier: String
+      Iops: !Ref DBIops
+      #KmsKeyId: String
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      #MonitoringInterval: Integer
+      #MonitoringRoleArn: String
+      #NetworkType: String
+      #PerformanceInsightsEnabled: Boolean
+      #PerformanceInsightsKmsKeyId: String
+      #PerformanceInsightsRetentionPeriod: Integer
+      Port: !Ref DBPort
+      #PreferredBackupWindow: String
+      #PreferredMaintenanceWindow: String
+      #PubliclyAccessible: Boolean
+      #ReplicationSourceIdentifier: String
+      #RestoreType: String
+      #ScalingConfiguration: 
+      #  ScalingConfiguration
+      #ServerlessV2ScalingConfiguration: 
+      #  ServerlessV2ScalingConfiguration
+      #SnapshotIdentifier: String
+      #SourceDBClusterIdentifier: String
+      #SourceRegion: String
+      #StorageEncrypted: Boolean
+      StorageType: io1
+      #Tags: 
+      #  - Tag
+      #UseLatestRestorableTime: Boolean
+      VpcSecurityGroupIds: 
+        - !Ref DBSecurityGroup
+
+  #PrimaryInstance:
+  #  Type: AWS::RDS::DBInstance
+  #  DeletionPolicy: Delete
+  #  Properties:
+  #    AllocatedStorage: !Ref DBAllocatedStorage
+  #    #AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+  #    DBInstanceClass: !Ref DBInstanceClass
+  #    DBInstanceIdentifier: dbinstance
+  #    #DBName: !Ref DBName
+  #    DBSubnetGroupName: !Ref DBSubnetGroup
+  #    Engine: !Ref DBEngine
+  #    EngineVersion: !Ref DBEngineVersion
+  #    MasterUsername: !Ref DBMasterUsername
+  #    MasterUserPassword: !Ref DBMasterUserPassword
+  #    #MultiAZ: true
+  #    VPCSecurityGroups:
+  #      - !Ref DBSecurityGroup
+  #      
+  #ReadReplicaInstance:
+  #  Type: AWS::RDS::DBInstance
+  #  DeletionPolicy: Delete
+  #  Properties:
+  #    #AllocatedStorage: !Ref DBAllocatedStorage
+  #    #AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+  #    DBInstanceClass: !Ref DBInstanceClass
+  #    #DBInstanceIdentifier: dbinstance
+  #    #DBName: !Ref DBName
+  #    #DBSubnetGroupName: !Ref DBSubnetGroup
+  #    #Engine: !Ref DBEngine
+  #    #EngineVersion: !Ref DBEngineVersion
+  #    #MasterUsername: !Ref DBMasterUsername
+  #    #MasterUserPassword: !Ref DBMasterUserPassword
+  #    #MultiAZ: true
+  #    SourceDBInstanceIdentifier: !Ref PrimaryInstance
+  #    #VPCSecurityGroups:
+  #    #  - !Ref DBSecurityGroup
+  
+  DBClusterParameterGroup:
+    Type: AWS::RDS::DBClusterParameterGroup
+    Properties:
+      DBClusterParameterGroupName: !Sub "${Prefix}-dbclusterparametergroup"
+      Description: Test DBCluster ParameterGroup.
+      Family: !Ref DBFamily
+      Parameters:
+        time_zone: Asia/Tokyo
+        character_set_database: utf8
+      #Tags: 
+      #  - Tag
+        
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: !Sub "${Prefix}-dbsubnetgroup"
+      DBSubnetGroupDescription: Test DB SubnetGroup.
+      SubnetIds:
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+        - !Ref DBSubnet3
+
+
+#Outputs:
+#  DBInstanceEndpointAddress:
+#    Value: !GetAtt DBInstance.Endpoint.Address
