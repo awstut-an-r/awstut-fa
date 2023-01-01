@@ -3,40 +3,16 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Architecture:
     Type: String
-    
-  #BucketName:
-  #  Type: String
-    
-  #EphemeralStorageSize:
-  #  Type: Number
 
   Handler:
     Type: String
-    
-  #LayerBucket:
-  #  Type: String
-  #  
-  #LayerPackage:
-  #  Type: String
-  #  
-  #LayerS3Key:
-  #  Type: String
-  
+
   Prefix:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-  #  
-  #ResizeBucketName:
-  #  Type: String
-    
+
   Runtime:
     Type: String
-    
-  #SNSTopicArn:
-  #  Type: String
-    
+
   SQSMaxNumberOfMessages:
     Type: Number
     
@@ -45,12 +21,6 @@ Parameters:
     
   SQSQueueName:
     Type: String
-    
-  #Timeout:
-  #  Type: Number
-    
-  #UploadBucketName:
-  #  Type: String
 
 
 Resources:
@@ -90,11 +60,8 @@ Resources:
           REGION: !Ref AWS::Region
       FunctionName: !Sub "${Prefix}-Function2"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt Function2Role.Arn
-      #Timeout: !Ref Timeout
       
   Function2Role:
     Type: AWS::IAM::Role
@@ -119,19 +86,5 @@ Resources:
                 Action:
                   - sqs:GetQueueUrl
                   - sqs:ReceiveMessage
-                  #- sqs:DeleteMessage
                 Resource:
                   - !Ref SQSQueueArn
-      
-  #S3Permission: 
-  #  Type: AWS::Lambda::Permission
-  #  Properties: 
-  #    FunctionName: !Ref Function1
-  #    Action: lambda:InvokeFunction
-  #    Principal: s3.amazonaws.com
-  #    SourceArn: !Sub "arn:aws:s3:::${BucketName}"
-      
-      
-#Outputs:
-#  Function1Arn:
-#    Value: !GetAtt Function1.Arn
