@@ -26,19 +26,10 @@ Resources:
           
           def lambda_handler(event, context):
             pprint.pprint(event)
-      #Environment:
-      #  #Variables:
-      #  #  #MAX_NUMBER_OF_MESSAGES: !Ref SQSMaxNumberOfMessages
-      #  #  #QUEUE_NAME: !Ref SQSQueueName
-      #  #  REGION: !Ref AWS::Region
-      #  #  TOPIC: !Ref TopicArn
       FunctionName: !Sub "${Prefix}-Function4"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt Function4Role.Arn
-      #Timeout: !Ref Timeout
       
   Function4Role:
     Type: AWS::IAM::Role
@@ -54,41 +45,6 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: SQSReceiveMessagePolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - sqs:GetQueueUrl
-      #            - sqs:ReceiveMessage
-      #            #- sqs:DeleteMessage
-      #          Resource:
-      #            - !Ref SQSQueueArn
-      
-  #TopicSubscription:
-  #  Type: AWS::SNS::Subscription
-  #  Properties: 
-  #    #DeliveryPolicy: Json
-  #    Endpoint: !GetAtt Function3.Arn
-  #    #FilterPolicy: Json
-  #    #FilterPolicyScope: String
-  #    Protocol: lambda
-  #    #RawMessageDelivery: Boolean
-  #    #RedrivePolicy: Json
-  #    #Region: String
-  #    #SubscriptionRoleArn: String
-  #    TopicArn: !Ref SNSTopicArn
-  #    
-  #SNSPermission: 
-  #  Type: AWS::Lambda::Permission
-  #  Properties: 
-  #    FunctionName: !Ref Function3
-  #    Action: lambda:InvokeFunction
-  #    Principal: sns.amazonaws.com
-  #    #SourceArn: !Sub "arn:aws:s3:::${BucketName}"
-  #    SourceArn: !Ref SNSTopicArn
       
       
 Outputs:
