@@ -10,9 +10,6 @@ Parameters:
   QueueArn:
     Type: String
     
-  #S3EventType:
-  #  Type: String
-  
   TopicArn:
     Type: String
 
@@ -22,23 +19,16 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      #BucketName: !Ref Prefix
       BucketName: !Ref BucketName
       NotificationConfiguration:
         LambdaConfigurations: 
           - Event: "s3:ObjectCreated:*"
-            #Filter: 
-            #  NotificationFilter
             Function: !Ref Function1Arn
         QueueConfigurations: 
           - Event: "s3:ObjectRemoved:*"
-            #Filter: 
-            #  NotificationFilter
             Queue: !Ref QueueArn
         TopicConfigurations: 
           - Event: "s3:ObjectTagging:*"
-            #Filter: 
-            #  NotificationFilter
             Topic: !Ref TopicArn
         EventBridgeConfiguration: 
           EventBridgeEnabled: true
