@@ -21,14 +21,11 @@ Resources:
   EventsRule:
     Type: AWS::Events::Rule
     Properties: 
-      #Description: String
       EventBusName: !Ref EventBusName
       EventPattern:
         source:
           - aws.s3
       Name: !Sub "${Prefix}-EventsRule"
-      #RoleArn: String
-      #ScheduleExpression: String
       State: ENABLED
       Targets: 
         - Arn: !Ref Function4Arn
