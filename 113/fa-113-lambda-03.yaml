@@ -25,29 +25,14 @@ Resources:
         - !Ref Architecture
       Code:
         ZipFile: |
-          #import boto3
-          #import os
           import pprint
-          
-          #MAX_NUMBER_OF_MESSAGES = int(os.environ['MAX_NUMBER_OF_MESSAGES'])
-          #QUEUE_NAME = os.environ['QUEUE_NAME']
-          #REGION = os.environ['REGION']
           
           def lambda_handler(event, context):
             pprint.pprint(event)
-      #Environment:
-      #  #Variables:
-      #  #  #MAX_NUMBER_OF_MESSAGES: !Ref SQSMaxNumberOfMessages
-      #  #  #QUEUE_NAME: !Ref SQSQueueName
-      #  #  REGION: !Ref AWS::Region
-      #  #  TOPIC: !Ref TopicArn
       FunctionName: !Sub "${Prefix}-Function3"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt Function3Role.Arn
-      #Timeout: !Ref Timeout
       
   Function3Role:
     Type: AWS::IAM::Role
@@ -63,31 +48,12 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: SQSReceiveMessagePolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - sqs:GetQueueUrl
-      #            - sqs:ReceiveMessage
-      #            #- sqs:DeleteMessage
-      #          Resource:
-      #            - !Ref SQSQueueArn
       
   TopicSubscription:
     Type: AWS::SNS::Subscription
     Properties: 
-      #DeliveryPolicy: Json
       Endpoint: !GetAtt Function3.Arn
-      #FilterPolicy: Json
-      #FilterPolicyScope: String
       Protocol: lambda
-      #RawMessageDelivery: Boolean
-      #RedrivePolicy: Json
-      #Region: String
-      #SubscriptionRoleArn: String
       TopicArn: !Ref SNSTopicArn
       
   SNSPermission: 
@@ -96,10 +62,4 @@ Resources:
       FunctionName: !Ref Function3
       Action: lambda:InvokeFunction
       Principal: sns.amazonaws.com
-      #SourceArn: !Sub "arn:aws:s3:::${BucketName}"
       SourceArn: !Ref SNSTopicArn
-      
-      
-#Outputs:
-#  Function1Arn:
-#    Value: !GetAtt Function1.Arn
