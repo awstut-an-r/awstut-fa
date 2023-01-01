@@ -1,18 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Architecture:
-  #  Type: String
-  
   BatchSize:
     Type: Number
     
   Handler:
     Type: String
-    
-  #MaxNumberOfMessages:
-  #  Type: Number
-    
+
   MemorySize:
     Type: Number
     
@@ -36,46 +30,16 @@ Resources:
   Function2:
     Type: AWS::Lambda::Function
     Properties:
-      #Architectures:
-      #  - !Ref Architecture
       Code:
         ZipFile: |
-          #import boto3
-          #import datetime
-          #import json
-          #import os
+          import pprint
           
           def lambda_handler(event, context):
-            print(event)
-            #max_number_of_messages = os.environ['max_number_of_messages']
-            #queue_name = os.environ['queue_name']
-            #region_name = os.environ['region_name']
-            #
-            #sqs = boto3.resource('sqs', region_name='ap-northeast-1')
-            #queue = sqs.get_queue_by_name(QueueName=queue_name)
-            #messages = queue.receive_messages(
-            #  MaxNumberOfMessages=int(max_number_of_messages))
-            #  
-            ##bodies = [msg.body for msg in messages]
-            #results = []
-            #for msg in messages:
-            #  results.append(msg.body)
-            #  msg.delete()
-            #return {
-            #  'statusCode': 200,
-            #  'body': json.dumps(results, indent=2)
-            #}
-      #Environment:
-      #  Variables:
-      #    max_number_of_messages: !Ref MaxNumberOfMessages
-      #    queue_name: !Ref QueueName
-      #    region_name: !Ref AWS::Region
+            pprint.pprint(event)
       FunctionName: !Sub "${Prefix}-Function2"
       Handler: !Ref Handler
       MemorySize: !Ref MemorySize
-      #PackageType: Zip
       Runtime: !Ref Runtime
-      #Runtime: python3.8
       Role: !GetAtt LambdaRole2.Arn
       Timeout: !Ref Timeout
 
@@ -97,7 +61,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- sqs:GetQueueUrl
                   - sqs:ReceiveMessage
                   - sqs:DeleteMessage
                   - sqs:GetQueueAttributes
@@ -109,33 +72,7 @@ Resources:
   EventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties: 
-      #AmazonManagedKafkaEventSourceConfig: 
-      #  AmazonManagedKafkaEventSourceConfig
       BatchSize: !Ref BatchSize
-      #BisectBatchOnFunctionError: Boolean
-      #DestinationConfig: 
-      #  DestinationConfig
       Enabled: true
       EventSourceArn: !Ref QueueArn
-      #FilterCriteria: 
-      #  FilterCriteria
       FunctionName: !Ref Function2
-      #FunctionResponseTypes: 
-      #  - String
-      #MaximumBatchingWindowInSeconds: Integer
-      #MaximumRecordAgeInSeconds: Integer
-      #MaximumRetryAttempts: Integer
-      #ParallelizationFactor: Integer
-      #Queues: 
-      #  - String
-      #SelfManagedEventSource: 
-      #  SelfManagedEventSource
-      #SelfManagedKafkaEventSourceConfig: 
-      #  SelfManagedKafkaEventSourceConfig
-      #SourceAccessConfigurations: 
-      #  - SourceAccessConfiguration
-      #StartingPosition: String
-      #StartingPositionTimestamp: Double
-      #Topics: 
-      #  - String
-      #TumblingWindowInSeconds: Integer
