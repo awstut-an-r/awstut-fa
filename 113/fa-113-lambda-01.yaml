@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  BucketName:
+    Type: String
+    
+  #EphemeralStorageSize:
+  #  Type: Number
+
+  Handler:
+    Type: String
+    
+  #LayerBucket:
+  #  Type: String
+  #  
+  #LayerPackage:
+  #  Type: String
+  #  
+  #LayerS3Key:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  #RequirementsParameter:
+  #  Type: String
+  #  
+  #ResizeBucketName:
+  #  Type: String
+    
+  Runtime:
+    Type: String
+    
+  #Timeout:
+  #  Type: Number
+    
+  #UploadBucketName:
+  #  Type: String
+
+
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Code:
+        ZipFile: |
+          import pprint
+          
+          def lambda_handler(event, context):
+            pprint.pprint(event)
+      FunctionName: !Sub "${Prefix}-Function1"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt Function1Role.Arn
+      #Timeout: !Ref Timeout
+      
+  Function1Role:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      #Policies:
+      #  - PolicyName: CreateThumbnailPolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:GetObject
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${UploadBucketName}/*"
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:PutObject
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${ResizeBucketName}/*"
+      
+  S3Permission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref Function1
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub "arn:aws:s3:::${BucketName}"
+      
+      
+Outputs:
+  Function1Arn:
+    Value: !GetAtt Function1.Arn

@@ -1,0 +1,177 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-113
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  #LambdaEphemeralStorageSize:
+  #  Type: Number
+  #  Default: 512
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  #LambdaLayerPackage:
+  #  Type: String
+  #  Default: layer.zip
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+  #LambdaTimeout:
+  #  Type: Number
+  #  Default: 300
+    
+  #S3EventType:
+  #  Type: String
+  #  Default: "s3:ObjectCreated:*"
+    
+Resources:
+  LambdaStack1:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        BucketName: !Ref Prefix
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        #BulkFile: !Ref BulkFile
+        #CodeS3Bucket: !Ref TemplateBucketName
+        #CodeS3Key: !Sub "${Prefix}/deploy.zip"
+        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
+        #EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
+        Handler: !Ref LambdaHandler
+        #LayerBucket: !Ref TemplateBucketName
+        #LayerPackage: !Ref LambdaLayerPackage
+        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
+        #LayerS3Key: !Sub "${Prefix}/layer.zip"
+        #MasterUserName: !Ref MasterUserName
+        #MasterUserPassword: !Ref MasterUserPassword
+        Prefix: !Ref Prefix
+        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        #ResizeBucket: !GetAtt S3Stack.Outputs.ResizeBucket
+        #ResizeBucketName: !Sub "${Prefix}-resized"
+        Runtime: !Ref LambdaRuntime
+        #Timeout: !Ref LambdaTimeout
+        #UploadBucket: !GetAtt S3Stack.Outputs.UploadBucket
+        #UploadBucketName: !Ref Prefix
+        
+  SQSStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - LambdaStack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sqs.yaml"
+      Parameters:
+        BucketName: !Ref Prefix
+        Prefix: !Ref Prefix
+        ReceiveMessageWaitTimeSeconds: 20
+        VisibilityTimeout: 90
+        
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        BucketName: !Ref Prefix
+        Prefix: !Ref Prefix
+        
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack1
+      - SNSStack
+      - SQSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        BucketName: !Ref Prefix
+        Function1Arn: !GetAtt LambdaStack1.Outputs.Function1Arn
+        QueueArn: !GetAtt SQSStack.Outputs.QueueArn
+        #S3EventType: !Ref S3EventType
+        TopicArn: !GetAtt SNSStack.Outputs.TopicArn
+        
+  LambdaStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SQSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        #BucketName: !Ref Prefix
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        #BulkFile: !Ref BulkFile
+        #CodeS3Bucket: !Ref TemplateBucketName
+        #CodeS3Key: !Sub "${Prefix}/deploy.zip"
+        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
+        #EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
+        Handler: !Ref LambdaHandler
+        #LayerBucket: !Ref TemplateBucketName
+        #LayerPackage: !Ref LambdaLayerPackage
+        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
+        #LayerS3Key: !Sub "${Prefix}/layer.zip"
+        #MasterUserName: !Ref MasterUserName
+        #MasterUserPassword: !Ref MasterUserPassword
+        Prefix: !Ref Prefix
+        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        #ResizeBucket: !GetAtt S3Stack.Outputs.ResizeBucket
+        #ResizeBucketName: !Sub "${Prefix}-resized"
+        Runtime: !Ref LambdaRuntime
+        #SNSTopicArn: !GetAtt SNSStack.Outputs.TopicArn
+        SQSMaxNumberOfMessages: 10
+        SQSQueueArn: !GetAtt SQSStack.Outputs.QueueArn
+        SQSQueueName: !GetAtt SQSStack.Outputs.QueueName
+        #Timeout: !Ref LambdaTimeout
+        #UploadBucket: !GetAtt S3Stack.Outputs.UploadBucket
+        #UploadBucketName: !Ref Prefix
+        
+  LambdaStack3:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SQSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-03.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        SNSTopicArn: !GetAtt SNSStack.Outputs.TopicArn
+        
+  LambdaStack4:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SQSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-04.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        BucketName: !Ref Prefix
+        EventBusName: default
+        Function4: !GetAtt LambdaStack4.Outputs.Function4
+        Function4Arn: !GetAtt LambdaStack4.Outputs.Function4Arn
+        Prefix: !Ref Prefix
+  

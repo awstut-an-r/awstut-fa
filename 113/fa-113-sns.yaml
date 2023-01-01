@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+
+  #Function1:
+  #  Type: String
+  
+  #FunctionArn1:
+  #  Type: String
+    
+  #Function2:
+  #  Type: String
+  
+  #FunctionArn2:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      #ContentBasedDeduplication: Boolean
+      #DisplayName: !Sub "${Prefix}-Topic"
+      #FifoTopic: Boolean
+      #KmsMasterKeyId: String
+      #Subscription: 
+      #  - Endpoint: !Ref FunctionArn1
+      #    Protocol: lambda
+      #Tags: 
+      #  - Tag
+      TopicName: !Sub "${Prefix}-Topic"
+      
+  TopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      PolicyDocument:
+        Statement: 
+          - Action: 
+              - sns:Publish
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub "arn:aws:s3:::${BucketName}"
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+            Effect: Allow
+            Resource: !Ref Topic
+            Principal:  
+              Service: 
+                - s3.amazonaws.com 
+      Topics: 
+        - !Ref Topic
+      
+  #SNSPermission: 
+  #  Type: AWS::Lambda::Permission
+  #  Properties: 
+  #    FunctionName: !Ref Function1
+  #    Action: lambda:InvokeFunction
+  #    Principal: sns.amazonaws.com
+  #    SourceArn: !Ref Topic
+      
+      
+Outputs:
+  TopicArn:
+    Value: !Ref Topic
