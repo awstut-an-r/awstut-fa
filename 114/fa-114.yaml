@@ -1,0 +1,82 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-114
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  #MaxNumberOfMessages:
+  #  Type: Number
+  #  Default: 10
+    
+  MemorySize:
+    Type: Number
+    Default: 128
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+  Timeout:
+    Type: Number
+    Default: 20
+    
+    
+Resources:
+  SQSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sqs.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        ReceiveMessageWaitTimeSeconds: 20
+        VisibilityTimeout: 90
+
+  LambdaStack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SQSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
+      Parameters:
+        #Architecture: !Ref Architecture
+        Handler: !Ref Handler
+        #LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
+        MemorySize: !Ref MemorySize
+        #PackageType: Zip
+        Prefix: !Ref Prefix
+        QueueArn: !GetAtt SQSStack.Outputs.QueueArn
+        QueueName: !GetAtt SQSStack.Outputs.QueueName
+        Runtime: !Ref Runtime
+        #S3Bucket:
+        #  Fn::ImportValue: !Sub "${Prefix}-S3Bucket"
+        #S3Key: deploy_package.zip
+        #SSMParameter: !GetAtt SSMStack.Outputs.SSMParameter
+        
+  LambdaStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SQSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
+      Parameters:
+        #Architecture: !Ref Architecture
+        BatchSize: 1
+        Handler: !Ref Handler
+        #LambdaRoleArn: !GetAtt LambdaRoleStack.Outputs.LambdaRoleArn
+        #MaxNumberOfMessages: !Ref MaxNumberOfMessages
+        MemorySize: !Ref MemorySize
+        #PackageType: Zip
+        Prefix: !Ref Prefix
+        QueueArn: !GetAtt SQSStack.Outputs.QueueArn
+        QueueName: !GetAtt SQSStack.Outputs.QueueName
+        Runtime: !Ref Runtime
+        Timeout: !Ref Timeout
