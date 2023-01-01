@@ -12,67 +12,29 @@ Parameters:
   LambdaArchitecture:
     Type: String
     Default: arm64
-    
-  #LambdaEphemeralStorageSize:
-  #  Type: Number
-  #  Default: 512
-    
+
   LambdaHandler:
     Type: String
     Default: index.lambda_handler
-    
-  #LambdaLayerPackage:
-  #  Type: String
-  #  Default: layer.zip
-    
+
   LambdaRuntime:
     Type: String
     Default: python3.8
-    
-  #LambdaTimeout:
-  #  Type: Number
-  #  Default: 300
-    
-  #S3EventType:
-  #  Type: String
-  #  Default: "s3:ObjectCreated:*"
-    
+
 Resources:
   LambdaStack1:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - SSMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
         BucketName: !Ref Prefix
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BulkFile: !Ref BulkFile
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/deploy.zip"
-        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
-        #EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
         Handler: !Ref LambdaHandler
-        #LayerBucket: !Ref TemplateBucketName
-        #LayerPackage: !Ref LambdaLayerPackage
-        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
-        #LayerS3Key: !Sub "${Prefix}/layer.zip"
-        #MasterUserName: !Ref MasterUserName
-        #MasterUserPassword: !Ref MasterUserPassword
         Prefix: !Ref Prefix
-        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
-        #ResizeBucket: !GetAtt S3Stack.Outputs.ResizeBucket
-        #ResizeBucketName: !Sub "${Prefix}-resized"
         Runtime: !Ref LambdaRuntime
-        #Timeout: !Ref LambdaTimeout
-        #UploadBucket: !GetAtt S3Stack.Outputs.UploadBucket
-        #UploadBucketName: !Ref Prefix
         
   SQSStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - LambdaStack1
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sqs.yaml"
       Parameters:
@@ -101,7 +63,6 @@ Resources:
         BucketName: !Ref Prefix
         Function1Arn: !GetAtt LambdaStack1.Outputs.Function1Arn
         QueueArn: !GetAtt SQSStack.Outputs.QueueArn
-        #S3EventType: !Ref S3EventType
         TopicArn: !GetAtt SNSStack.Outputs.TopicArn
         
   LambdaStack2:
@@ -112,32 +73,12 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #BucketName: !Ref Prefix
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BulkFile: !Ref BulkFile
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/deploy.zip"
-        #DomainEndpoint: !GetAtt OpenSearchStack.Outputs.DomainEndpoint
-        #EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
         Handler: !Ref LambdaHandler
-        #LayerBucket: !Ref TemplateBucketName
-        #LayerPackage: !Ref LambdaLayerPackage
-        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
-        #LayerS3Key: !Sub "${Prefix}/layer.zip"
-        #MasterUserName: !Ref MasterUserName
-        #MasterUserPassword: !Ref MasterUserPassword
         Prefix: !Ref Prefix
-        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
-        #ResizeBucket: !GetAtt S3Stack.Outputs.ResizeBucket
-        #ResizeBucketName: !Sub "${Prefix}-resized"
         Runtime: !Ref LambdaRuntime
-        #SNSTopicArn: !GetAtt SNSStack.Outputs.TopicArn
         SQSMaxNumberOfMessages: 10
         SQSQueueArn: !GetAtt SQSStack.Outputs.QueueArn
         SQSQueueName: !GetAtt SQSStack.Outputs.QueueName
-        #Timeout: !Ref LambdaTimeout
-        #UploadBucket: !GetAtt S3Stack.Outputs.UploadBucket
-        #UploadBucketName: !Ref Prefix
         
   LambdaStack3:
     Type: AWS::CloudFormation::Stack
@@ -174,4 +115,3 @@ Resources:
         Function4: !GetAtt LambdaStack4.Outputs.Function4
         Function4Arn: !GetAtt LambdaStack4.Outputs.Function4Arn
         Prefix: !Ref Prefix
-  
