@@ -73,12 +73,11 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
+        BatchSize: 1
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
-        SQSMaxNumberOfMessages: 10
-        SQSQueueArn: !GetAtt SQSStack.Outputs.QueueArn
-        SQSQueueName: !GetAtt SQSStack.Outputs.QueueName
+        QueueArn: !GetAtt SQSStack.Outputs.QueueArn
         
   LambdaStack3:
     Type: AWS::CloudFormation::Stack
