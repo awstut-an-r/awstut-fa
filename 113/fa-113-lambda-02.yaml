@@ -3,6 +3,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Architecture:
     Type: String
+    
+  BatchSize:
+    Type: Number
 
   Handler:
     Type: String
@@ -13,13 +16,7 @@ Parameters:
   Runtime:
     Type: String
 
-  SQSMaxNumberOfMessages:
-    Type: Number
-    
-  SQSQueueArn:
-    Type: String
-    
-  SQSQueueName:
+  QueueArn:
     Type: String
 
 
@@ -31,33 +28,8 @@ Resources:
         - !Ref Architecture
       Code:
         ZipFile: |
-          import boto3
-          import os
-          import pprint
-          
-          MAX_NUMBER_OF_MESSAGES = int(os.environ['MAX_NUMBER_OF_MESSAGES'])
-          QUEUE_NAME = os.environ['QUEUE_NAME']
-          REGION = os.environ['REGION']
-          
           def lambda_handler(event, context):
-            pprint.pprint(event)
-            
-            sqs = boto3.resource('sqs', region_name=REGION)
-            queue = sqs.get_queue_by_name(QueueName=QUEUE_NAME)
-            messages = queue.receive_messages(
-              MaxNumberOfMessages=MAX_NUMBER_OF_MESSAGES)
-              
-            #bodies = [msg.body for msg in messages]
-            #results = []
-            for msg in messages:
-              print(msg.body)
-              #results.append(msg.body)
-              #msg.delete()
-      Environment:
-        Variables:
-          MAX_NUMBER_OF_MESSAGES: !Ref SQSMaxNumberOfMessages
-          QUEUE_NAME: !Ref SQSQueueName
-          REGION: !Ref AWS::Region
+            print(event)
       FunctionName: !Sub "${Prefix}-Function2"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
@@ -84,7 +56,16 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - sqs:GetQueueUrl
                   - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
                 Resource:
-                  - !Ref SQSQueueArn
+                  - !Ref QueueArn
+      
+  EventSourceMapping:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties: 
+      BatchSize: !Ref BatchSize
+      Enabled: true
+      EventSourceArn: !Ref QueueArn
+      FunctionName: !Ref Function2
