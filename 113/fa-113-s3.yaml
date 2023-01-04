@@ -25,10 +25,10 @@ Resources:
           - Event: "s3:ObjectCreated:*"
             Function: !Ref Function1Arn
         QueueConfigurations: 
-          - Event: "s3:ObjectRemoved:*"
+          - Event: "s3:ObjectTagging:*"
             Queue: !Ref QueueArn
         TopicConfigurations: 
-          - Event: "s3:ObjectTagging:*"
+          - Event: "s3:ObjectRemoved:*"
             Topic: !Ref TopicArn
         EventBridgeConfiguration: 
           EventBridgeEnabled: true
