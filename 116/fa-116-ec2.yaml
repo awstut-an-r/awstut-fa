@@ -38,22 +38,7 @@ Resources:
       Tags:
         - Key: Patch Group
           Value: !Ref PatchGroupTag
-          
-  #Instance2:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup
-  #    Tags:
-  #      - Key: Patch Group
-  #        Value: !Sub "${Prefix}-patch-group"
-            
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -87,14 +72,6 @@ Resources:
                   - s3:GetObject
                 Resource:
                   - "*"
-                  #- !Sub "arn:aws:s3:::aws-windows-downloads-${AWS::Region}/*"
-                  #- !Sub "arn:aws:s3:::amazon-ssm-${AWS::Region}/*"
-                  #- !Sub "arn:aws:s3:::amazon-ssm-packages-${AWS::Region}/*"
-                  #- !Sub "arn:aws:s3:::${AWS::Region}-birdwatcher-prod/*"
-                  #- !Sub "arn:aws:s3:::aws-ssm-document-attachments-${AWS::Region}/*"
-                  #- !Sub "arn:aws:s3:::patch-baseline-snapshot-${AWS::Region}/*"
-                  #- !Sub "arn:aws:s3:::aws-ssm-${AWS::Region}/*"
-                  #- !Sub "arn:aws:s3:::aws-patchmanager-macos-${AWS::Region}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         
@@ -102,6 +79,3 @@ Resources:
 Outputs:
   Instance:
     Value: !Ref Instance
-    
-  #Instance2:
-  #  Value: !Ref Instance2
