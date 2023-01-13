@@ -63,12 +63,7 @@ Resources:
           - Effect: Allow
             Principal: "*"
             Action: "*"
-              #- s3:GetObject
             Resource: "*"
-              #- !Sub arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*
-              #- !Sub arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*
-              #- !Sub "arn:aws:s3:::patch-baseline-snapshot-${AWS::Region}/*"
-              #- !Sub "arn:aws:s3:::aws-ssm-${AWS::Region}/*"
       RouteTableIds:
         - !Ref PrivateRouteTable
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
