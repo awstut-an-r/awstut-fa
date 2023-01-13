@@ -57,13 +57,6 @@ Resources:
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal: "*"
-            Action: "*"
-            Resource: "*"
       RouteTableIds:
         - !Ref PrivateRouteTable
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
