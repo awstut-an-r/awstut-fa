@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-115
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    Default: ami-0427ff21031d224a8 # amzn2-ami-hvm-2.0.20211001.1-arm64-gp2
+    
+  #PatchGroupTag:
+  #  Type: String
+  #  Default: my-patch-group
+  
+
+Resources:
+  #S3Stack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+  #    Parameters:
+  #      Prefix: !Ref Prefix
+        
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        CidrIp4: 10.0.4.0/24
+        HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        Prefix: !Ref Prefix
+        PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
+      Parameters:
+        ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
+        HTTPPort: !Ref HTTPPort
+        Prefix: !Ref Prefix
+        PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        HealthyThresholdCount: 5
+        UnhealthyThresholdCount: 2
+        HealthCheckTimeoutSeconds: 5
+        HealthCheckIntervalSeconds: 30
+        HttpCode: 200
+        
+  AutoScalingStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
+      Parameters:
+        #AlarmEvaluationPeriod: 2
+        #AlarmPeriod: 60
+        #AlarmThreshold: 30
+        ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup
+        #Cooldown: 300
+        DesiredCapacity: 2
+        ImageId: !Ref ImageId
+        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        #InstanceType: t4g.nano
+        InstanceType: t4g.micro
+        MaxSize: 2
+        MinSize: 1
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        #ScalingAdjustment1: 1
+        #ScalingAdjustment2: -1
+        #TargetTrackingConfigurationTargetValue: 50.0
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - AutoScalingStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        AutoScalingGroup: !GetAtt AutoScalingStack.Outputs.AutoScalingGroup
+        #Instance: !GetAtt EC2Stack.Outputs.Instance
+        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
+        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
+        #PatchGroupTag: !Ref PatchGroupTag
+        Prefix: !Ref Prefix
+        #S3BucketName: !GetAtt S3Stack.Outputs.S3BucketName
+        #WaitForSuccessTimeoutSeconds: 3000
