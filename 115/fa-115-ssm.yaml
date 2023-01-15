@@ -4,104 +4,25 @@ Parameters:
   AutoScalingGroup:
     Type: String
 
-  #Instance:
-  #  Type: String
-  
-  #Instance1:
-  #  Type: String
-  #  
-  #Instance2:
-  #  Type: String
-  
-  #PatchGroupTag:
-  #  Type: String
-
   Prefix:
     Type: String
-    
-  #S3BucketName:
-  #  Type: String
-    
-  #WaitForSuccessTimeoutSeconds:
-  #  Type: Number
 
 
 Resources:
-  #MyPatchBaseline:
-  #  Type: AWS::SSM::PatchBaseline
-  #  Properties:
-  #    ApprovalRules:
-  #      PatchRules:
-  #        - ApproveAfterDays: 7
-  #          ComplianceLevel: UNSPECIFIED
-  #          EnableNonSecurity: false
-  #          PatchFilterGroup:
-  #            PatchFilters:
-  #              - Key: CLASSIFICATION
-  #                Values:
-  #                  - Security
-  #              - Key: SEVERITY
-  #                Values:
-  #                  - Critical
-  #                  #- Important
-  #        #- ApproveAfterDays: 7
-  #        #  ComplianceLevel: UNSPECIFIED
-  #        #  EnableNonSecurity: false
-  #        #  PatchFilterGroup:
-  #        #    PatchFilters:
-  #        #      - Key: CLASSIFICATION
-  #        #        Values:
-  #        #          - Bugfix
-  #    Description: Test Patch Baseline.
-  #    Name: !Sub ${Prefix}-MyPatchBaseline
-  #    OperatingSystem: AMAZON_LINUX_2
-  #    PatchGroups:
-  #      - !Sub ${Prefix}-patch-group
-        
-        
-  #AWSRunPatchBaselineAssociation:
-  #  Type: AWS::SSM::Association
-  #  Properties:
-  #    AssociationName: !Sub "${Prefix}-AWSRunPatchBaselineAssociation"
-  #    Name: AWS-RunPatchBaseline
-  #    OutputLocation:
-  #      S3Location:
-  #        OutputS3BucketName: !Ref S3BucketName
-  #        OutputS3KeyPrefix: !Sub "AWSRunPatchBaselineAssociation"
-  #    Parameters:
-  #      Operation:
-  #        - Install
-  #    Targets:
-  #      - Key: InstanceIds
-  #        Values:
-  #          - !Ref Instance
-  #          #- !Ref Instance1
-  #          #- !Ref Instance2
-  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-      
-      
   MaintenanceWindow:
     Type: AWS::SSM::MaintenanceWindow
     Properties: 
       AllowUnassociatedTargets: false
       Cutoff: 1
-      #Description: My-First-Maintenance-Window
       Duration: 2
-      #EndDate: String
       Name: !Sub "${Prefix}-MaintenanceWindow"
       Schedule: rate(60 minutes)
-      #ScheduleOffset: Integer
       ScheduleTimezone: Asia/Tokyo
-      #StartDate: String
-      #Tags: 
-      #  - Tag
       
   MaintenanceWindowTarget:
     Type: AWS::SSM::MaintenanceWindowTarget
     Properties: 
-      #Description: My-First-Maintenance-Window-Target
       Name: !Sub "${Prefix}-MaintenanceWindowTarget"
-      #OwnerInformation: String
       ResourceType: INSTANCE
       Targets: 
         - Key: tag:aws:autoscaling:groupName
@@ -112,10 +33,6 @@ Resources:
   MaintenanceWindowTask:
     Type: AWS::SSM::MaintenanceWindowTask
     Properties: 
-      #CutoffBehavior: String
-      #Description: My-First-Maintenance-Window
-      #LoggingInfo: 
-      #  LoggingInfo
       MaxConcurrency: 1
       MaxErrors: 0
       Name: !Sub "${Prefix}-MaintenanceWindowTask"
@@ -128,36 +45,9 @@ Resources:
       TaskArn: AWS-PatchAsgInstance
       TaskInvocationParameters: 
         MaintenanceWindowAutomationParameters:
-          #DocumentVersion: String
           Parameters:
             InstanceId:
-              #- "{{TARGET_ID}}"
               - "{{RESOURCE_ID}}"
-            #WaitForReboot:
-            #  - "PT0M"
-            #WaitForInstance:
-            #  - "PT0M"
-            #LambdaRoleArn:
-            #AutomationAssumeRole:
-            #  - !GetAtt SSMAutomationRole.Arn
-      
-        #MaintenanceWindowRunCommandParameters:
-        #  #CloudWatchOutputConfig: 
-        #  #  CloudWatchOutputConfig
-        #  #Comment: String
-        #  #DocumentHash: String
-        #  #DocumentHashType: String
-        #  #DocumentVersion: String
-        #  #NotificationConfig: 
-        #  #  NotificationConfig
-        #  OutputS3BucketName: !Ref S3BucketName
-        #  #OutputS3KeyPrefix: String
-        #  Parameters:
-        #    Operation:
-        #      - Install
-        #  #ServiceRoleArn: String
-        #  #TimeoutSeconds: Integer
-      #TaskParameters: Json
       TaskType: AUTOMATION
       WindowId: !Ref MaintenanceWindow
       
@@ -183,7 +73,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- "*"
                   - iam:CreatePolicy
                   - iam:CreateRole
                   - iam:DeletePolicy
