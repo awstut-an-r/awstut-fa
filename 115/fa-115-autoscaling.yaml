@@ -31,15 +31,6 @@ Parameters:
   PrivateSubnet2:
     Type: String
     
-  #ScalingAdjustment1:
-  #  Type: Number
-  #  
-  #ScalingAdjustment2:
-  #  Type: Number
-    
-  #TargetTrackingConfigurationTargetValue:
-  #  Type: Number
-    
 
 Resources:
   LaunchTemplate:
