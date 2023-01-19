@@ -16,7 +16,7 @@ Resources:
       Cutoff: 1
       Duration: 2
       Name: !Sub "${Prefix}-MaintenanceWindow"
-      Schedule: rate(60 minutes)
+      Schedule: rate(30 minutes)
       ScheduleTimezone: Asia/Tokyo
       
   MaintenanceWindowTarget:
