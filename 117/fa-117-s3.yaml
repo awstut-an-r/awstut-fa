@@ -14,15 +14,5 @@ Resources:
 
 
 Outputs:
-  #BucketArn:
-  #  Value: !GetAtt Bucket.Arn
-    
-  #BucketRegionalDomainName:
-  #  #Value: !GetAtt Bucket.DomainName
-  #  Value: !GetAtt Bucket.RegionalDomainName
-  
-  #BucketWebsiteURL:
-  #  Value: !GetAtt Bucket.WebsiteURL
-    
   BucketName:
     Value: !Ref Bucket
