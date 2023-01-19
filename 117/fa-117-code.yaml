@@ -1,0 +1,341 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BranchName:
+    Type: String
+    
+  #BucketArn:
+  #  Type: String
+
+  BucketName:
+    Type: String
+    
+  ChangeSetName:
+    Type: String
+    
+  #ContainerName:
+  #  Type: String
+  #  
+  #ECRRepositoryName:
+  #  Type: String
+  #  
+  #ECSClusterName:
+  #  Type: String
+  #  
+  #ECSServiceName:
+  #  Type: String
+  #  
+  #ImageDefinitionFileName:
+  #  Type: String
+    
+  #PipelineBuildArtifact:
+  #  Type: String
+
+  PipelineSourceArtifact:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  ProdStackConfig:
+    Type: String
+    
+  ProdStackName:
+    Type: String
+    
+  #ProjectEnvironmentComputeType:
+  #  Type: String
+  #  
+  #ProjectEnvironmentImage:
+  #  Type: String
+  #  
+  #ProjectEnvironmentType:
+  #  Type: String
+  #  
+  #SSMParameterDockerHubPassword:
+  #  Type: String
+  #  
+  #SSMParameterDockerHubUsername:
+  #  Type: String
+  
+  TemplateFileName:
+    Type: String
+  
+  TestStackConfig:
+    Type: String
+  
+  TestStackName:
+    Type: String
+    
+  TopicArn:
+    Type: String
+    
+
+Resources:
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    #DependsOn:
+    #  - CodeCommitRepository
+    Properties:
+      ArtifactStore:
+        #EncryptionKey:
+        Location: !Ref BucketName
+        Type: S3
+      #ArtifactStores:
+      #DisableInboundStageTransitions:
+      Name: !Ref Prefix
+      #RestartExecutionOnUpdate
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+        - Actions:
+            - ActionTypeId: 
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              Configuration:
+                BranchName: !Ref BranchName
+                OutputArtifactFormat: CODE_ZIP
+                PollForSourceChanges: false
+                RepositoryName: !GetAtt CodeCommitRepository.Name
+              #InputArtifacts:
+              Name: SourceAction
+              #Namespace:
+              OutputArtifacts:
+                - Name: !Ref PipelineSourceArtifact
+              Region: !Ref AWS::Region
+              #RoleArn:
+              RunOrder: 1
+          Name: CodeCommitSource
+        - Actions:
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: REPLACE_ON_FAILURE
+                Capabilities: CAPABILITY_IAM
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                StackName: !Ref TestStackName
+                TemplateConfiguration: !Sub "${PipelineSourceArtifact}::${TestStackConfig}"
+                TemplatePath: !Sub "${PipelineSourceArtifact}::${TemplateFileName}"
+              InputArtifacts:
+                - Name: !Ref PipelineSourceArtifact
+              Name: CreateTestStack
+              RunOrder: 1
+            - ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: 1
+              Configuration:
+                CustomData: !Sub "Do you want to create a change set against the production stack and delete the ${TestStackName} stack?"
+                NotificationArn: !Ref TopicArn
+              Name: ApproveTestStack
+              RunOrder: 2
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: DELETE_ONLY
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                StackName: !Ref TestStackName
+              Name: DeleteTestStack
+              RunOrder: 3
+          Name: DeployTestStack
+        - Actions:
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CHANGE_SET_REPLACE
+                Capabilities: CAPABILITY_IAM
+                ChangeSetName: !Ref ChangeSetName
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                StackName: !Ref ProdStackName
+                TemplateConfiguration: !Sub "${PipelineSourceArtifact}::${ProdStackConfig}"
+                TemplatePath: !Sub "${PipelineSourceArtifact}::${TemplateFileName}"
+              InputArtifacts:
+                - Name: !Ref PipelineSourceArtifact
+              Name: CreateProdStack
+              RunOrder: 1
+            - ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: 1
+              Configuration:
+                CustomData: !Sub "A new change set was created for the ${ProdStackName} stack. Do you want to implement the changes?"
+                NotificationArn: !Ref TopicArn
+              Name: ApproveChangeSet
+              RunOrder: 2
+            - ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration:
+                ActionMode: CHANGE_SET_EXECUTE
+                ChangeSetName: !Ref ChangeSetName
+                RoleArn: !GetAtt CloudFormationRole.Arn
+                StackName: !Ref ProdStackName
+              Name: ExecuteChangeSet
+              RunOrder: 3
+          Name: DeployProdStack
+  
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PipelinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Resource:
+                  - !GetAtt CodeCommitRepository.Arn
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketAcl
+                  - s3:GetBucketLocation
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Ref TopicArn
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DescribeStacks
+                  - cloudformation:DeleteStack
+                  - cloudformation:UpdateStack
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:SetStackPolicy
+                  - iam:PassRole
+                Resource: "*"
+      
+  CloudFormationRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CloudFormationDeployPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              #- Effect: Allow
+              #  Action:
+              #    - ec2:*
+              #  Resource:
+              #    - "*"
+              - Effect: Allow
+                Action:
+                  #- iam:AttachRolePolicy
+                  #- iam:CreateRole
+                  #- iam:PutRolePolicy
+                  #- iam:GetRole
+                  - iam:*
+                  - lambda:*
+                Resource: "*"
+    
+      
+  CodeCommitRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties: 
+      #Code:
+      #RepositoryDescription:
+      RepositoryName: !Ref Prefix
+      #Triggers:
+
+  EventsRule:
+    Type: AWS::Events::Rule
+    #DependsOn:
+    #  - Pipeline
+    Properties: 
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - CodeCommit Repository State Change
+        resources:
+          - !GetAtt CodeCommitRepository.Arn
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - !Ref BranchName
+      Name: !Ref Prefix
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
+          Id: !Sub "${Prefix}-CodePipeline-CodeCommit"
+          RoleArn: !GetAtt EventsRuleRole.Arn
+          
+  EventsRuleRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:StartPipelineExecution
+                Resource:
+                  - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"

@@ -1,0 +1,91 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-117
+ 
+  BranchName:
+    Type: String
+    Default: master
+    
+  ChangeSetName:
+    Type: String
+    Default: UpdatePreview-MyLambdaFunction
+
+  MailAddress:
+    Type: String
+    Default: mail@example.com
+    
+  ProdStackConfig:
+    Type: String
+    Default: prod-stack-configuration.json
+    
+  ProdStackName:
+    Type: String
+    Default: ProdStack
+    
+  TemplateFileName:
+    Type: String
+    Default: sample-lambda.yaml
+    
+  TestStackConfig:
+    Type: String
+    Default: test-stack-configuration.json
+    
+  TestStackName:
+    Type: String
+    Default: TestStack
+    
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        MailAddress: !Ref MailAddress
+        Prefix: !Ref Prefix
+        
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+      - SNSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        BranchName: !Ref BranchName
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ChangeSetName: !Ref ChangeSetName
+        #ContainerName: !Ref ContainerName
+        #ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        #ECSClusterName: !GetAtt FargateStack.Outputs.ECSClusterName
+        #ECSServiceName: !GetAtt FargateStack.Outputs.ECSServiceName
+        #ImageDefinitionFileName: !Ref ImageDefinitionFileName
+        #PipelineBuildArtifact: BuildArtifact
+        PipelineSourceArtifact: SourceArtifact
+        Prefix: !Ref Prefix
+        ProdStackConfig: !Ref ProdStackConfig
+        ProdStackName: !Ref ProdStackName
+        #ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        #ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        #ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        #SSMParameterDockerHubPassword: !GetAtt SSMStack.Outputs.SSMParameterDockerHubPassword
+        #SSMParameterDockerHubUsername: !GetAtt SSMStack.Outputs.SSMParameterDockerHubUsername
+        TemplateFileName: !Ref TemplateFileName
+        TestStackConfig: !Ref TestStackConfig
+        TestStackName: !Ref TestStackName
+        TopicArn: !GetAtt SNSStack.Outputs.TopicArn

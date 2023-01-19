@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: fa-117-sample-lambda
+    
+  #Architecture:
+  #  Type: String
+  
+  Environment:
+    Type: String
+    Default: test
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  MemorySize:
+    Type: Number
+    Default: 128
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+  Timeout:
+    Type: Number
+    Default: 5
+    
+    
+Resources:
+    
+
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+            print('sample lambda')
+      FunctionName: !Sub "${Prefix}-${Environment}-Function"
+      Handler: !Ref Handler
+      MemorySize: !Ref MemorySize
+      #PackageType: Zip
+      Runtime: !Ref Runtime
+      #Runtime: python3.8
+      Role: !GetAtt LambdaRole.Arn
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      #Policies:
+      #  - PolicyName: GetSSMParameter
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - sqs:GetQueueUrl
+      #            - sqs:SendMessage
+      #          Resource:
+      #            - !Ref QueueArn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  

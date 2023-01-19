@@ -1,0 +1,7 @@
+{
+  "Parameters" : {
+    "Environment": "test",
+    "MemorySize": "128",
+    "Timeout": "5"
+  }
+}
