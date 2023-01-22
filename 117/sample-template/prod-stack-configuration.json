@@ -1,7 +1,6 @@
 {
   "Parameters" : {
     "Environment": "test",
-    "MemorySize": "512",
-    "Timeout": "10"
+    "MemorySize": "512"
   }
 }
