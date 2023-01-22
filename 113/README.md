@@ -22,10 +22,7 @@ Parameters:
   TemplateBucketName:
     Type: String
     Default: [bucket-name]
-```
 
-```yaml
-Parameters:
   MailAddress:
     Type: String
     Default: mail@example.com
