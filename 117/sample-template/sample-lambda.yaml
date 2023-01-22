@@ -21,10 +21,6 @@ Parameters:
     Type: String
     Default: python3.8
     
-  Timeout:
-    Type: Number
-    Default: 5
-    
     
 Resources:
     
