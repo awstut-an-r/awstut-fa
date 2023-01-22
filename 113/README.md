@@ -24,6 +24,13 @@ Parameters:
     Default: [bucket-name]
 ```
 
+```yaml
+Parameters:
+  MailAddress:
+    Type: String
+    Default: mail@example.com
+```
+
 ## Upload  Template Files to S3 Bucket
 
 ```bash
