@@ -22,10 +22,6 @@ Parameters:
   TemplateBucketName:
     Type: String
     Default: [bucket-name]
-
-  MailAddress:
-    Type: String
-    Default: mail@example.com
 ```
 
 ## Upload  Template Files to S3 Bucket
