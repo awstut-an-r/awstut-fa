@@ -13,21 +13,17 @@ Resources:
             Principal:
               Service:
                 - ssm.amazonaws.com
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
-      #Policies:
-      #  - PolicyName: CreateImagePolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            #- "*"
-      #            #- ec2:CreateImage
-      #            #- ec2:DescribeInstances
-      #            - iam:PassRole
-      #          Resource:
-      #            - "*"
+      Policies:
+        - PolicyName: CreateImagePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:CreateImage
+                  - ec2:DescribeInstances
+                Resource:
+                  - "*"
       
       
 Outputs:
