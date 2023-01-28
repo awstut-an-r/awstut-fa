@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketName:
-  #  Type: String
-
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
@@ -78,28 +75,5 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
-      #Policies:
-      #  - PolicyName: AccessS3Policy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            #- s3:*
-      #            - s3:GetObject
-      #            - s3:PutObject
-      #            - s3:PutObjectAcl
-      #            #- s3:ListBucket
-      #          Resource:
-      #            #- !Sub "arn:aws:s3:::${BucketName}"
-      #            - !Sub "arn:aws:s3:::${BucketName}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        
-        
-#Outputs:
-#  Instance1:
-#    Value: !Ref Instance1
-#      
-#  Instance2:
-#    Value: !Ref Instance2
