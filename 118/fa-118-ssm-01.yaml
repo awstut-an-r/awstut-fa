@@ -1,15 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketName:
-  #  Type: String
-  
   CreateImageRoleArn:
     Type: String
-    
-  #:wInstance1:
-  #:w  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -30,53 +24,13 @@ Resources:
       AssociationName: !Sub "${Prefix}-createimage-association"
       AutomationTargetParameterName: InstanceId
       Name: AWS-CreateImage
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref BucketName
-      #    OutputS3KeyPrefix: !Sub "${Prefix}/createimage-association-log"
       Parameters:
         AutomationAssumeRole:
-          #- !GetAtt CreateImageRole.Arn
           - !Ref CreateImageRoleArn
         InstanceId:
           - "{{RESOURCE_ID}}"
-          #- !Ref Instance1
-        #NoReboot:
-        #  - "false"
       Targets:
-        #- Key: InstanceIds
-        #  Values:
-        #    - !Ref Instance1
         - Key: !Sub "tag:${TagKey}"
           Values:
-            #- !Ref Instance1
             - !Ref TagValue1
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-
-  #CreateImageRole:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - ssm.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
-  #    #Policies:
-  #    #  - PolicyName: CreateImagePolicy
-  #    #    PolicyDocument:
-  #    #      Version: 2012-10-17
-  #    #      Statement:
-  #    #        - Effect: Allow
-  #    #          Action:
-  #    #            #- "*"
-  #    #            #- ec2:CreateImage
-  #    #            #- ec2:DescribeInstances
-  #    #            - iam:PassRole
-  #    #          Resource:
-  #    #            - "*"
