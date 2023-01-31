@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketName:
-  #  Type: String
-
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
@@ -41,22 +38,7 @@ Resources:
       Tags:
         - Key: !Ref TagKey
           Value: !Ref TagValue
-            
-  #Instance2:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup
-  #    Tags:
-  #      - Key: !Ref TagKey
-  #        Value: !Ref TagValue2
-            
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -77,26 +59,8 @@ Resources:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      #Policies:
-      #  - PolicyName: AccessS3Policy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            #- s3:*
-      #            - s3:GetObject
-      #            - s3:PutObject
-      #            - s3:PutObjectAcl
-      #            #- s3:ListBucket
-      #          Resource:
-      #            #- !Sub "arn:aws:s3:::${BucketName}"
-      #            - !Sub "arn:aws:s3:::${BucketName}/*"
-        
+
         
 Outputs:
   Instance:
     Value: !Ref Instance
-#      
-#  Instance2:
-#    Value: !Ref Instance2
