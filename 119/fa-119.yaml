@@ -19,8 +19,6 @@ Parameters:
     
   InstanceType:
     Type: String
-    #Default: t4g.micro
-    #Default: t4g.small
     Default: t4g.nano
     
   TagKey:
@@ -30,24 +28,13 @@ Parameters:
   TagValue:
     Type: String
     Default: Group1
-    
-  #TagValue2:
-  #  Type: String
-  #  Default: Group2
-    
+
   WaitForSuccessTimeoutSeconds:
     Type: Number
     Default: 600
     
 
 Resources:
-  #S3Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
-        
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -55,7 +42,6 @@ Resources:
       Parameters:
         AvailabilityZone1: a
         CidrIp1: 10.0.1.0/24
-        #HTTPPort: !Ref HTTPPort
         HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
@@ -68,8 +54,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
       Parameters:
         EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-        #Prefix: !Ref Prefix
-        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         VPC: !GetAtt VPCStack.Outputs.VPC
         
@@ -80,7 +64,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         ImageId: !Ref ImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
@@ -94,15 +77,9 @@ Resources:
     DependsOn:
       - EndpointStack
       - EC2Stack
-      #- SSMIAMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CreateImageRoleArn: !GetAtt SSMIAMStack.Outputs.CreateImageRoleArn
-        #Instance: !GetAtt EC2Stack.Outputs.Instance
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
         TagKey: !Ref TagKey
         TagValue: !Ref TagValue
