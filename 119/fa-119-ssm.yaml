@@ -1,0 +1,162 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketName:
+  #  Type: String
+  
+  #CreateImageRoleArn:
+  #  Type: String
+    
+  #Instance:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  TagKey:
+    Type: String
+    
+  TagValue:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+
+Resources:
+  MyDocument:
+    Type: AWS::SSM::Document
+    Properties: 
+      #Attachments: 
+      #  - AttachmentsSource
+      Content:
+        assumeRole: "{{AutomationAssumeRole}}"
+        description: Run a script on Linux instances.
+        schemaVersion: "0.3"
+        parameters:
+          AutomationAssumeRole:
+            type: String
+            description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
+            default: ""
+          Commands:
+            type: String
+            description: (Required) The commands to run or the path to an existing script on the instance.
+            default: echo Hello World
+          InstanceId:
+            type: String
+            description: (Required) The instance ID you want to run commands on.
+            default: ""
+        mainSteps:
+          - name: sayHello
+            action: aws:runCommand
+            inputs:
+              DocumentName: AWS-RunShellScript
+              InstanceIds:
+                - "{{InstanceId}}"
+              Parameters:
+                #InstanceIds:
+                #  - "{{InstanceId}}"
+                commands:
+                  - "{{Commands}}"
+      DocumentFormat: YAML
+      DocumentType: Automation
+      Name: !Sub "${Prefix}-MyDocument2"
+      #Requires: 
+      #  - DocumentRequires
+      #Tags: 
+      #  - Tag
+      TargetType: /AWS::EC2::Instance
+      #UpdateMethod: String
+      #VersionName: String
+
+  MyDocumentAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-MyDocumentAssociation"
+      AutomationTargetParameterName: InstanceId
+      #Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${MyDocument}"
+      Name: !Ref MyDocument
+      #OutputLocation:
+      #  S3Location:
+      #    OutputS3BucketName: !Ref BucketName
+      #    OutputS3KeyPrefix: MyDocumentAssociation/
+      Parameters:
+        AutomationAssumeRole:
+          - !GetAtt MyDocumentRole.Arn
+          #- !Ref CreateImageRoleArn
+        Commands:
+          - "echo Hello World"
+        InstanceId:
+          - "{{RESOURCE_ID}}"
+          #- !Ref Instance
+        #NoReboot:
+        #  - "false"
+      Targets:
+        #- Key: InstanceIds
+        #  Values:
+        #    - !Ref Instance1
+        - Key: !Sub "tag:${TagKey}"
+          Values:
+            #- !Ref Instance1
+            - !Ref TagValue
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+  
+  #MyDocumentAssociation2:
+  #  Type: AWS::SSM::Association
+  #  Properties:
+  #    AssociationName: !Sub "${Prefix}-MyDocumentAssociation2"
+  #    #AutomationTargetParameterName: InstanceId
+  #    #Name: !Ref MyDocument
+  #    Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${MyDocument}"
+  #    #OutputLocation:
+  #    #  S3Location:
+  #    #    OutputS3BucketName: !Ref BucketName
+  #    #    OutputS3KeyPrefix: MyDocumentAssociation/
+  #    Parameters:
+  #      #AutomationAssumeRole:
+  #      #  - !GetAtt MyDocumentRole.Arn
+  #      #  #- !Ref CreateImageRoleArn
+  #      Commands:
+  #        - "echo Hello World"
+  #      InstanceId:
+  #        - "{{RESOURCE_ID}}"
+  #        #- !Ref Instance
+  #      #NoReboot:
+  #      #  - "false"
+  #    Targets:
+  #      #- Key: InstanceIds
+  #      #  Values:
+  #      #    - !Ref Instance
+  #      - Key: !Sub "tag:${TagKey}"
+  #        Values:
+  #          #- !Ref Instance1
+  #          - !Ref TagValue
+  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+      
+  MyDocumentRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+      Policies:
+        - PolicyName: CreateImagePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- "*"
+                  #- ec2:CreateImage
+                  #- ec2:DescribeInstances
+                  - iam:PassRole
+                Resource:
+                  - "*"
