@@ -15,7 +15,7 @@ Parameters:
     
 
 Resources:
-  MyDocument:
+  MyRunbook:
     Type: AWS::SSM::Document
     Properties: 
       Content:
@@ -47,18 +47,18 @@ Resources:
                   - "{{Commands}}"
       DocumentFormat: YAML
       DocumentType: Automation
-      Name: !Sub "${Prefix}-MyDocument2"
+      Name: !Sub "${Prefix}-MyRunbook"
       TargetType: /AWS::EC2::Instance
 
-  MyDocumentAssociation:
+  MyRunbookAssociation:
     Type: AWS::SSM::Association
     Properties:
-      AssociationName: !Sub "${Prefix}-MyDocumentAssociation"
+      AssociationName: !Sub "${Prefix}-MyRunbookAssociation"
       AutomationTargetParameterName: InstanceId
-      Name: !Ref MyDocument
+      Name: !Ref MyRunbook
       Parameters:
         AutomationAssumeRole:
-          - !GetAtt MyDocumentRole.Arn
+          - !GetAtt MyRunbookRole.Arn
         Commands:
           - "echo Hello World"
         InstanceId:
@@ -69,7 +69,7 @@ Resources:
             - !Ref TagValue
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
   
-  MyDocumentRole:
+  MyRunbookRole:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
     Properties:
