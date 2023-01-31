@@ -84,7 +84,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
       Policies:
-        - PolicyName: CreateImagePolicy
+        - PolicyName: PassRolePolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
