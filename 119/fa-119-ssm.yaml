@@ -1,15 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketName:
-  #  Type: String
-  
-  #CreateImageRoleArn:
-  #  Type: String
-    
-  #Instance:
-  #  Type: String
-    
   Prefix:
     Type: String
     
@@ -27,8 +18,6 @@ Resources:
   MyDocument:
     Type: AWS::SSM::Document
     Properties: 
-      #Attachments: 
-      #  - AttachmentsSource
       Content:
         assumeRole: "{{AutomationAssumeRole}}"
         description: Run a script on Linux instances.
@@ -54,85 +43,32 @@ Resources:
               InstanceIds:
                 - "{{InstanceId}}"
               Parameters:
-                #InstanceIds:
-                #  - "{{InstanceId}}"
                 commands:
                   - "{{Commands}}"
       DocumentFormat: YAML
       DocumentType: Automation
       Name: !Sub "${Prefix}-MyDocument2"
-      #Requires: 
-      #  - DocumentRequires
-      #Tags: 
-      #  - Tag
       TargetType: /AWS::EC2::Instance
-      #UpdateMethod: String
-      #VersionName: String
 
   MyDocumentAssociation:
     Type: AWS::SSM::Association
     Properties:
       AssociationName: !Sub "${Prefix}-MyDocumentAssociation"
       AutomationTargetParameterName: InstanceId
-      #Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${MyDocument}"
       Name: !Ref MyDocument
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref BucketName
-      #    OutputS3KeyPrefix: MyDocumentAssociation/
       Parameters:
         AutomationAssumeRole:
           - !GetAtt MyDocumentRole.Arn
-          #- !Ref CreateImageRoleArn
         Commands:
           - "echo Hello World"
         InstanceId:
           - "{{RESOURCE_ID}}"
-          #- !Ref Instance
-        #NoReboot:
-        #  - "false"
       Targets:
-        #- Key: InstanceIds
-        #  Values:
-        #    - !Ref Instance1
         - Key: !Sub "tag:${TagKey}"
           Values:
-            #- !Ref Instance1
             - !Ref TagValue
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
   
-  #MyDocumentAssociation2:
-  #  Type: AWS::SSM::Association
-  #  Properties:
-  #    AssociationName: !Sub "${Prefix}-MyDocumentAssociation2"
-  #    #AutomationTargetParameterName: InstanceId
-  #    #Name: !Ref MyDocument
-  #    Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${MyDocument}"
-  #    #OutputLocation:
-  #    #  S3Location:
-  #    #    OutputS3BucketName: !Ref BucketName
-  #    #    OutputS3KeyPrefix: MyDocumentAssociation/
-  #    Parameters:
-  #      #AutomationAssumeRole:
-  #      #  - !GetAtt MyDocumentRole.Arn
-  #      #  #- !Ref CreateImageRoleArn
-  #      Commands:
-  #        - "echo Hello World"
-  #      InstanceId:
-  #        - "{{RESOURCE_ID}}"
-  #        #- !Ref Instance
-  #      #NoReboot:
-  #      #  - "false"
-  #    Targets:
-  #      #- Key: InstanceIds
-  #      #  Values:
-  #      #    - !Ref Instance
-  #      - Key: !Sub "tag:${TagKey}"
-  #        Values:
-  #          #- !Ref Instance1
-  #          - !Ref TagValue
-  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-      
   MyDocumentRole:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
@@ -154,9 +90,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- "*"
-                  #- ec2:CreateImage
-                  #- ec2:DescribeInstances
                   - iam:PassRole
                 Resource:
                   - "*"
