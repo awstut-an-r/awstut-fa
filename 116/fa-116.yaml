@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
 
   Prefix:
     Type: String
