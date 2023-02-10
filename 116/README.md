@@ -15,7 +15,7 @@ https://awstut.com/en/2023/02/05/set-up-maintenance-window-to-schedule-ssm-patch
 
 ## Tempalte File Modification
 
-Modify the following locations in fa-106.yaml.
+Modify the following locations in fa-116.yaml.
 
 ```yaml
 Parameters:
@@ -27,14 +27,14 @@ Parameters:
 ## Upload  Template Files to S3 Bucket
 
 ```bash
-aws s3 cp . s3://my-bucket/fa-106/ --recursive
+aws s3 cp . s3://my-bucket/fa-116/ --recursive
 ```
 
 ## CloudFormation Stack Creation
 
 ```bash
 aws cloudformation create-stack \
---stack-name fa-106 \
---template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-106/fa-106.yaml \
+--stack-name fa-116 \
+--template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-116/fa-116.yaml \
 --capabilities CAPABILITY_IAM
 ```
