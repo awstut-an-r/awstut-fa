@@ -21,8 +21,7 @@ Resources:
         
           def lambda_handler(event, context):
             now = datetime.datetime.now()
-            #now_str = now.strftime('%Y%m%d%H%M%S%f')
-            #return now_str
+
             return {
               'year': now.year,
               'month': now.month,
@@ -81,17 +80,7 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: !Sub "${Prefix}-S3GetObjectPolicy"
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - s3:GetObject
-      #          Resource:
-      #            - !Sub "arn:aws:s3:::${BulkS3Bucket}/*"
-        
+
       
 Outputs:
   Function1Arn:
