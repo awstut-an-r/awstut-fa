@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Function1Arn:
+    Type: String
+    
+  Function2Arn:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: !Sub "${Prefix}-StateMachine"
+        StartAt: FirstState
+        States:
+          FirstState:
+            Type: Task
+            Resource: !Ref Function1Arn
+            Next: LastState
+          LastState:
+            Type: Task
+            Resource: !Ref Function2Arn
+            End: true
+      LoggingConfiguration:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt LogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      RoleArn: !GetAtt StateMachineRole.Arn
+      StateMachineName: !Ref Prefix
+      StateMachineType: STANDARD
+      #TracingConfiguration:
+        
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-StateMachineLogGroup"
+      
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - states.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref Function1Arn
+                  - !Ref Function2Arn
+        - PolicyName: !Sub "${Prefix}-DeliverToCloudWatchLogPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                #Resource: !GetAtt LogGroup.Arn
+                Resource: "*"
+                #Resource: !Sub
+                #  - "${LogGroupArn}:*"
+                #  - LogGroupArn: !GetAtt LogGroup.Arn
+                
+                
+Outputs:
+  StateMachineArn:
+    Value: !Ref StateMachine
+    
+  StateMachineName:
+    Value: !GetAtt StateMachine.Name
