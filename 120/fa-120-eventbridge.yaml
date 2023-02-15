@@ -15,13 +15,8 @@ Resources:
   Rule1:
     Type: AWS::Events::Rule
     Properties: 
-      #Description: String
-      #EventBusName: String
-      #EventPattern: Json
       Name: !Sub "${Prefix}-EventsRule"
-      #RoleArn: !GetAtt EventsRuleRole.Arn
       ScheduleExpression: rate(5 minutes)
-      #ScheduleExpression: cron(0 0 ? * L *)
       State: ENABLED
       Targets: 
         - Arn: !Ref StateMachineArn
