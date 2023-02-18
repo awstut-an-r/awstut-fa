@@ -6,10 +6,7 @@ Parameters:
     
   Function2Arn:
     Type: String
-    
-  #Function3Arn:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -26,14 +23,11 @@ Resources:
             Type: Pass
             Parameters:
               numbers.$: States.ArrayRange(0, 9, 1)
-            #ResultPath: $.numbers
-            #OutputPath: $.numbers
             Next: MapState
           MapState:
             Type: Map
             MaxConcurrency: 5
             InputPath: $.numbers
-            #ItemsPath: $
             ItemSelector:
               number-origin.$: $$.Map.Item.Value
             ItemProcessor:
@@ -65,7 +59,6 @@ Resources:
       RoleArn: !GetAtt StateMachineRole.Arn
       StateMachineName: !Ref Prefix
       StateMachineType: STANDARD
-      #TracingConfiguration:
         
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -83,8 +76,6 @@ Resources:
             Principal:
               Service:
                 - states.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
           PolicyDocument:
@@ -111,16 +102,4 @@ Resources:
                   - logs:PutResourcePolicy
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
-                #Resource: !GetAtt LogGroup.Arn
                 Resource: "*"
-                #Resource: !Sub
-                #  - "${LogGroupArn}:*"
-                #  - LogGroupArn: !GetAtt LogGroup.Arn
-                
-                
-#Outputs:
-#  StateMachineArn:
-#    Value: !Ref StateMachine
-#    
-#  StateMachineName:
-#    Value: !GetAtt StateMachine.Name
