@@ -17,8 +17,6 @@ Resources:
     Properties:
       Code:
         ZipFile: |
-          import json
-          
           def lambda_handler(event, context):
             num = event['number']
             num_squared = num ** 2
