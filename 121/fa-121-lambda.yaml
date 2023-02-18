@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+
+
+Resources:
+  #Function1:
+  #  Type: AWS::Lambda::Function
+  #  Properties:
+  #    Code:
+  #      ZipFile: |
+  #        import datetime
+  #        import json
+  #      
+  #        def lambda_handler(event, context):
+  #          now = datetime.datetime.now()
+  #          now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+  #        
+  #          num_list = range(10)
+  #          print(num_list)
+  #          
+  #          return json.dumps({
+  #            'datetime': now_str,
+  #            'numbers': num_list
+  #          })
+  #    FunctionName: !Sub "${Prefix}-function-01"
+  #    Handler: !Ref Handler
+  #    Runtime: !Ref Runtime
+  #    Role: !GetAtt FunctionRole.Arn
+      
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import json
+          
+          def lambda_handler(event, context):
+            print(event)
+            
+            num = event['number']
+            num_squared = num ** 2
+            
+            return num_squared
+      FunctionName: !Sub "${Prefix}-function-01"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+            num= event['number']
+            
+            return num * 2
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      #Policies:
+      #  - PolicyName: !Sub "${Prefix}-S3GetObjectPolicy"
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:GetObject
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${BulkS3Bucket}/*"
+        
+      
+Outputs:
+  Function1Arn:
+    Value: !GetAtt Function1.Arn
+
+  Function2Arn:
+    Value: !GetAtt Function2.Arn
+    
+  #Function3Arn:
+  #  Value: !GetAtt Function3.Arn
