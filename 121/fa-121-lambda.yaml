@@ -20,8 +20,6 @@ Resources:
           import json
           
           def lambda_handler(event, context):
-            print(event)
-            
             num = event['number']
             num_squared = num ** 2
             
@@ -38,8 +36,9 @@ Resources:
         ZipFile: |
           def lambda_handler(event, context):
             num= event['number']
+            num_doubled = num * 2
             
-            return num * 2
+            return num_doubled
       FunctionName: !Sub "${Prefix}-function-02"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
