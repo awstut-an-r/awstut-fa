@@ -33,7 +33,7 @@ Resources:
       Code:
         ZipFile: |
           def lambda_handler(event, context):
-            num= event['number']
+            num　= event['number']
             num_doubled = num * 2
             
             return num_doubled
