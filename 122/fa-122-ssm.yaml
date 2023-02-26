@@ -17,8 +17,6 @@ Resources:
   CreateImageRunbook:
     Type: AWS::SSM::Document
     Properties: 
-      #Attachments: 
-      #  - AttachmentsSource
       Content:
         assumeRole: "{{AutomationAssumeRole}}"
         description: Create an AMI for an EC2 instance with a specific tag.
@@ -28,14 +26,6 @@ Resources:
             type: String
             description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
             default: !GetAtt CreateImageRole.Arn
-          #Commands:
-          #  type: String
-          #  description: (Required) The commands to run or the path to an existing script on the instance.
-          #  default: echo Hello World
-          #InstanceId:
-          #  type: String
-          #  description: (Required) The instance ID you want to run commands on.
-          #  default: ""
           TagKey:
             type: String
             description: (Required) The tag key of Instance.
@@ -52,12 +42,6 @@ Resources:
             onFailure: Abort
             inputs:
               DocumentName: AWS-CreateImage
-              #RuntimeParameters:
-              #  AutomationAssumeRole:
-              #    - "{{AutomationAssumeRole}}"
-              #  #InstanceId:
-              #  #  #- "{{InstanceId}}"
-              #  #  - "{{RESOURCE_ID}}"
               TargetParameterName: InstanceId
               Targets:
                 - Key: "tag:{{TagKey}}"
@@ -66,13 +50,7 @@ Resources:
       DocumentFormat: YAML
       DocumentType: Automation
       Name: !Sub "${Prefix}-CreateImageRunbook"
-      #Requires: 
-      #  - DocumentRequires
-      #Tags: 
-      #  - Tag
       TargetType: /AWS::EC2::Instance
-      #UpdateMethod: String
-      #VersionName: String
       
   CreateImageRole:
     Type: AWS::IAM::Role
@@ -95,10 +73,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- "*"
-                  #- ec2:CreateImage
-                  #- ec2:DescribeInstances
-                  #- iam:PassRole
                   - tag:GetResources
                 Resource:
                   - "*"
