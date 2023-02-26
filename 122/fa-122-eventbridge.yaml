@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #StateMachineArn:
-  #  Type: String
-  #  
-  #StateMachineName:
-  #  Type: String
-    
   Prefix:
     Type: String
     
@@ -21,13 +15,8 @@ Resources:
   EventsRule:
     Type: AWS::Events::Rule
     Properties: 
-      #Description: String
-      #EventBusName: String
-      #EventPattern: Json
       Name: !Sub "${Prefix}-EventsRule"
-      #RoleArn: !GetAtt EventsRuleRole.Arn
       ScheduleExpression: rate(10 minutes)
-      #ScheduleExpression: cron(0 0 ? * L *)
       State: ENABLED
       Targets: 
         - Arn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Runbook}:$DEFAULT"
@@ -45,8 +34,6 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: events.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
       Policies:
         - PolicyName: !Sub "${Prefix}-StartAutomationExecutionPolicy"
           PolicyDocument:
@@ -58,18 +45,3 @@ Resources:
               - Effect: Allow
                 Action: iam:PassRole
                 Resource: !Ref RunbookRoleArn
-      #Policies:
-      #  - PolicyName: CreateImagePolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            #- "*"
-      #            - ssm:*
-      #            #- ec2:CreateImage
-      #            #- ec2:DescribeInstances
-      #            - iam:PassRole
-      #            #- tag:GetResources
-      #          Resource:
-      #            - "*"
