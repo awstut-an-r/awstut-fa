@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  TagKey:
+    Type: String
+    
+  TagValue:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+
+Resources:
+  CreateImageRunbook:
+    Type: AWS::SSM::Document
+    Properties: 
+      #Attachments: 
+      #  - AttachmentsSource
+      Content:
+        assumeRole: "{{AutomationAssumeRole}}"
+        description: Create an AMI for an EC2 instance with a specific tag.
+        schemaVersion: "0.3"
+        parameters:
+          AutomationAssumeRole:
+            type: String
+            description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
+            default: !GetAtt CreateImageRole.Arn
+          #Commands:
+          #  type: String
+          #  description: (Required) The commands to run or the path to an existing script on the instance.
+          #  default: echo Hello World
+          #InstanceId:
+          #  type: String
+          #  description: (Required) The instance ID you want to run commands on.
+          #  default: ""
+          TagKey:
+            type: String
+            description: (Required) The tag key of Instance.
+            default: !Ref TagKey
+          TagValue:
+            type: String
+            description: (Required) The tag value of Instance.
+            default: !Ref TagValue
+        mainSteps:
+          - name: createImage
+            action: aws:executeAutomation
+            maxAttempts: 1
+            timeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+            onFailure: Abort
+            inputs:
+              DocumentName: AWS-CreateImage
+              #RuntimeParameters:
+              #  AutomationAssumeRole:
+              #    - "{{AutomationAssumeRole}}"
+              #  #InstanceId:
+              #  #  #- "{{InstanceId}}"
+              #  #  - "{{RESOURCE_ID}}"
+              TargetParameterName: InstanceId
+              Targets:
+                - Key: "tag:{{TagKey}}"
+                  Values:
+                    - "{{TagValue}}"
+      DocumentFormat: YAML
+      DocumentType: Automation
+      Name: !Sub "${Prefix}-CreateImageRunbook"
+      #Requires: 
+      #  - DocumentRequires
+      #Tags: 
+      #  - Tag
+      TargetType: /AWS::EC2::Instance
+      #UpdateMethod: String
+      #VersionName: String
+      
+  CreateImageRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+      Policies:
+        - PolicyName: CreateImagePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- "*"
+                  #- ec2:CreateImage
+                  #- ec2:DescribeInstances
+                  #- iam:PassRole
+                  - tag:GetResources
+                Resource:
+                  - "*"
+      
+      
+Outputs:
+  CreateImageRoleArn:
+    Value: !GetAtt CreateImageRole.Arn
+  
+  CreateImageRunbook:
+    Value: !Ref CreateImageRunbook

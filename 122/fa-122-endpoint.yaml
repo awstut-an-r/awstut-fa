@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EndpointSecurityGroup:
+    Type: String
+
+  #Prefix:
+  #  Type: String
+    
+  #PrivateRouteTable:
+  #  Type: String
+    
+  PrivateSubnet:
+    Type: String
+    
+  VPC:
+    Type: String
+    
+
+Resources:
+  #S3Endpoint:
+  #  Type: AWS::EC2::VPCEndpoint
+  #  Properties:
+  #    #PolicyDocument:
+  #    #  Version: 2012-10-17
+  #    #  Statement:
+  #    #    - Effect: Allow
+  #    #      Principal: '*'
+  #    #      Action:
+  #    #        - s3:GetObject
+  #    #      Resource:
+  #    #        - !Sub arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*
+  #    #        - !Sub arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*
+  #    #    #- Effect: Allow
+  #    #    #  Principal: '*'
+  #    #    #  Action:
+  #    #    #    - s3:*
+  #    #    #  Resource:
+  #    #    #    - !Ref PlaybookBucketArn
+  #    #    #    - !Sub "${PlaybookBucketArn}/*"
+  #    RouteTableIds:
+  #      - !Ref PrivateRouteTable
+  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
+  #    VpcEndpointType: Gateway
+  #    VpcId: !Ref VPC
+        
+  SSMEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
+      SubnetIds:
+        - !Ref PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+
+  EC2MessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
+      SubnetIds:
+        - !Ref PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC
+        
+  SSMMessagesEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: true
+      SecurityGroupIds:
+        - !Ref EndpointSecurityGroup
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
+      SubnetIds:
+        - !Ref PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId: !Ref VPC

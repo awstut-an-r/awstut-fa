@@ -1,0 +1,104 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-122
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    #Default: t4g.micro
+    #Default: t4g.small
+    Default: t4g.nano
+    
+  TagKey:
+    Type: String
+    Default: CreateImage
+    
+  TagValue:
+    Type: String
+    Default: Group1
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    Default: 600
+    
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        CidrIp1: 10.0.1.0/24
+        #HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        #Prefix: !Ref Prefix
+        #PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ImageId: !Ref ImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
+        TagKey: !Ref TagKey
+        TagValue: !Ref TagValue
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EndpointStack
+      - EC2Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        Prefix: !Ref Prefix
+        TagKey: !Ref TagKey
+        TagValue: !Ref TagValue
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        #StateMachineArn: !GetAtt StepFunctionsStack.Outputs.StateMachineArn
+        #StateMachineName: !GetAtt StepFunctionsStack.Outputs.StateMachineName
+        Prefix: !Ref Prefix
+        Runbook: !GetAtt SSMStack.Outputs.CreateImageRunbook
+        RunbookRoleArn: !GetAtt SSMStack.Outputs.CreateImageRoleArn
