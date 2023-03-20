@@ -37,8 +37,6 @@ Parameters:
 Resources:
   LambdaStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - SSMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
