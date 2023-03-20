@@ -66,7 +66,7 @@ Resources:
                   ],
                   'Timestamp': datetime.datetime.now(),
                   'Value': random.randint(0, 9),
-                  'Unit': 'Count',
+                  'Unit': 'Average',
                   'StorageResolution': 60
                 }
               ]
