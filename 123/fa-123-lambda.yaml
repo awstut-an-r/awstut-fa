@@ -1,0 +1,110 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  CloudWatchMetricDimensionName:
+    Type: String
+    
+  CloudWatchMetricDimensionValue:
+    Type: String
+    
+  CloudWatchMetricName:
+    Type: String
+    
+  CloudWatchMetricNamespace:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          DIMENSION_NAME: !Ref CloudWatchMetricDimensionName
+          DIMENSION_VALUE: !Ref CloudWatchMetricDimensionValue
+          METRIC_NAME: !Ref CloudWatchMetricName
+          NAMESPACE: !Ref CloudWatchMetricNamespace
+      Code:
+        ZipFile: |
+          import boto3
+          import datetime
+          import os
+          import random
+          
+          dimension_name = os.environ['DIMENSION_NAME']
+          dimension_value = os.environ['DIMENSION_VALUE']
+          metric_name = os.environ['METRIC_NAME']
+          namespace = os.environ['NAMESPACE']
+          
+          client = boto3.client('cloudwatch')
+          
+          def lambda_handler(event, context):
+            response = client.put_metric_data(
+              Namespace=namespace,
+              MetricData=[
+                {
+                  'MetricName': metric_name,
+                  'Dimensions': [
+                    {
+                      'Name': dimension_name,
+                      'Value': dimension_value
+                    }
+                  ],
+                  'Timestamp': datetime.datetime.now(),
+                  'Value': random.randint(0, 9),
+                  'Unit': 'Count',
+                  'StorageResolution': 60
+                }
+              ]
+            )
+            print(response)
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CreateThumbnailPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudwatch:PutMetricData
+                Resource: "*"
+
+
+Outputs:
+  Function:
+    Value: !Ref Function
+    
+  FunctionArn:
+    Value: !GetAtt Function.Arn

@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Function:
+    Type: String
+    
+  FunctionArn:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Rule:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      #EventBusName: String
+      #EventPattern: Json
+      Name: !Sub "${Prefix}-EventsRule"
+      #RoleArn: !GetAtt EventsRuleRole.Arn
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref FunctionArn
+          Id: !Ref Function
+          #RoleArn: !GetAtt EventsRuleRole.Arn
+          
+  #EventsRuleRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service: events.amazonaws.com
+  #    Policies:
+  #      - PolicyName: !Sub "${Prefix}-InvokeFunctionPolicy"
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action: lambda:InvokeFunction
+  #              Resource: !Ref FunctionArn1
+  
+  EventsRulePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt Rule.Arn

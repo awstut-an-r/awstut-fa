@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-123
+    
+  CloudWatchMetricDimensionName:
+    Type: String
+    Default: lambda
+    
+  CloudWatchMetricName:
+    Type: String
+    Default: randomnum
+    
+  CloudWatchMetricNamespace:
+    Type: String
+    Default: test
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+
+Resources:
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        CloudWatchMetricDimensionName: !Ref CloudWatchMetricDimensionName
+        CloudWatchMetricDimensionValue: !Ref Prefix
+        CloudWatchMetricName: !Ref CloudWatchMetricName
+        CloudWatchMetricNamespace: !Ref CloudWatchMetricNamespace
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        Function: !GetAtt LambdaStack.Outputs.Function
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        Prefix: !Ref Prefix
