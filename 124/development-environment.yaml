@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: |
+  AWS Service Catalog sample template. Creates an Amazon EC2 instance 
+  running the Amazon Linux AMI. The AMI is chosen based on the region 
+  in which the stack is run. This example creates an EC2 security 
+  group for the instance to give you SSH access. **WARNING** This 
+  template creates an Amazon EC2 instance. You will be billed for the 
+  AWS resources used if you create a stack from this template.
+  
+  
+Parameters:
+  InstanceType:
+    Description: EC2 instance type.
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.micro 
+      - t2.small
+      - t2.medium
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      
+      
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: Instance configuration
+        Parameters:
+          - InstanceType
+    ParameterLabels:
+      InstanceType:
+        default: "Server size:"
+        
+        
+Mappings:
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-08842d60 
+    us-west-2:
+      HVM64: ami-8786c6b7
+    us-west-1:
+      HVM64: ami-cfa8a18a
+    eu-west-1:
+      HVM64: ami-748e2903
+    ap-southeast-1:
+      HVM64: ami-d6e1c584
+    ap-northeast-1:
+      HVM64: ami-35072834
+    ap-southeast-2:
+      HVM64: ami-fd4724c7
+    sa-east-1:
+      HVM64: ami-956cc688
+    cn-north-1:
+      HVM64: ami-ac57c595
+    eu-central-1:
+      HVM64: ami-b43503a9
+      
+      
+Resources:
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      SecurityGroups:
+        - !Ref InstanceSecurityGroup
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref AWS::Region
+        - HVM64
+          
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable SSH access via port 22
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+          
+
+Outputs:
+  PublicDNSName:
+    Description: Public DNS name of the new EC2 instance
+    Value: !GetAtt EC2Instance.PublicDnsName
+    
+  PublicIPAddress:
+    Description: Public IP address of the new EC2 instance
+    Value: !GetAtt EC2Instance.PublicIp

@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+#Transform: AWS::LanguageExtensions
+
+Parameters:
+  AcceptLanguage:
+    Type: String
+
+  IAMGroupArn:
+    Type: String
+    
+  IAMRoleArn:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  TemplateBucketName:
+    Type: String
+    
+
+Resources:
+  Portfolio:
+    Type: AWS::ServiceCatalog::Portfolio
+    Properties: 
+      AcceptLanguage: !Ref AcceptLanguage
+      Description: Sample portfolio that contains a single product.
+      DisplayName: Engineering Tools
+      ProviderName: IT (it@example.com)
+      #Tags: 
+      #  - Tag
+      
+  CloudFormationProduct:
+    Type: AWS::ServiceCatalog::CloudFormationProduct
+    Properties: 
+      AcceptLanguage: !Ref AcceptLanguage
+      Description: Cloud development environment configured for engineering staff. Runs AWS Linux.
+      #Distributor: String
+      Name: Linux Desktop
+      Owner: IT
+      ProvisioningArtifactParameters: 
+        - Description: Base Version
+          DisableTemplateValidation: true
+          Info:
+            LoadTemplateFromURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/development-environment.yaml"
+          Name: v1.0
+      ReplaceProvisioningArtifacts: false
+      #SourceConnection: 
+      #  SourceConnection
+      SupportDescription: Contact the IT department for issues deploying or connecting to this product.
+      SupportEmail: ITSupport@example.com
+      SupportUrl: https://wiki.example.com/IT/support 
+      #Tags: 
+      #  - Tag
+      
+  PortfolioProductAssociation:
+    Type: AWS::ServiceCatalog::PortfolioProductAssociation
+    Properties: 
+      AcceptLanguage: !Ref AcceptLanguage
+      PortfolioId: !Ref Portfolio
+      ProductId: !Ref CloudFormationProduct
+      #SourcePortfolioId: String
+      
+  PortfolioPrincipalAssociation:
+    Type: AWS::ServiceCatalog::PortfolioPrincipalAssociation
+    Properties: 
+      AcceptLanguage: !Ref AcceptLanguage
+      PortfolioId: !Ref Portfolio
+      PrincipalARN: !Ref IAMGroupArn
+      PrincipalType: IAM
+      
+  LaunchTemplateConstraint:
+    Type: AWS::ServiceCatalog::LaunchTemplateConstraint
+    Properties: 
+      AcceptLanguage: !Ref AcceptLanguage
+      #Description: String
+      PortfolioId: !Ref Portfolio
+      ProductId: !Ref CloudFormationProduct
+      Rules: |
+        {
+          "Rule1": {
+            "Assertions": [
+              {
+                "Assert" : {"Fn::Contains": [["t2.micro", "t2.small"], {"Ref": "InstanceType"}]},
+                "AssertDescription": "Instance type should be t2.micro or t2.small"
+              }
+            ]
+          }
+        }
+      
+  LaunchRoleConstraint:
+    DependsOn:
+      - Portfolio
+      - CloudFormationProduct
+      - PortfolioProductAssociation
+      - PortfolioPrincipalAssociation
+      - LaunchTemplateConstraint
+    Type: AWS::ServiceCatalog::LaunchRoleConstraint
+    Properties: 
+      AcceptLanguage: !Ref AcceptLanguage
+      Description: !Sub "Launch as ${IAMRoleArn}"
+      #LocalRoleName: !Ref IAMRoleArn
+      PortfolioId: !Ref Portfolio
+      ProductId: !Ref CloudFormationProduct
+      RoleArn: !Ref IAMRoleArn

@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  IAMUserPassword:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+
+Resources:
+  Group:
+    Type: AWS::IAM::Group
+    Properties: 
+      GroupName: !Sub "${Prefix}-Endusers"
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/AWSServiceCatalogEndUserFullAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+      #Path: String
+      #Policies: 
+      #  - Policy
+
+  User:
+    Type: AWS::IAM::User
+    Properties:
+      Groups: 
+        - !Ref Group
+      LoginProfile: 
+        Password: !Ref IAMUserPassword
+        PasswordResetRequired: false
+      #ManagedPolicyArns: 
+      #  - String
+      #Path: String
+      #PermissionsBoundary: String
+      #Policies: 
+      #  - Policy
+      #Tags: 
+      #  - Tag
+      UserName: !Sub "${Prefix}-User"
+    
+  LinuxDesktopLaunchRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - servicecatalog.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LinuxDesktopPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeStackEvents
+                  - cloudformation:DescribeStacks
+                  - cloudformation:GetTemplateSummary
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:ValidateTemplate
+                  - cloudformation:UpdateStack
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - servicecatalog:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - sns:*
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    s3:ExistingObjectTag/servicecatalog:provisioning: true
+              - Effect: Allow
+                Action:
+                  - ec2:*
+                Resource: "*"
+  
+  
+Outputs:
+  IAMGroupArn:
+    Value: !GetAtt Group.Arn
+    
+  IAMRoleArn:
+    Value: !GetAtt LinuxDesktopLaunchRole.Arn

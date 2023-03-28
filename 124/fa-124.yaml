@@ -1,0 +1,41 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-124
+    
+  AcceptLanguage:
+    Type: String
+    Default: en
+    
+  IAMUserPassword:
+    Type: String
+    Default: P@ssword01
+    
+
+Resources:
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
+      Parameters:
+        IAMUserPassword: !Ref IAMUserPassword
+        Prefix: !Ref Prefix
+        
+  ServiceCatalogStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IAMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-servicecatalog.yaml"
+      Parameters:
+        AcceptLanguage: !Ref AcceptLanguage
+        IAMGroupArn: !GetAtt IAMStack.Outputs.IAMGroupArn
+        IAMRoleArn: !GetAtt IAMStack.Outputs.IAMRoleArn
+        Prefix: !Ref Prefix
+        TemplateBucketName: !Ref TemplateBucketName
