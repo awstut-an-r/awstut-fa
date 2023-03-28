@@ -1,7 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-#Transform: AWS::LanguageExtensions
-
 Parameters:
   AcceptLanguage:
     Type: String
@@ -27,15 +25,12 @@ Resources:
       Description: Sample portfolio that contains a single product.
       DisplayName: Engineering Tools
       ProviderName: IT (it@example.com)
-      #Tags: 
-      #  - Tag
       
   CloudFormationProduct:
     Type: AWS::ServiceCatalog::CloudFormationProduct
     Properties: 
       AcceptLanguage: !Ref AcceptLanguage
       Description: Cloud development environment configured for engineering staff. Runs AWS Linux.
-      #Distributor: String
       Name: Linux Desktop
       Owner: IT
       ProvisioningArtifactParameters: 
@@ -45,13 +40,9 @@ Resources:
             LoadTemplateFromURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/development-environment.yaml"
           Name: v1.0
       ReplaceProvisioningArtifacts: false
-      #SourceConnection: 
-      #  SourceConnection
       SupportDescription: Contact the IT department for issues deploying or connecting to this product.
       SupportEmail: ITSupport@example.com
       SupportUrl: https://wiki.example.com/IT/support 
-      #Tags: 
-      #  - Tag
       
   PortfolioProductAssociation:
     Type: AWS::ServiceCatalog::PortfolioProductAssociation
@@ -59,7 +50,6 @@ Resources:
       AcceptLanguage: !Ref AcceptLanguage
       PortfolioId: !Ref Portfolio
       ProductId: !Ref CloudFormationProduct
-      #SourcePortfolioId: String
       
   PortfolioPrincipalAssociation:
     Type: AWS::ServiceCatalog::PortfolioPrincipalAssociation
@@ -73,7 +63,6 @@ Resources:
     Type: AWS::ServiceCatalog::LaunchTemplateConstraint
     Properties: 
       AcceptLanguage: !Ref AcceptLanguage
-      #Description: String
       PortfolioId: !Ref Portfolio
       ProductId: !Ref CloudFormationProduct
       Rules: |
@@ -99,7 +88,6 @@ Resources:
     Properties: 
       AcceptLanguage: !Ref AcceptLanguage
       Description: !Sub "Launch as ${IAMRoleArn}"
-      #LocalRoleName: !Ref IAMRoleArn
       PortfolioId: !Ref Portfolio
       ProductId: !Ref CloudFormationProduct
       RoleArn: !Ref IAMRoleArn
