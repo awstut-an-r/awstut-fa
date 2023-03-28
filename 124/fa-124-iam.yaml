@@ -16,9 +16,6 @@ Resources:
       ManagedPolicyArns: 
         - arn:aws:iam::aws:policy/AWSServiceCatalogEndUserFullAccess
         - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
-      #Path: String
-      #Policies: 
-      #  - Policy
 
   User:
     Type: AWS::IAM::User
@@ -28,14 +25,6 @@ Resources:
       LoginProfile: 
         Password: !Ref IAMUserPassword
         PasswordResetRequired: false
-      #ManagedPolicyArns: 
-      #  - String
-      #Path: String
-      #PermissionsBoundary: String
-      #Policies: 
-      #  - Policy
-      #Tags: 
-      #  - Tag
       UserName: !Sub "${Prefix}-User"
     
   LinuxDesktopLaunchRole:
@@ -50,8 +39,6 @@ Resources:
             Principal:
               Service:
                 - servicecatalog.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: LinuxDesktopPolicy
           PolicyDocument:
