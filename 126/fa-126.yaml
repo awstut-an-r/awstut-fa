@@ -8,11 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-126
-    
-  #Password:
-  #  Type: String
-  #  Default: P@ssword01
-  
+
   PasswordKey:
     Type: String
     Default: password
@@ -23,13 +19,11 @@ Parameters:
     
     
 Resources:
-
   SecretsManagerStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-secretsmanager.yaml"
       Parameters:
-        #Password: !Ref Password
         PasswordKey: !Ref PasswordKey
         PasswordLength: !Ref PasswordLength
         Prefix: !Ref Prefix
