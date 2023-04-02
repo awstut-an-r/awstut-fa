@@ -9,6 +9,18 @@ Parameters:
     Type: String
     Default: fa-126
 
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+  
   PasswordKey:
     Type: String
     Default: password
@@ -27,3 +39,14 @@ Resources:
         PasswordKey: !Ref PasswordKey
         PasswordLength: !Ref PasswordLength
         Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
