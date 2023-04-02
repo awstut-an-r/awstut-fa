@@ -1,0 +1,83 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Secret:
+    Type: String
+    
+
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          SECRET_ARN: !Ref Secret
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          
+          secret_arn = os.environ['SECRET_ARN']
+          
+          client = boto3.client('secretsmanager')
+          
+          def lambda_handler(event, context):
+            response = client.get_secret_value(
+              SecretId=secret_arn
+            )
+            #print(response)
+            
+            secret_dict = json.loads(response['SecretString'])
+            return secret_dict['password']
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: GetSecretValuePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource:
+                  - !Ref Secret
+
+
+#Outputs:
+#  Function:
+#    Value: !Ref Function
+#    
+#  FunctionArn:
+#    Value: !GetAtt Function.Arn
