@@ -21,9 +21,7 @@ Resources:
   Key:
     Type: AWS::KMS::Key
     Properties: 
-      #Description: String
       Enabled: true
-      #EnableKeyRotation: Boolean
       KeyPolicy:
         Version: 2012-10-17
         Id: !Sub "${Prefix}-cmk"
@@ -50,14 +48,3 @@ Resources:
       KeySpec: SYMMETRIC_DEFAULT
       KeyUsage: ENCRYPT_DECRYPT
       MultiRegion: false
-      #PendingWindowInDays: Integer
-      #Tags: 
-      #  - Tag
-
-
-#Outputs:
-#  #BucketName:
-#  #  Value: !Ref Bucket
-#  
-#  BucketArn:
-#    Value: !GetAtt Bucket.Arn
