@@ -17,11 +17,3 @@ Resources:
             ServerSideEncryptionByDefault: 
               KMSMasterKeyID: aws/s3
               SSEAlgorithm: aws:kms
-
-
-#Outputs:
-#  #BucketName:
-#  #  Value: !Ref Bucket
-#  
-#  BucketArn:
-#    Value: !GetAtt Bucket.Arn
