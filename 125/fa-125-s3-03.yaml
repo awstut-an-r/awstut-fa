@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+
+Resources:
+  Bucket3:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "${Prefix}-sse-kms-cmk"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: false
+            ServerSideEncryptionByDefault: 
+              KMSMasterKeyID: !Ref Key
+              SSEAlgorithm: aws:kms
+              
+  Key:
+    Type: AWS::KMS::Key
+    Properties: 
+      #Description: String
+      Enabled: true
+      #EnableKeyRotation: Boolean
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: !Sub "${Prefix}-cmk"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: "*"
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+              - kms:ReEncrypt*
+              - kms:GenerateDataKey*
+              - kms:DescribeKey
+            Resource: "*"
+            Condition:
+              StringEquals:
+                kms:CallerAccount: !Ref AWS::AccountId
+                kms:ViaService: s3.ap-northeast-1.amazonaws.com
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "*"
+            Resource: "*"
+      KeySpec: SYMMETRIC_DEFAULT
+      KeyUsage: ENCRYPT_DECRYPT
+      MultiRegion: false
+      #PendingWindowInDays: Integer
+      #Tags: 
+      #  - Tag
+
+
+#Outputs:
+#  #BucketName:
+#  #  Value: !Ref Bucket
+#  
+#  BucketArn:
+#    Value: !GetAtt Bucket.Arn

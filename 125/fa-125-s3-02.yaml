@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+
+Resources:
+  Bucket2:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub "${Prefix}-sse-kms-aws-managed"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - BucketKeyEnabled: false
+            ServerSideEncryptionByDefault: 
+              KMSMasterKeyID: aws/s3
+              SSEAlgorithm: aws:kms
+
+
+#Outputs:
+#  #BucketName:
+#  #  Value: !Ref Bucket
+#  
+#  BucketArn:
+#    Value: !GetAtt Bucket.Arn
