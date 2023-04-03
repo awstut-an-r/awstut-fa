@@ -26,12 +26,6 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Sub "${Prefix}-sse-c"
-      #BucketEncryption:
-      #  ServerSideEncryptionConfiguration:
-      #    - BucketKeyEnabled: false
-      #      ServerSideEncryptionByDefault: 
-      #        KMSMasterKeyID: !Ref Key
-      #        SSEAlgorithm: aws:kms
       
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -60,19 +54,11 @@ Resources:
         ExcludeNumbers: false
         ExcludePunctuation: true
         ExcludeUppercase: true
-        #GenerateStringKey: !Ref PasswordKey
         IncludeSpace: false
         PasswordLength: !Ref PasswordLength
         RequireEachIncludedType: true
-        #SecretStringTemplate: !Sub '{"${PasswordKey}": "hogehoge"}'
       KmsKeyId: alias/aws/secretsmanager
       Name: !Ref Prefix
-      #ReplicaRegions: 
-      #  - ReplicaRegion
-      #SecretString: 
-      #  String
-      #Tags: 
-      #  - Tag
       
   Function1:
     Type: AWS::Lambda::Function
@@ -106,17 +92,11 @@ Resources:
             response = secretmanager_client.get_secret_value(
               SecretId=secret_arn
             )
-            #print(response)
             key = response['SecretString']
-            #print(key)
-            
             key_base64 = base64.b64encode(key.encode()).decode()
-            #print(key_base64)
             
             key_hash = hashlib.md5(key.encode()).digest()
-            #print(key_hash)
             key_hash_base64 = base64.b64encode(key_hash).decode()
-            #print(key_hash_base64)
             
             response = s3_client.put_object(
               Bucket=bucket_name,
@@ -158,40 +138,26 @@ Resources:
           secretmanager_client = boto3.client('secretsmanager')
           s3_client = boto3.client('s3')
           
-          #object_body = 'awstut!'
           char_code = 'utf-8'
-          #content_type = 'text/plain'
           
           def lambda_handler(event, context):
             response = secretmanager_client.get_secret_value(
               SecretId=secret_arn
             )
-            #print(response)
             key = response['SecretString']
-            #print(key)
-            
             key_base64 = base64.b64encode(key.encode()).decode()
-            #print(key_base64)
             
             key_hash = hashlib.md5(key.encode()).digest()
-            #print(key_hash)
             key_hash_base64 = base64.b64encode(key_hash).decode()
-            #print(key_hash_base64)
             
             response = s3_client.get_object(
               Bucket=bucket_name,
               Key=object_key,
-              #Body=object_body.encode(char_code),
-              #ContentEncoding=char_code,
-              #ContentType=content_type,
               SSECustomerAlgorithm='AES256',
               SSECustomerKey=key_base64,
               SSECustomerKeyMD5=key_hash_base64
             )
             body = response['Body'].read()
-            #print(body)
-            #print(body.decode(char_code))
-            
             return body.decode(char_code)
       FunctionName: !Sub "${Prefix}-function2"
       Handler: !Ref Handler
@@ -226,7 +192,6 @@ Resources:
                 Action:
                   - s3:GetObject
                   - s3:PutObject
-                  #- s3:ListBucket
                 Resource:
                   - !Sub "arn:aws:s3:::${Bucket4}"
                   - !Sub "arn:aws:s3:::${Bucket4}/*"
