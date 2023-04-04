@@ -39,7 +39,7 @@ Resources:
             Condition:
               StringEquals:
                 kms:CallerAccount: !Ref AWS::AccountId
-                kms:ViaService: s3.ap-northeast-1.amazonaws.com
+                kms:ViaService: !Sub "s3.${AWS::Region}.amazonaws.com"
           - Effect: Allow
             Principal:
               AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
