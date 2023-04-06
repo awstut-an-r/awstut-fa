@@ -27,7 +27,7 @@ Parameters:
     
   TestObjectKey:
     Type: String
-    Default: test2.txt
+    Default: test.txt
     
     
 Resources:
