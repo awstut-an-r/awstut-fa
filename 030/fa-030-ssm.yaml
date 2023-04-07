@@ -82,8 +82,6 @@ Resources:
           - ssm
         optionalConfigurationLocation:
           - !Ref CloudWatchConfigParemeter
-        optionalOpenTelemetryCollectorConfigurationSource:
-          - ssm
         optionalRestart:
           - "yes"
       Targets:
