@@ -36,5 +36,5 @@ aws s3 cp . s3://my-bucket/fa-125/ --recursive
 aws cloudformation create-stack \
 --stack-name fa-125 \
 --template-url https://my-bucket.s3.ap-northeast-1.amazonaws.com/fa-125/fa-125.yaml \
---capabilities CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND
+--capabilities CAPABILITY_IAM
 ```
