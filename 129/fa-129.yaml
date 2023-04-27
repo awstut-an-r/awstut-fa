@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-129
+    
+  DockerHubPassword:
+    Type: String
+    Default: [password]
+    
+  DockerHubUsername:
+    Type: String
+    Default: [username]
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_CONTAINER
+    
+    
+Resources:
+  #S3Stack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+  #    Parameters:
+  #      Prefix: !Ref Prefix
+  #      
+  #SSMStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+  #    Parameters:
+  #      DockerHubPassword: !Ref DockerHubPassword
+  #      DockerHubUsername: !Ref DockerHubUsername
+  #      Prefix: !Ref Prefix
+  
+  SecretsManagerStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-secretsmanager.yaml"
+      Parameters:
+        #Password: !Ref Password
+        Password: !Ref DockerHubPassword
+        Prefix: !Ref Prefix
+        Username: !Ref DockerHubUsername
+        
+  ECRStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      #- S3Stack
+      #- SSMStack
+      - SecretsManagerStack
+      - ECRStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        #BranchName: !Ref BranchName
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        #PipelineBuildArtifact: BuildArtifact
+        #PipelineSourceArtifact: SourceArtifact
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
+        #SecretArn: !GetAtt SecretsManagerStack.Outputs.SecretArn
+        #SecretId: !GetAtt SecretsManagerStack.Outputs.SecretId
+        #SSMParameterDockerHubPassword: !GetAtt SSMStack.Outputs.SSMParameterDockerHubPassword
+        #SSMParameterDockerHubUsername: !GetAtt SSMStack.Outputs.SSMParameterDockerHubUsername
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CodeStack
+    #  - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
