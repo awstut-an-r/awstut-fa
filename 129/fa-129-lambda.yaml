@@ -34,7 +34,6 @@ Resources:
       Environment:
         Variables:
           CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
       Code:
         ZipFile: |
           import boto3
@@ -90,11 +89,3 @@ Resources:
                   - codebuild:StartBuild
                 Resource:
                   - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProject}" 
-
-
-#Outputs:
-#  Function:
-#    Value: !Ref Function
-#    
-#  FunctionArn:
-#    Value: !GetAtt Function.Arn
