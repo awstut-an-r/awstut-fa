@@ -1,24 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ContainerSubnet1:
-  #  Type: String
-    
   ContainerSubnet2:
     Type: String
 
   EndpointSecurityGroup:
     Type: String
-    
-  #EndpointSecurityGroup2:
-  #  Type: String
-  
-  #Prefix:
-  #  Type: String
-  
-  #InstanceSubnet:
-  #  Type: String
-    
+
   ContainerRouteTable2:
     Type: String
     
@@ -35,30 +23,6 @@ Resources:
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
       VpcId: !Ref VPC
 
-  #SSMEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup1
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
-  #    SubnetIds:
-  #      - !Ref InstanceSubnet
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-  #
-  #EC2MessagesEndpoint:
-  #  Type: AWS::EC2::VPCEndpoint
-  #  Properties:
-  #    PrivateDnsEnabled: true
-  #    SecurityGroupIds:
-  #      - !Ref EndpointSecurityGroup1
-  #    ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
-  #    SubnetIds:
-  #      - !Ref InstanceSubnet
-  #    VpcEndpointType: Interface
-  #    VpcId: !Ref VPC
-  
   SSMMessagesEndpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
@@ -67,7 +31,6 @@ Resources:
         - !Ref EndpointSecurityGroup
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
       SubnetIds:
-        #- !Ref InstanceSubnet
         - !Ref ContainerSubnet2
       VpcEndpointType: Interface
       VpcId: !Ref VPC
