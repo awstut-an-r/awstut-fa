@@ -1,0 +1,167 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-127
+    
+  DockerHubPassword:
+    Type: String
+    Default: [password]
+    
+  DockerHubUsername:
+    Type: String
+    Default: [username]
+    
+  #ImageId:
+  #  Type: String
+  #  Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+  #  
+  #InstanceType:
+  #  Type: String
+  #  Default: t4g.nano
+    
+  #HTTPPort:
+  #  Type: Number
+  #  Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_CONTAINER
+    
+  TaskCpu:
+    Type: Number
+    Default: 512
+    
+  TaskImage:
+    Type: String
+    Default: public.ecr.aws/amazonlinux/amazonlinux:latest
+    
+  TaskMemory:
+    Type: Number
+    Default: 1024
+
+
+Resources:
+  SecretsManagerStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-secretsmanager.yaml"
+      Parameters:
+        Password: !Ref DockerHubPassword
+        Prefix: !Ref Prefix
+        Username: !Ref DockerHubUsername
+        
+  ECRStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ecr.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SecretsManagerStack
+      - ECRStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CodeStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
+        
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        AvailabilityZone2: c
+        #AvailabilityZone3: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        #CidrIp4: 10.0.4.0/24
+        #HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        #ContainerSubnet1: !GetAtt VPCStack.Outputs.ContainerSubnet1
+        ContainerSubnet2: !GetAtt VPCStack.Outputs.ContainerSubnet2
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        #EndpointSecurityGroup2: !GetAtt VPCStack.Outputs.EndpointSecurityGroup2
+        #InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        #Prefix: !Ref Prefix
+        ContainerRouteTable2: !GetAtt VPCStack.Outputs.ContainerRouteTable2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  FargateStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EndpointStack
+      - ECRStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-fargate.yaml"
+      Parameters:
+        ContainerSecurityGroup: !GetAtt VPCStack.Outputs.ContainerSecurityGroup
+        ContainerSubnet1: !GetAtt VPCStack.Outputs.ContainerSubnet1
+        ContainerSubnet2: !GetAtt VPCStack.Outputs.ContainerSubnet2
+        Prefix: !Ref Prefix
+        ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
+        TaskCpu: !Ref TaskCpu
+        TaskImage: !Ref TaskImage
+        TaskMemory: !Ref TaskMemory

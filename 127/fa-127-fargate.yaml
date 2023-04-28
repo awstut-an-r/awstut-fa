@@ -1,0 +1,152 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ContainerSecurityGroup:
+    Type: String
+    
+  ContainerSubnet1:
+    Type: String
+    
+  ContainerSubnet2:
+    Type: String
+    
+  ECRRepositoryName:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  #RepositoryName:
+  #  Type: String
+    
+  TaskCpu:
+    Type: Number
+    
+  TaskImage:
+    Type: String
+    
+  TaskMemory:
+    Type: Number
+
+
+Resources:
+  Cluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${Prefix}-cluster"
+      
+  FargateTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ecs-tasks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: ECSExecPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssmmessages:CreateControlChannel
+                  - ssmmessages:CreateDataChannel
+                  - ssmmessages:OpenControlChannel
+                  - ssmmessages:OpenDataChannel
+                Resource: "*"
+        
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Cpu: !Ref TaskCpu
+      ContainerDefinitions:
+        - Name: !Sub "${Prefix}-amazon-linux"
+          Command:
+            #- "/bin/sleep 3600"
+            - "/bin/sh"
+            - "-c"
+            - "sleep 3600"
+          Essential: true
+          #Image: public.ecr.aws/amazonlinux/amazonlinux:latest
+          #Image: !Ref TaskImage
+          Image: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}:latest"
+          LinuxParameters:
+            InitProcessEnabled: true # update
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: !Sub "${Prefix}-amazon-linux"
+      ExecutionRoleArn: !Ref FargateTaskExecutionRole
+      Memory: !Ref TaskMemory
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      RuntimePlatform:
+        CpuArchitecture: ARM64
+        OperatingSystemFamily: LINUX
+      TaskRoleArn: !Ref TaskRole
+          
+  Service1:
+    Type: AWS::ECS::Service
+    Properties:
+      #Cluster: !Ref Cluster1
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      EnableExecuteCommand: true # update
+      TaskDefinition: !Ref TaskDefinition
+      ServiceName: !Sub "${Prefix}-service1"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          #AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - !Ref ContainerSubnet1
+            #- !Ref PrivateSubnet1
+            
+  Service2:
+    Type: AWS::ECS::Service
+    Properties:
+      #Cluster: !Ref Cluster1
+      Cluster: !Ref Cluster
+      LaunchType: FARGATE
+      DesiredCount: 1
+      EnableExecuteCommand: true # update
+      TaskDefinition: !Ref TaskDefinition
+      ServiceName: !Sub "${Prefix}-service2"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          #AssignPublicIp: ENABLED
+          SecurityGroups:
+            - !Ref ContainerSecurityGroup
+          Subnets:
+            - !Ref ContainerSubnet2
+            #- !Ref PrivateSubnet1
+  
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-LogGroup"
