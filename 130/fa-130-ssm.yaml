@@ -13,7 +13,6 @@ Resources:
       Type: String
       Value: |
         https://data.nasa.gov/resource/gvk9-iz74.json
-      #  https://www.amazontrust.com/repository/AmazonRootCA1.pem
         
       
 Outputs:
