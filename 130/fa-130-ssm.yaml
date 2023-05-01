@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  UrlsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Ref Prefix
+      Type: String
+      Value: |
+        https://data.nasa.gov/resource/gvk9-iz74.json
+      #  https://www.amazontrust.com/repository/AmazonRootCA1.pem
+        
+      
+Outputs:
+  UrlsParameter:
+    Value: !Ref UrlsParameter

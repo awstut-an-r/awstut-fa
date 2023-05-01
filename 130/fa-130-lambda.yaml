@@ -1,0 +1,331 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  CodeS3Bucket:
+    Type: String
+    
+  EphemeralStorageSize:
+    Type: Number
+
+  Handler:
+    Type: String
+    
+  LayerPackage:
+    Type: String
+    
+  LayerS3Key:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+    
+  UrlsParameter:
+    Type: String
+    
+    
+Resources:
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    DependsOn:
+      - CustomResource
+    Properties:
+      CompatibleArchitectures:
+        - !Ref Architecture
+      CompatibleRuntimes:
+        - !Ref Runtime
+      Content:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref LayerS3Key
+      Description: !Ref Prefix
+      LayerName: !Ref Prefix
+      #LicenseInfo: MIT
+      
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function1.Arn
+
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          LAYER_PACKAGE: !Ref LayerPackage
+          REGION: !Ref AWS::Region
+          URLS_PARAMETER: !Ref UrlsParameter
+          S3_BUCKET: !Ref CodeS3Bucket
+          S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          #import pip
+          import shutil
+          import subprocess
+          import urllib
+          
+          layer_package = os.environ['LAYER_PACKAGE']
+          region = os.environ['REGION']
+          urls_parameter = os.environ['URLS_PARAMETER']
+          s3_bucket = os.environ['S3_BUCKET']
+          s3_bucket_folder = os.environ['S3_BUCKET_FOLDER']
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          work_dir = '/tmp'
+          #requirements_file = 'requirements.txt'
+          package_dir = 'python'
+          
+          #download_path_format = os.path.join(work_dir, '{file_name}')
+          #requirements_path = os.path.join(work_dir, requirements_file)
+          package_dir_path = os.path.join(work_dir, package_dir)
+          layer_package_path = os.path.join(
+            work_dir,
+            #os.path.splitext(os.path.basename(layer_package))[0]
+            layer_package
+            )
+            
+          ssm_client = boto3.client('ssm', region_name=region)
+          s3_client = boto3.client('s3', region_name=region)
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                ssm_response = ssm_client.get_parameter(Name=urls_parameter)
+                urls = ssm_response['Parameter']['Value']
+                #print(urls)
+                
+                result = subprocess.run(
+                  ['mkdir', package_dir_path],
+                  stdout=subprocess.PIPE,
+                  stderr=subprocess.PIPE
+                )
+                #print(result.stdout.decode('utf-8'))
+                
+                for url in urls.splitlines():
+                  print(url)
+                  file_name = os.path.basename(url)
+                  download_path = os.path.join(package_dir_path, file_name)
+                  #download_path = download_path_format.format(file_name=file_name)
+                  
+                  data = urllib.request.urlopen(url).read()
+                  
+                  with open(download_path, mode='wb') as f:
+                    f.write(data)
+                  
+                #result = subprocess.run(
+                #  ['ls', '-l', package_dir_path],
+                #  stdout=subprocess.PIPE,
+                #  stderr=subprocess.PIPE
+                #)
+                #print(result.stdout.decode('utf-8'))
+                  
+                shutil.make_archive(
+                  os.path.splitext(layer_package_path)[0],
+                  format='zip',
+                  root_dir=work_dir,
+                  base_dir=package_dir
+                )
+                
+                #result = subprocess.run(
+                #  ['ls', '-l', work_dir],
+                #  stdout=subprocess.PIPE,
+                #  stderr=subprocess.PIPE
+                #)
+                #print(result.stdout.decode('utf-8'))
+                
+                s3_client.upload_file(
+                  layer_package_path,
+                  s3_bucket,
+                  os.path.join(s3_bucket_folder, layer_package)
+                )
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+          
+            #try:
+            #  if event['RequestType'] == CREATE:
+            #    ssm_client = boto3.client('ssm', region_name=region)
+            #    ssm_response = ssm_client.get_parameter(Name=requirements_parameter)
+            #    requirements = ssm_response['Parameter']['Value']
+            #    #print(requirements)
+            #    
+            #    with open(requirements_path, 'w') as file_data:
+            #      print(requirements, file=file_data)
+            #    
+            #    pip.main(['install', '-t', package_dir_path, '-r', requirements_path])
+            #    shutil.make_archive(
+            #      os.path.splitext(layer_package_path)[0],
+            #      format='zip',
+            #      root_dir=work_dir,
+            #      base_dir=package_dir
+            #      )
+            #    
+            #    s3_resource = boto3.resource('s3')
+            #    bucket = s3_resource.Bucket(s3_bucket)
+            #    
+            #    bucket.upload_file(
+            #      layer_package_path,
+            #      '/'.join([s3_bucket_folder, layer_package])
+            #      )
+            #    
+            #  cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+            #    
+            #except Exception as e:
+            #  print(e)
+            #  cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      EphemeralStorage:
+        Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function1"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole1.Arn
+      Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          DIR_PATH: /opt/python
+          FILE_NAME: gvk9-iz74.json
+      Code:
+        ZipFile: |
+          import subprocess
+          import json
+          import os
+          #import pprint
+          #import requests
+          #from bs4 import BeautifulSoup
+          
+          dir_path = os.environ['DIR_PATH']
+          file_name = os.environ['FILE_NAME']
+          
+          def lambda_handler(event, context):
+            #result = subprocess.run(
+            #  ['ls', '-l', '/opt/python'],
+            #  stdout=subprocess.PIPE,
+            #  stderr=subprocess.PIPE
+            #)
+            #print(result.stdout.decode('utf-8'))
+            
+            file_path = os.path.join(dir_path, file_name)
+            
+            with open(file_path, 'r') as f:
+              json_data = json.load(f)
+              print(json_data)
+              #pprint.pprint(json_data)
+              
+              return {
+                'statusCode': 200,
+                'body': json.dumps(json_data, indent=2)
+              }
+      FunctionName: !Sub "${Prefix}-function2"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      Timeout: !Ref Timeout
+      #Timeout: 10
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  #FunctionUrl1:
+  #  Type: AWS::Lambda::Url
+  #  Properties:
+  #    AuthType: NONE
+  #    TargetFunctionArn: !GetAtt Function1.Arn
+  
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      AuthType: NONE
+      TargetFunctionArn: !GetAtt Function2.Arn
+      
+  #FunctionUrlPermission1:
+  #  Type: AWS::Lambda::Permission
+  #  Properties:
+  #    Action: lambda:InvokeFunctionUrl
+  #    FunctionName: !GetAtt Function1.Arn
+  #    FunctionUrlAuthType: NONE
+  #    Principal: "*"
+  
+  FunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunctionUrl
+      FunctionName: !GetAtt Function2.Arn
+      FunctionUrlAuthType: NONE
+      Principal: "*"
+  
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CreateLambdaLayerPackagePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${UrlsParameter}"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${CodeS3Bucket}/*"
+
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
