@@ -154,7 +154,6 @@ Resources:
           FILE_NAME: gvk9-iz74.json
       Code:
         ZipFile: |
-          import subprocess
           import json
           import os
           
