@@ -50,11 +50,8 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
         Architecture: !Ref Architecture
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
         CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
         EphemeralStorageSize: !Ref EphemeralStorageSize
-        #FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         Handler: !Ref Handler
         LayerPackage: !Ref LayerPackage
         LayerS3Key: !Sub "${Prefix}/${LayerPackage}"
