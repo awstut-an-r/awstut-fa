@@ -61,7 +61,7 @@ Resources:
           DB_TABLENAME: !Ref DBTableName
           DB_USER: !Ref DBIamUsername
           REGION: !Ref AWS::Region
-          SSL_CERTIFICATE: /opt/python/rds-combined-ca-bundle.pem
+          SSL_CERTIFICATE: /opt/python/global-bundle.pem
       Code:
         ZipFile: |
           import boto3
