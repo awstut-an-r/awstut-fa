@@ -36,7 +36,7 @@ Resources:
       Name: !Sub "${Prefix}-customresource-02"
       Type: String
       Value: |
-        https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
+        https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
       
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
