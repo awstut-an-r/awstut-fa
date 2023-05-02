@@ -3,19 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Architecture:
     Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-    
-  #CodeS3Key1:
-  #  Type: String
-  #  
-  #CodeS3Key2:
-  #  Type: String
-  #  
-  #CodeS3Key3:
-  #  Type: String
-    
+
   DBIamUsername:
     Type: String
     
@@ -25,27 +13,12 @@ Parameters:
   DBInstanceResourceId:
     Type: String
     
-  #DBMasterUsername:
-  #  Type: String
-  #  
-  #DBMasterUserPassword:
-  #  Type: String
-    
   DBName:
     Type: String
     
   DBTableName:
     Type: String
-    
-  #DBProxyEndpointAddress1:
-  #  Type: String
-  #  
-  #DBProxyEndpointAddress2:
-  #  Type: String
-  #  
-  #DBProxyId2:
-  #  Type: String
-    
+
   FunctionSecurityGroup:
     Type: String
     
@@ -75,48 +48,6 @@ Parameters:
 
 
 Resources:
-  #LambdaLayer:
-  #  Type: AWS::Lambda::LayerVersion
-  #  Properties:
-  #    #CompatibleArchitectures:
-  #    #  - arm64
-  #    #  - x86_64
-  #    CompatibleRuntimes:
-  #      - !Ref Runtime
-  #    Content:
-  #      S3Bucket: !Ref CodeS3Bucket
-  #      S3Key: !Ref CodeS3Key3
-  #    Description: !Ref Prefix
-  #    LayerName: !Ref Prefix
-      
-  #Function1:
-  #  Type: AWS::Lambda::Function
-  #  Properties:
-  #    Environment:
-  #      Variables:
-  #        DB_ENDPOINT_PORT: !Ref MySQLPort
-  #        DB_NAME: !Ref DBName
-  #        DB_PASSWORD: !Ref DBMasterUserPassword
-  #        DB_PROXY_ENDPOINT_ADDRESS: !Ref DBProxyEndpointAddress1
-  #        DB_TABLENAME: !Ref DBTableName
-  #        DB_USER: !Ref DBMasterUsername
-  #        REGION: !Ref AWS::Region
-  #    Code:
-  #      S3Bucket: !Ref CodeS3Bucket
-  #      S3Key: !Ref CodeS3Key1
-  #    FunctionName: !Sub "${Prefix}-function-01"
-  #    Handler: !Ref Handler
-  #    Layers:
-  #      - !Ref LambdaLayer
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole1.Arn
-  #    Timeout: !Ref Timeout
-  #    VpcConfig:
-  #      SecurityGroupIds:
-  #        - !Ref FunctionSecurityGroup
-  #      SubnetIds:
-  #        - !Ref FunctionSubnet
-          
   Function:
     Type: AWS::Lambda::Function
     Properties:
@@ -127,16 +58,11 @@ Resources:
           DB_ENDPOINT_ADDRESS: !Ref DBInstanceEndpointAddress
           DB_ENDPOINT_PORT: !Ref MySQLPort
           DB_NAME: !Ref DBName
-          #DB_PASSWORD: !Ref DBMasterUserPassword
-          #DB_PROXY_ENDPOINT_ADDRESS: !Ref DBProxyEndpointAddress2
           DB_TABLENAME: !Ref DBTableName
           DB_USER: !Ref DBIamUsername
           REGION: !Ref AWS::Region
-          #SSLCERTIFICATE: AmazonRootCA1.pem
           SSL_CERTIFICATE: /opt/python/rds-combined-ca-bundle.pem
       Code:
-        #S3Bucket: !Ref CodeS3Bucket
-        #S3Key: !Ref CodeS3Key2
         ZipFile: |
           import boto3
           import datetime
@@ -147,11 +73,8 @@ Resources:
           db_endpoint_address = os.environ['DB_ENDPOINT_ADDRESS']
           db_endpoint_port = int(os.environ['DB_ENDPOINT_PORT'])
           db_name = os.environ['DB_NAME']
-          #db_password = os.environ['DB_PASSWORD']
-          #db_proxy_endpoint_address = os.environ['DB_PROXY_ENDPOINT_ADDRESS']
           db_tablename = os.environ['DB_TABLENAME']
           db_user = os.environ['DB_USER']
-          #region = 'ap-northeast-1'
           region = os.environ['REGION']
           ssl_certificate = os.environ['SSL_CERTIFICATE']
           
@@ -165,15 +88,7 @@ Resources:
                   Port=db_endpoint_port,
                   DBUsername=db_user,
                   Region=region)
-            
-              #conn = mysql.connector.connect(
-              #    #host=db_endpoint_address,
-              #    host=db_proxy_endpoint_address,
-              #    port=db_endpoint_port,
-              #    user=db_user,
-              #    password=db_password,
-              #    database=db_name
-              #    )
+
               conn = mysql.connector.connect(
                   host=db_endpoint_address,
                   user=db_user,
@@ -181,26 +96,7 @@ Resources:
                   port=db_endpoint_port,
                   database=db_name,
                   ssl_ca=ssl_certificate)
-              
-              cur = conn.cursor()
-              
-              #table_sql = 'create table if not exists {db}.{tbl} (dt datetime);'.format(
-              #    db=db_name,
-              #    tbl=db_tablename
-              #    )
-              #cur.execute(table_sql)
-              #
-              #now = datetime.datetime.now()
-              #now_str = now.strftime('%Y-%m-%d %H:%M:%S')
-              #write_sql = 'insert into {tbl} values ("{now}");'.format(
-              #    tbl=db_tablename,
-              #    now=now_str
-              #)
-              #cur.execute(write_sql)
-              #
-              #cur.close()
-              #conn.commit()
-              
+
               cur = conn.cursor()
               read_sql = 'select * from {tbl};'.format(tbl=db_tablename)
               cur.execute(read_sql)
@@ -209,10 +105,8 @@ Resources:
               cur.close()
               conn.close()
               
-              
               return {
                   'statusCode': 200,
-                  #'body': 'hello, world !'
                   'body': json.dumps(content, indent=2)
               }
       FunctionName: !Sub "${Prefix}-function"
@@ -229,20 +123,6 @@ Resources:
         SubnetIds:
           - !Ref FunctionSubnet
 
-  #FunctionRole1:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - lambda.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole
-        
   FunctionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -265,7 +145,6 @@ Resources:
                 Action:
                   - rds-db:connect
                 Resource:
-                  #- !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DBProxyId2}/${DBMasterUsername}"
                   - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DBInstanceResourceId}/${DBIamUsername}"
                   
   FunctionUrl:
@@ -281,17 +160,3 @@ Resources:
       FunctionName: !GetAtt Function.Arn
       FunctionUrlAuthType: NONE
       Principal: "*"
-  
-                  
-#Outputs:
-#  FunctionArn1:
-#    Value: !GetAtt Function1.Arn
-#    
-#  FunctionName1:
-#    Value: !Ref Function1
-#    
-#  FunctionArn2:
-#    Value: !GetAtt Function2.Arn
-#    
-#  FunctionName2:
-#    Value: !Ref Function2
