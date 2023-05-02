@@ -43,8 +43,6 @@ Resources:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VPCCidrBlock
-      #EnableDnsHostnames: true
-      #EnableDnsSupport: true
 
   IGW:
     Type: AWS::EC2::InternetGateway
@@ -165,19 +163,7 @@ Resources:
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
           CidrIp: 0.0.0.0/0
-      
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-  
+
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -196,15 +182,6 @@ Resources:
       
       
 Outputs:
-  #PrivateSubnet1:
-  #  Value: !Ref PrivateSubnet1
-    
-  #PrivateSubnet2:
-  #  Value: !Ref PrivateSubnet2
-    
-  #PrivateSubnet3:
-  #  Value: !Ref PrivateSubnet3
-  
   InstanceSubnet:
     Value: !Ref InstanceSubnet
     
@@ -219,10 +196,7 @@ Outputs:
       
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
-  
+
   FunctionSecurityGroup:
     Value: !Ref FunctionSecurityGroup
     
