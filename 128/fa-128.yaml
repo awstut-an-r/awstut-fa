@@ -5,17 +5,9 @@ Parameters:
     Type: String
     Default: awstut-bucket
     
-  #TemplateBucketFolder:
-  #  Type: String
-  #  Default: saa-01-004
-    
   Prefix:
     Type: String
     Default: fa-128
-    
-  #PrefixCommon:
-  #  Type: String
-  #  Default: saa-01-004
     
   AvailabilityZone1:
     Type: String
@@ -48,11 +40,7 @@ Parameters:
   DBIamUsername:
     Type: String
     Default: iamuser
-    
-  #DBIamPassword:
-  #  Type: String
-  #  Default: Passw0rd
-    
+
   DBMasterUsername:
     Type: String
     Default: masteruser
@@ -76,12 +64,10 @@ Parameters:
   ImageId:
     Type: String
     Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
     
   InstanceType:
     Type: String
     Default: t4g.nano
-    #Default: t3a.nano
     
   LambdaArchitecture:
     Type: String
@@ -143,46 +129,29 @@ Resources:
         DBEngine: !Ref DBEngine
         DBEngineVersion: !Ref DBEngineVersion
         DBInstanceClass: !Ref DBInstanceClass
-        #DBInstanceIdentifier: !Sub "${Prefix}-dbinstance3"
         DBName: !Ref DBName
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
         DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
         DBSubnet1: !GetAtt VPCStack.Outputs.DBSubnet1
         DBSubnet2: !GetAtt VPCStack.Outputs.DBSubnet2
-        #DBSubnetGroup: !GetAtt RDSCommonStack.Outputs.DBSubnetGroup
-        #ImageId: !Ref ImageId
-        #InstanceProfile: !GetAtt RDSCommonStack.Outputs.InstanceProfile
-        #InstanceSecurityGroup: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup
-        #InstanceType: !Ref InstanceType
-        #LicenseModel: general-public-license
-        #Port: !Ref MySQLPort
         Prefix: !Ref Prefix
-        #PrivateSubnet: !GetAtt VPCStack2.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
-        #VPC: !GetAtt VPCStack.Outputs.VPC
         
-  # lambda layer
   CustomResourceStack1:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource-01.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
         CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
         EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
-        #FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         Handler: !Ref LambdaHandler
         LayerPackage: !Ref LambdaLayerPackage
         LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
         Prefix: !Ref Prefix
-        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
         Runtime: !Ref LambdaRuntime
         Timeout: !Ref LambdaTimeout
         
-  # cert download
   CustomResourceStack2:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -191,20 +160,15 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource-02.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
         CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
         EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
-        #FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         Handler: !Ref LambdaHandler
         LayerPackage: !Ref LambdaLayerPackage
         LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
         Timeout: !Ref LambdaTimeout
-        #UrlsParameter: !GetAtt SSMStack.Outputs.UrlsParameter
         
-  # DB query
   CustomResourceStack3:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -214,22 +178,16 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource-03.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
-        #DBTableName: !Ref DBTableName
         DBIamUsername: !Ref DBIamUsername
         DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
         DBName: !Ref DBName
         DBTableName: !Ref DBTableName
-        #DBProxyEndpointAddress: !GetAtt RDSStack.Outputs.DBProxyEndpointAddress
         FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         FunctionSubnet: !GetAtt VPCStack.Outputs.FunctionSubnet
         Handler: !Ref LambdaHandler
         LambdaLayer: !GetAtt CustomResourceStack1.Outputs.LambdaLayer
-        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
         MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
@@ -239,23 +197,15 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - RDSStack
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #DBInstance: !GetAtt RDSStack.Outputs.DBInstance
         DBIamUsername: !Ref DBIamUsername
         DBInstanceResourceId: !GetAtt RDSStack.Outputs.DBInstanceResourceId
-        #DBMasterUsername: !Ref DBMasterUsername
         ImageId: !Ref ImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
         InstanceType: !Ref InstanceType
-        #Prefix: !Ref Prefix
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        #PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         
   LambdaStack:
     Type: AWS::CloudFormation::Stack
@@ -268,22 +218,11 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
-        #CodeS3Key1: !Sub "${Prefix}/deploy1.zip"
-        #CodeS3Key2: !Sub "${Prefix}/deploy2.zip"
-        #CodeS3Key3: !Sub "${Prefix}/layer.zip"
         DBIamUsername: !Ref DBIamUsername
         DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
         DBInstanceResourceId: !GetAtt RDSStack.Outputs.DBInstanceResourceId
-        #DBMasterUsername: !Ref DBMasterUsername
-        #DBMasterUserPassword: !Ref DBMasterUserPassword
         DBName: !Ref DBName
         DBTableName: !Ref DBTableName
-        #DBProxyEndpointAddress1: !GetAtt RDSStack.Outputs.DBProxyEndpointAddress1
-        #DBProxyEndpointAddress2: !GetAtt RDSStack.Outputs.DBProxyEndpointAddress2
-        #DBProxyId2: !GetAtt RDSStack.Outputs.DBProxyId2
         FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         FunctionSubnet: !GetAtt VPCStack.Outputs.FunctionSubnet
         Handler: !Ref LambdaHandler
