@@ -36,7 +36,7 @@ Resources:
         #!/bin/bash -xe
         yum update -y
         yum install -y mariadb
-        curl -OL https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
+        curl -OL https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
