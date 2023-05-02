@@ -1,27 +1,12 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketArn:
-  #  Type: String
-  
-  #DAXClusterArn:
-  #  Type: String
-    
-  #DynamoDBTableArn:
-  #  Type: String
-  
   DBIamUsername:
     Type: String
     
   DBInstanceResourceId:
     Type: String
-  
-  #DBInstance:
-  #  Type: String
-    
-  #DBMasterUsername:
-  #  Type: String
-    
+
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
@@ -33,22 +18,7 @@ Parameters:
 
   InstanceType:
     Type: String
-    
-  #Prefix:
-  #  Type: String
-    
-  #PrivateSubnet1:
-  #  Type: String
-  #  
-  #PrivateSubnet2:
-  #  Type: String
-  
-  #PrivateSubnet:
-  #  Type: String
-    
-  #UserData:
-  #  Type: String
-    
+
 
 Resources:
   Instance:
@@ -67,19 +37,6 @@ Resources:
         yum update -y
         yum install -y mariadb
         curl -OL https://s3.amazonaws.com/rds-downloads/rds-combined-ca-bundle.pem
-            
-  #Instance2:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet2
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup
-  #    #UserData: !Ref UserData
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -109,24 +66,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- s3:GetObject
-                  #- "dax:*"
                   - rds-db:connect
                 Resource:
-                  #- !Ref DAXClusterArn
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
-                  #- !Sub "arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*"
-                  #- !Sub "arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*"
                   - !Sub "arn:aws:rds-db:${AWS::Region}:${AWS::AccountId}:dbuser:${DBInstanceResourceId}/${DBIamUsername}"
-              #- Effect: Allow
-              #  Action:
-              #    #- s3:GetObject
-              #    - "dynamodb:*"
-              #  Resource:
-              #    - !Ref DynamoDBTableArn
-      
-      
-#Outputs:
-#  Instance:
-#    Value: !Ref Instance
