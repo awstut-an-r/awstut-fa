@@ -1,0 +1,234 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    
+  DBAllocatedStorage:
+    Type: Number
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBInstanceClass:
+    Type: String
+  
+  #DBInstanceIdentifier:
+  #  Type: String
+    
+  DBName:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBSecurityGroup:
+    Type: String
+  
+  DBSubnet1:
+    Type: String
+    
+  DBSubnet2:
+    Type: String
+    
+  #DBProxyEngineFamily:
+  #  Type: String
+  #  
+  #DBProxySecurityGroup:
+  #  Type: String
+  #  
+  #IdleClientTimeout:
+  #  Type: Number
+  #  
+  #MaxConnectionsPercent:
+  #  Type: Number
+  #  
+  #MaxIdleConnectionsPercent:
+  #  Type: Number
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: !Sub "${Prefix}-DBSubnetGroup"
+      DBSubnetGroupDescription: Test DBSubnetGroup.
+      SubnetIds:
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+        
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      EnableIAMDatabaseAuthentication: true
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: !Sub "${Prefix}-dbinstance"
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+        
+  #DBProxy1:
+  #  Type: AWS::RDS::DBProxy
+  #  Properties:
+  #    Auth: 
+  #      - IAMAuth: DISABLED
+  #        AuthScheme: SECRETS
+  #        SecretArn: !Ref Secret
+  #      #- IAMAuth: REQUIRED
+  #      #  AuthScheme: SECRETS
+  #      #  SecretArn: !Ref Secret
+  #    DBProxyName: !Sub "${Prefix}-DBProxy-01"
+  #    #DebugLogging: true
+  #    EngineFamily: !Ref DBProxyEngineFamily
+  #    IdleClientTimeout: !Ref IdleClientTimeout
+  #    RequireTLS: false
+  #    RoleArn: !GetAtt DBProxyRole.Arn
+  #    VpcSecurityGroupIds: 
+  #      - !Ref DBProxySecurityGroup
+  #    VpcSubnetIds: 
+  #      - !Ref DBSubnet1
+  #      - !Ref DBSubnet2
+  #      
+  #DBProxy2:
+  #  Type: AWS::RDS::DBProxy
+  #  Properties:
+  #    Auth: 
+  #      #- IAMAuth: DISABLED
+  #      #  AuthScheme: SECRETS
+  #      #  SecretArn: !Ref Secret
+  #      - IAMAuth: REQUIRED
+  #        AuthScheme: SECRETS
+  #        SecretArn: !Ref Secret
+  #    DBProxyName: !Sub "${Prefix}-DBProxy-02"
+  #    #DebugLogging: true
+  #    EngineFamily: !Ref DBProxyEngineFamily
+  #    IdleClientTimeout: !Ref IdleClientTimeout
+  #    RequireTLS: true
+  #    RoleArn: !GetAtt DBProxyRole.Arn
+  #    VpcSecurityGroupIds: 
+  #      - !Ref DBProxySecurityGroup
+  #    VpcSubnetIds: 
+  #      - !Ref DBSubnet1
+  #      - !Ref DBSubnet2
+  #      
+  #DBProxyTargetGroup1:
+  #  Type: AWS::RDS::DBProxyTargetGroup
+  #  Properties:
+  #    DBProxyName: !Ref DBProxy1
+  #    DBInstanceIdentifiers:
+  #      - !Ref DBInstance
+  #    TargetGroupName: default
+  #    ConnectionPoolConfigurationInfo:
+  #      MaxConnectionsPercent: !Ref MaxConnectionsPercent
+  #      MaxIdleConnectionsPercent: !Ref MaxIdleConnectionsPercent
+  #      ConnectionBorrowTimeout: !Ref ConnectionBorrowTimeout
+  #      
+  #DBProxyTargetGroup2:
+  #  Type: AWS::RDS::DBProxyTargetGroup
+  #  Properties:
+  #    DBProxyName: !Ref DBProxy2
+  #    DBInstanceIdentifiers:
+  #      - !Ref DBInstance
+  #    TargetGroupName: default
+  #    ConnectionPoolConfigurationInfo:
+  #      MaxConnectionsPercent: !Ref MaxConnectionsPercent
+  #      MaxIdleConnectionsPercent: !Ref MaxIdleConnectionsPercent
+  #      ConnectionBorrowTimeout: !Ref ConnectionBorrowTimeout
+  #      
+  #DBProxyRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: "2012-10-17"
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - rds.amazonaws.com
+  #    Policies:
+  #      - PolicyName: !Sub "${Prefix}-DBProxyPolicy"
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action: secretsmanager:GetSecretValue
+  #              Resource: !Ref Secret
+  #            - Effect: Allow
+  #              Action: kms:Decrypt
+  #              Resource: '*' # use default key.
+  #            #- Effect: Allow
+  #            #  Action: kms:Decrypt
+  #            #  Resource: '*'
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - secretsmanager:GetResourcePolicy
+  #            #    - secretsmanager:GetSecretValue
+  #            #    - secretsmanager:DescribeSecret
+  #            #    - secretsmanager:ListSecretVersionIds
+  #            #  Resource: !Ref SecretAttachment
+  #      
+  #Secret:
+  #  Type: AWS::SecretsManager::Secret
+  #  Properties: 
+  #    Name: !Sub "${Prefix}-Secret"
+  #    SecretString: !Sub '{"username":"${DBMasterUsername}","password":"${DBMasterUserPassword}"}'
+      
+  #SecretAttachment:
+  #  Type: AWS::SecretsManager::SecretTargetAttachment
+  #  Properties:
+  #    SecretId: !Ref Secret
+  #    TargetId: !Ref DBInstance
+  #    TargetType: AWS::RDS::DBInstance
+      
+
+Outputs:
+  DBInstanceEndpointAddress:
+    Value: !GetAtt DBInstance.Endpoint.Address
+      
+  #DBEndpointPort:
+  #  Value: !GetAtt DBInstance.Endpoint.Port
+  #    
+  #DBUser:
+  #  Value: !Ref DBMasterUsername
+  #
+  #DBPassword:
+  #  Value: !Ref DBMasterUserPassword
+  #    
+  #DBName:
+  #  Value: !Ref DBName
+  
+  #DBProxyEndpointAddress1:
+  #  Value: !GetAtt DBProxy1.Endpoint
+  #  
+  #DBProxyEndpointAddress2:
+  #  Value: !GetAtt DBProxy2.Endpoint
+  #  
+  #DBProxyId2:
+  #  Value: !Select
+  #    - 6
+  #    - !Split
+  #      - ":"
+  #      - !GetAtt DBProxy2.DBProxyArn
+  
+  #DBInstance:
+  #  Value: !Ref DBInstance
+    
+  DBInstanceResourceId:
+    Value: !GetAtt DBInstance.DbiResourceId
