@@ -1,0 +1,50 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+
+Resources:
+  ConfigBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref Prefix
+      AccessControl: Private
+        
+  ConfigBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref ConfigBucket
+      PolicyDocument:
+        Statement:
+          - Principal:
+              Service: config.amazonaws.com
+            Action: s3:GetBucketAcl
+            Effect: Allow
+            Resource: !Sub "arn:aws:s3:::${ConfigBucket}"
+            Condition:
+              StringLike:
+                AWS:SourceAccount: !Ref AWS::AccountId
+          - Principal:
+              Service: config.amazonaws.com
+            Action: s3:ListBucket
+            Effect: Allow
+            Resource: !Sub "arn:aws:s3:::${ConfigBucket}"
+            Condition:
+              StringLike:
+                AWS:SourceAccount: !Ref AWS::AccountId
+          - Principal:
+              Service: config.amazonaws.com
+            Action: s3:PutObject
+            Effect: Allow
+            Resource: !Sub "arn:aws:s3:::${ConfigBucket}/*"
+            Condition:
+              StringLike:
+                s3:x-amz-acl: bucket-owner-full-control
+                AWS:SourceAccount: !Ref AWS::AccountId
+
+
+Outputs:
+  ConfigBucket:
+    Value: !Ref ConfigBucket
