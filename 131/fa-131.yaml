@@ -25,8 +25,5 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-config.yaml"
       Parameters:
-        #Bucket1: !GetAtt S3Stack.Outputs.Bucket1
-        #Bucket2: !GetAtt S3Stack.Outputs.Bucket2
-        #LogBucket: !GetAtt S3Stack.Outputs.LogBucket
         ConfigBucket: !GetAtt S3Stack.Outputs.ConfigBucket
         Prefix: !Ref Prefix
