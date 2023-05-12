@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
     
   Prefix:
     Type: String
@@ -13,19 +13,19 @@ Parameters:
     Type: Number
     Default: 0
 
-  CustomHeaderFieldNameJsonKey:
+  CustomHeaderNameJsonKey:
     Type: String
-    Default: CustomHeaderFieldName
+    Default: CustomHeaderName
     
-  CustomHeaderFieldName:
+  CustomHeaderName:
     Type: String
     Default: X-Custom-Header
     
-  CustomHeaderFieldValueJsonKey:
+  CustomHeaderValueJsonKey:
     Type: String
-    Default: CustomHeaderFieldValue
+    Default: CustomHeaderValue
     
-  CustomHeaderFieldValueLength:
+  CustomHeaderValueLength:
     Type: Number
     Default: 64
     
@@ -53,10 +53,10 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-secretsmanager.yaml"
       Parameters:
-        CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
-        CustomHeaderFieldName: !Ref CustomHeaderFieldName
-        CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
-        CustomHeaderFieldValueLength: !Ref CustomHeaderFieldValueLength
+        CustomHeaderNameJsonKey: !Ref CustomHeaderNameJsonKey
+        CustomHeaderName: !Ref CustomHeaderName
+        CustomHeaderValueJsonKey: !Ref CustomHeaderValueJsonKey
+        CustomHeaderValueLength: !Ref CustomHeaderValueLength
         Prefix: !Ref Prefix
         
   VPCStack:
@@ -120,9 +120,9 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
       Parameters:
         ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
-        CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
-        CustomHeaderFieldName: !Ref CustomHeaderFieldName
-        CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
+        CustomHeaderNameJsonKey: !Ref CustomHeaderNameJsonKey
+        CustomHeaderName: !Ref CustomHeaderName
+        CustomHeaderValueJsonKey: !Ref CustomHeaderValueJsonKey
         HTTPPort: !Ref HTTPPort
         Instance1: !GetAtt EC2Stack.Outputs.Instance1
         Instance2: !GetAtt EC2Stack.Outputs.Instance2
@@ -148,8 +148,8 @@ Resources:
       Parameters:
         ALBDNSName: !GetAtt ALBStack.Outputs.ALBDNSName
         CacheTTL: !Ref CloudFrontCacheTTL
-        CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
-        CustomHeaderFieldName: !Ref CustomHeaderFieldName
-        CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
+        CustomHeaderNameJsonKey: !Ref CustomHeaderNameJsonKey
+        CustomHeaderName: !Ref CustomHeaderName
+        CustomHeaderValueJsonKey: !Ref CustomHeaderValueJsonKey
         Prefix: !Ref Prefix
         Secret: !GetAtt SecretsManagerStack.Outputs.Secret
