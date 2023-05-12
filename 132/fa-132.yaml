@@ -12,11 +12,7 @@ Parameters:
   CloudFrontCacheTTL:
     Type: Number
     Default: 0
-    
-  #CustomHeaderKey:
-  #  Type: String
-  #  Default: X-Custom-Header
-  
+
   CustomHeaderFieldNameJsonKey:
     Type: String
     Default: CustomHeaderFieldName
@@ -61,9 +57,6 @@ Resources:
         CustomHeaderFieldName: !Ref CustomHeaderFieldName
         CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
         CustomHeaderFieldValueLength: !Ref CustomHeaderFieldValueLength
-        #Password: !Ref Password
-        #PasswordKey: !Ref PasswordKey
-        #PasswordLength: !Ref PasswordLength
         Prefix: !Ref Prefix
         
   VPCStack:
@@ -158,6 +151,5 @@ Resources:
         CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
         CustomHeaderFieldName: !Ref CustomHeaderFieldName
         CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
-        #InstancePublicDnsName: !GetAtt EC2Stack.Outputs.InstancePublicDnsName
         Prefix: !Ref Prefix
         Secret: !GetAtt SecretsManagerStack.Outputs.Secret
