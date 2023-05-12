@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ALBDNSName:
+    Type: String
+    
+  CacheTTL:
+    Type: Number
+    
+  CustomHeaderFieldNameJsonKey:
+    Type: String
+    
+  CustomHeaderFieldName:
+    Type: String
+    
+  CustomHeaderFieldValueJsonKey:
+    Type: String
+  
+  #InstancePublicDnsName:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Secret:
+    Type: String
+    
+
+Resources:
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: false
+          TargetOriginId: !Ref ALBDNSName
+          ViewerProtocolPolicy: allow-all
+          DefaultTTL: !Ref CacheTTL
+          MaxTTL: !Ref CacheTTL
+          MinTTL: !Ref CacheTTL
+        Enabled: true
+        Origins:
+          - CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+            DomainName: !Ref ALBDNSName
+            Id: !Ref ALBDNSName
+            OriginCustomHeaders:
+              - HeaderName: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderFieldNameJsonKey}}}"
+                HeaderValue: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderFieldValueJsonKey}}}"
+        PriceClass: PriceClass_All

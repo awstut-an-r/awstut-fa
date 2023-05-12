@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-132
+    
+  CloudFrontCacheTTL:
+    Type: Number
+    Default: 0
+    
+  #CustomHeaderKey:
+  #  Type: String
+  #  Default: X-Custom-Header
+  
+  CustomHeaderFieldNameJsonKey:
+    Type: String
+    Default: CustomHeaderFieldName
+    
+  CustomHeaderFieldName:
+    Type: String
+    Default: X-Custom-Header
+    
+  CustomHeaderFieldValueJsonKey:
+    Type: String
+    Default: CustomHeaderFieldValue
+    
+  CustomHeaderFieldValueLength:
+    Type: Number
+    Default: 64
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  InstanceImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+      
+    
+Resources:
+  SecretsManagerStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-secretsmanager.yaml"
+      Parameters:
+        CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
+        CustomHeaderFieldName: !Ref CustomHeaderFieldName
+        CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
+        CustomHeaderFieldValueLength: !Ref CustomHeaderFieldValueLength
+        #Password: !Ref Password
+        #PasswordKey: !Ref PasswordKey
+        #PasswordLength: !Ref PasswordLength
+        Prefix: !Ref Prefix
+        
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        AvailabilityZone2: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        CidrIp4: 10.0.4.0/24
+        HTTPPort: !Ref HTTPPort
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EndpointStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+      Parameters:
+        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
+        Prefix: !Ref Prefix
+        PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+      - EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: !Ref InstanceImageId
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        UserData: !Base64 |
+          #!/bin/bash -xe
+          yum update -y
+          yum install -y httpd
+          systemctl start httpd
+          systemctl enable httpd
+          ec2-metadata -i > /var/www/html/index.html
+          
+  ALBStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SecretsManagerStack
+      - EC2Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
+      Parameters:
+        ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
+        CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
+        CustomHeaderFieldName: !Ref CustomHeaderFieldName
+        CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
+        HTTPPort: !Ref HTTPPort
+        Instance1: !GetAtt EC2Stack.Outputs.Instance1
+        Instance2: !GetAtt EC2Stack.Outputs.Instance2
+        PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
+        PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
+        Prefix: !Ref Prefix
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
+        VPC: !GetAtt VPCStack.Outputs.VPC
+        
+        HealthyThresholdCount: 5
+        UnhealthyThresholdCount: 2
+        HealthCheckTimeoutSeconds: 5
+        HealthCheckIntervalSeconds: 30
+        HttpCode: 200
+        
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SecretsManagerStack
+      - ALBStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
+      Parameters:
+        ALBDNSName: !GetAtt ALBStack.Outputs.ALBDNSName
+        CacheTTL: !Ref CloudFrontCacheTTL
+        CustomHeaderFieldNameJsonKey: !Ref CustomHeaderFieldNameJsonKey
+        CustomHeaderFieldName: !Ref CustomHeaderFieldName
+        CustomHeaderFieldValueJsonKey: !Ref CustomHeaderFieldValueJsonKey
+        #InstancePublicDnsName: !GetAtt EC2Stack.Outputs.InstancePublicDnsName
+        Prefix: !Ref Prefix
+        Secret: !GetAtt SecretsManagerStack.Outputs.Secret
