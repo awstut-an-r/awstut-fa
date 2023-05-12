@@ -4,13 +4,13 @@ Parameters:
   ALBSecurityGroup:
     Type: String
     
-  CustomHeaderFieldNameJsonKey:
+  CustomHeaderNameJsonKey:
     Type: String
     
-  CustomHeaderFieldName:
+  CustomHeaderName:
     Type: String
     
-  CustomHeaderFieldValueJsonKey:
+  CustomHeaderValueJsonKey:
     Type: String
     
   HTTPPort:
@@ -108,9 +108,9 @@ Resources:
       Conditions: 
         - Field: http-header
           HttpHeaderConfig:
-            HttpHeaderName: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderFieldNameJsonKey}}}"
+            HttpHeaderName: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderNameJsonKey}}}"
             Values: 
-              - !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderFieldValueJsonKey}}}"
+              - !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderValueJsonKey}}}"
       ListenerArn: !Ref ALBListener
       Priority: 1
 
