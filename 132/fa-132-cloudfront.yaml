@@ -6,13 +6,13 @@ Parameters:
   CacheTTL:
     Type: Number
     
-  CustomHeaderFieldNameJsonKey:
+  CustomHeaderNameJsonKey:
     Type: String
     
-  CustomHeaderFieldName:
+  CustomHeaderName:
     Type: String
     
-  CustomHeaderFieldValueJsonKey:
+  CustomHeaderValueJsonKey:
     Type: String
 
   Prefix:
@@ -51,6 +51,6 @@ Resources:
             DomainName: !Ref ALBDNSName
             Id: !Ref ALBDNSName
             OriginCustomHeaders:
-              - HeaderName: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderFieldNameJsonKey}}}"
-                HeaderValue: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderFieldValueJsonKey}}}"
+              - HeaderName: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderNameJsonKey}}}"
+                HeaderValue: !Sub "{{resolve:secretsmanager:${Secret}:SecretString:${CustomHeaderValueJsonKey}}}"
         PriceClass: PriceClass_All
