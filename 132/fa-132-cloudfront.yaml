@@ -14,10 +14,7 @@ Parameters:
     
   CustomHeaderFieldValueJsonKey:
     Type: String
-  
-  #InstancePublicDnsName:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
