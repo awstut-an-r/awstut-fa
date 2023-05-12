@@ -90,9 +90,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties: 
       DefaultActions: 
-        #- TargetGroupArn: !Ref ALBTargetGroup
-        #  Type: forward
-        #  
         - FixedResponseConfig:
             ContentType: text/plain
             MessageBody: Access denied
