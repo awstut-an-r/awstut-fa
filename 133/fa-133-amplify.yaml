@@ -12,20 +12,12 @@ Parameters:
 
   Prefix:
     Type: String
-    
-  #TopicArn:
-  #  Type: String
 
 
 Resources:
   App:
     Type: AWS::Amplify::App
     Properties: 
-      #AccessToken: String
-      #AutoBranchCreationConfig: 
-      #  AutoBranchCreationConfig
-      #BasicAuthConfig: 
-      #  BasicAuthConfig
       BuildSpec: |
         version: 1
         frontend:
@@ -40,42 +32,26 @@ Resources:
               - '**/*'
           cache:
             paths: []
-      #CustomHeaders: String
       CustomRules: 
         - Source: /<*>
           Status: 404-200
           Target: /index.html
-      #Description: String
       EnableBranchAutoDeletion: false
-      #EnvironmentVariables: 
-      #  - EnvironmentVariable
       IAMServiceRole: !GetAtt AppRole.Arn
       Name: !Ref Prefix
-      #OauthToken: String
       Platform: WEB
       Repository: !Ref CodeCommitRepositoryCloneUrlHttp
-      #Tags: 
-      #  - Tag
       
   Branch:
     Type: AWS::Amplify::Branch
     Properties: 
       AppId: !GetAtt App.AppId
-      #BasicAuthConfig: 
-      #  BasicAuthConfig
       BranchName: !Ref BranchName
-      #BuildSpec: String
-      #Description: String
       EnableAutoBuild: true
       EnablePerformanceMode: false
       EnablePullRequestPreview: false
-      #EnvironmentVariables: 
-      #  - EnvironmentVariable
       Framework: Web
-      #PullRequestEnvironmentName: String
       Stage: PRODUCTION
-      #Tags: 
-      #  - Tag
         
   AppRole:
     Type: AWS::IAM::Role
@@ -90,8 +66,6 @@ Resources:
                 - amplify.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: CloudFormationDeployPolicy
           PolicyDocument:
@@ -110,17 +84,3 @@ Resources:
                 Action:
                   - codecommit:GitPull
                 Resource: !Ref CodeCommitRepositoryArn
-                
-  #Subscription:
-  #  Type: AWS::SNS::Subscription
-  #  Properties: 
-  #    #DeliveryPolicy: Json
-  #    Endpoint: String
-  #    FilterPolicy: Json
-  #    FilterPolicyScope: String
-  #    Protocol: String
-  #    RawMessageDelivery: Boolean
-  #    RedrivePolicy: Json
-  #    Region: String
-  #    SubscriptionRoleArn: String
-  #    TopicArn: String
