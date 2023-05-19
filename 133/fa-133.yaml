@@ -15,23 +15,13 @@ Parameters:
     
 
 Resources:
-  #SNSStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
-        
   CodeStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - SNSStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
       Parameters:
         BranchName: !Ref BranchName
         Prefix: !Ref Prefix
-        #TopicArn: !GetAtt SNSStack.Outputs.TopicArn
         
   AmplifyStack:
     Type: AWS::CloudFormation::Stack
@@ -44,11 +34,3 @@ Resources:
         CodeCommitRepositoryArn: !GetAtt CodeStack.Outputs.CodeCommitRepositoryArn
         CodeCommitRepositoryCloneUrlHttp: !GetAtt CodeStack.Outputs.CodeCommitRepositoryCloneUrlHttp
         Prefix: !Ref Prefix
-        #TopicArn: !GetAtt SNSStack.Outputs.TopicArn
-
-  #S3Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
