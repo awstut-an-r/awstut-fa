@@ -10,7 +10,11 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Ref Prefix
-      AccessControl: Private
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
       WebsiteConfiguration:
         IndexDocument: index.html
 
