@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-135
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaMemory:
+    Type: Number
+    Default: 128
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+
+Resources:
+  StackSetsStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-stacksets.yaml"
+      Parameters:
+        LambdaHandler: !Ref LambdaHandler
+        LambdaMemory: !Ref LambdaMemory
+        LambdaRuntime: !Ref LambdaRuntime
+        Prefix: !Ref Prefix
+        TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"

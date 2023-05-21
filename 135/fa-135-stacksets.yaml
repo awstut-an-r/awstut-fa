@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  LambdaHandler:
+    Type: String
+    
+  LambdaMemory:
+    Type: Number
+    
+  LambdaRuntime:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  TemplateURL:
+    Type: String
+    
+
+Resources:
+  StackSet:
+    Type: AWS::CloudFormation::StackSet
+    Properties: 
+      AdministrationRoleARN: !GetAtt AdministrationRole.Arn
+      #AutoDeployment: 
+      #  AutoDeployment
+      #CallAs: String
+      Capabilities: 
+        - CAPABILITY_NAMED_IAM
+      #Description: String
+      #ExecutionRoleName: AWSCloudFormationStackSetExecutionRole
+      #ManagedExecution: 
+      #  ManagedExecution
+      #OperationPreferences: 
+      #  OperationPreferences
+      Parameters: 
+        - ParameterKey: Prefix
+          ParameterValue: !Ref Prefix
+        - ParameterKey: Handler
+          ParameterValue: !Ref LambdaHandler
+        - ParameterKey: Memory
+          ParameterValue: !Ref LambdaMemory
+        - ParameterKey: Runtime
+          ParameterValue: !Ref LambdaRuntime
+      PermissionModel: SELF_MANAGED
+      StackInstancesGroup: 
+        - DeploymentTargets: 
+            #AccountFilterType: String
+            Accounts: 
+              - !Ref AWS::AccountId
+            #OrganizationalUnitIds: 
+            #  - String
+          #ParameterOverrides: 
+          #  - Parameter
+          Regions: 
+            - !Ref AWS::Region
+        - DeploymentTargets: 
+            #AccountFilterType: String
+            Accounts: 
+              - !Ref AWS::AccountId
+            #OrganizationalUnitIds: 
+            #  - String
+          ParameterOverrides: 
+            - ParameterKey: Memory
+              ParameterValue: 256
+          Regions: 
+            - us-east-1
+      StackSetName: !Ref Prefix
+      #Tags: 
+      #  - Tag
+      #TemplateBody: String
+      TemplateURL: !Ref TemplateURL
+      
+  AdministrationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSCloudFormationStackSetAdministrationRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: AssumeRole-AWSCloudFormationStackSetExecutionRole
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sts:AssumeRole
+                Resource:
+                  - arn:*:iam::*:role/AWSCloudFormationStackSetExecutionRole
+  
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSCloudFormationStackSetExecutionRole
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS:
+                - !Ref AWS::AccountId
+            Action:
+              - sts:AssumeRole
+      Path: /
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
+      
+      
+
+#Outputs:
+#  BucketArn:
+#    Value: !GetAtt Bucket.Arn
+#    
+#  BucketName:
+#    Value: !Ref Bucket
+#    
+#  BucketRegionalDomainName:
+#    #Value: !GetAtt Bucket.DomainName
+#    Value: !GetAtt Bucket.RegionalDomainName
+#  
+#  #BucketWebsiteURL:
+#  #  Value: !GetAtt Bucket.WebsiteURL
