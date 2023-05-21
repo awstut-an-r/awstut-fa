@@ -18,8 +18,6 @@ Resources:
   Function:
     Type: AWS::Lambda::Function
     Properties:
-      #Architectures:
-      #  - !Ref Architecture
       Environment:
         Variables:
           REGION: !Ref AWS::Region
@@ -42,21 +40,11 @@ Resources:
               'statusCode': 200,
               'body': json.dumps(data, indent=2)
             }
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       MemorySize: !Ref Memory
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   FunctionRole:
     Type: AWS::IAM::Role
@@ -72,18 +60,3 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: CreateLambdaLayerPackagePolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - ssm:GetParameter
-      #          Resource:
-      #            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${UrlsParameter}"
-      #        - Effect: Allow
-      #          Action:
-      #            - s3:PutObject
-      #          Resource:
-      #            - !Sub "arn:aws:s3:::${CodeS3Bucket}/*"
