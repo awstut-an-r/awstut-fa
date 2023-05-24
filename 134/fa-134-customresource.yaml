@@ -15,13 +15,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #FunctionArn:
-  #  Type: String
-    
-  #Prefix:
-  #  Type: String
-    
+
     
 Resources:
   Function:
@@ -117,8 +111,3 @@ Resources:
     Type: Custom::CustomResource
     Properties:
       ServiceToken: !GetAtt Function.Arn
-      
-      
-#Outputs:
-#  CustomResourceReturnValue:
-#    Value: !GetAtt CustomResource.message
