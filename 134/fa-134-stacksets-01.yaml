@@ -37,17 +37,8 @@ Resources:
     Type: AWS::CloudFormation::StackSet
     Properties: 
       AdministrationRoleARN: !Ref AdministrationRoleArn
-      #AutoDeployment: 
-      #  AutoDeployment
-      #CallAs: String
       Capabilities: 
         - CAPABILITY_IAM
-      #Description: String
-      #ExecutionRoleName: AWSCloudFormationStackSetExecutionRole
-      #ManagedExecution: 
-      #  ManagedExecution
-      #OperationPreferences: 
-      #  OperationPreferences
       Parameters: 
         - ParameterKey: ACMParameterStoreName
           ParameterValue: !Ref ACMParameterStoreName
@@ -68,90 +59,14 @@ Resources:
       PermissionModel: SELF_MANAGED
       StackInstancesGroup: 
         - DeploymentTargets: 
-            #AccountFilterType: String
             Accounts: 
               - !Ref AWS::AccountId
-            #OrganizationalUnitIds: 
-            #  - String
-          #ParameterOverrides: 
-          #  - Parameter
           Regions: 
             - !Ref ACMRegion
-        #- DeploymentTargets: 
-        #    #AccountFilterType: String
-        #    Accounts: 
-        #      - !Ref AWS::AccountId
-        #    #OrganizationalUnitIds: 
-        #    #  - String
-        #  ParameterOverrides: 
-        #    - ParameterKey: Memory
-        #      ParameterValue: 256
-        #  Regions: 
-        #    - us-east-1
       StackSetName: !Sub "${Prefix}-01"
-      #Tags: 
-      #  - Tag
-      #TemplateBody: String
       TemplateURL: !Sub "${TemplateDir}/${Prefix}-01.yaml"
-      
-  #AdministrationRole:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    RoleName: AWSCloudFormationStackSetAdministrationRole
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Principal:
-  #            Service: cloudformation.amazonaws.com
-  #          Action:
-  #            - sts:AssumeRole
-  #    Path: /
-  #    Policies:
-  #      - PolicyName: AssumeRole-AWSCloudFormationStackSetExecutionRole
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - sts:AssumeRole
-  #              Resource:
-  #                - arn:*:iam::*:role/AWSCloudFormationStackSetExecutionRole
-  #
-  #ExecutionRole:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    RoleName: AWSCloudFormationStackSetExecutionRole
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Principal:
-  #            AWS:
-  #              - !Ref AWS::AccountId
-  #          Action:
-  #            - sts:AssumeRole
-  #    Path: /
-  #    ManagedPolicyArns:
-  #      - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
-      
       
 
 Outputs:
   ACMParameterStoreName:
     Value: !Ref ACMParameterStoreName
-
-#  BucketArn:
-#    Value: !GetAtt Bucket.Arn
-#    
-#  BucketName:
-#    Value: !Ref Bucket
-#    
-#  BucketRegionalDomainName:
-#    #Value: !GetAtt Bucket.DomainName
-#    Value: !GetAtt Bucket.RegionalDomainName
-#  
-#  #BucketWebsiteURL:
-#  #  Value: !GetAtt Bucket.WebsiteURL
