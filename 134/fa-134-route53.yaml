@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ALBDnsName:
-  #  Type: String
-  #  
-  #ALBHostedZoneId:
-  #  Type: String
-  
   DistributionDomainName:
     Type: String
     
@@ -18,10 +12,7 @@ Parameters:
     
   HostedZoneId:
     Type: String
-    
-  #Prefix:
-  #  Type: String
-    
+
 
 Resources:
   DnsRecord:
