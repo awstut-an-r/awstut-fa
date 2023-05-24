@@ -6,13 +6,7 @@ Parameters:
     
   Distribution:
     Type: String
-    
-  #OAI:
-  #  Type: String
-    
-  #Prefix:
-  #  Type: String
-    
+
 
 Resources:
   BucketPolicy:
@@ -27,13 +21,7 @@ Resources:
           Principal: 
             Service: 
               - cloudfront.amazonaws.com
-          #Principal:
-          #  AWS: !Sub "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${OAI}"
           Resource: !Sub "arn:aws:s3:::${BucketName}/*"
           Condition: 
             StringEquals:
               AWS:SourceArn: !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
-          #Condition:
-          #  StringLike:
-          #    aws:Referer:
-          #      - !Ref Prefix
