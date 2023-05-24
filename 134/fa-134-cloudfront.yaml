@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ACMParameterStoreName:
+    Type: String
+
+  BucketName:
+    Type: String
+
+  #BucketWebsiteURL:
+  #  Type: String
+  
+  BucketRegionalDomainName:
+    Type: String
+    
+  DomainName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+
+Resources:
+  OAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties: 
+      OriginAccessControlConfig:
+        #Description: Access Control
+        Name: !Ref Prefix
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  #OAI:
+  #  Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+  #  Properties:
+  #    CloudFrontOriginAccessIdentityConfig:
+  #      Comment: !Ref Prefix
+        
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        DefaultCacheBehavior:
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          Compress: true
+          ForwardedValues:
+            Cookies:
+              Forward: none
+            QueryString: false
+          TargetOriginId: !Ref BucketName
+          #ViewerProtocolPolicy: allow-all
+          ViewerProtocolPolicy: redirect-to-https
+          #DefaultTTL: !Ref CacheTTL
+          #MaxTTL: !Ref CacheTTL
+          #MinTTL: !Ref CacheTTL
+        DefaultRootObject: index.html
+        Enabled: true
+        Origins:
+          - DomainName: !Ref BucketRegionalDomainName
+            #DomainName: !Select
+            #  - 2
+            #  - !Split
+            #      - /
+            #      - !Ref BucketWebsiteURL
+            Id: !Ref BucketName
+            OriginAccessControlId: !GetAtt OAC.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ""
+            #CustomOriginConfig:
+            #  OriginProtocolPolicy: http-only
+            #OriginCustomHeaders:
+            #  - HeaderName: Referer
+            #    HeaderValue: !Ref Prefix
+        PriceClass: PriceClass_All
+        ViewerCertificate:
+          SslSupportMethod: sni-only
+          AcmCertificateArn: !Sub "{{resolve:ssm:${ACMParameterStoreName}}}"
+        
+        
+Outputs:
+  Distribution:
+    Value: !Ref Distribution
+
+  #OAI:
+  #  Value: !Ref OAI
+  
+  DistributionDomainName:
+    Value: !GetAtt Distribution.DomainName

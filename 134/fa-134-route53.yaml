@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #ALBDnsName:
+  #  Type: String
+  #  
+  #ALBHostedZoneId:
+  #  Type: String
+  
+  DistributionDomainName:
+    Type: String
+    
+  DistributionHostedZoneId:
+    Type: String
+    
+  DomainName:
+    Type: String
+    
+  HostedZoneId:
+    Type: String
+    
+  #Prefix:
+  #  Type: String
+    
+
+Resources:
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId
+      Name: !Ref DomainName
+      Type: A
+      AliasTarget: 
+        DNSName: !Ref DistributionDomainName
+        HostedZoneId: !Ref DistributionHostedZoneId

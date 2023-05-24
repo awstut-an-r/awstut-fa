@@ -1,0 +1,109 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ACMParameterStoreName:
+    Type: String
+
+  AppRegion:
+    Type: String
+
+  Certificate:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+    
+Resources:
+  #CertificateId:
+  #  Type: AWS::SSM::Parameter
+  #  Properties:
+  #    Name: !Sub "${Prefix}-CertificateId"
+  #    Type: String
+  #    Value: !Ref Certificate
+        
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function.Arn
+  
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          certificate = os.environ['CERTIFICATE']
+          parameter_name = os.environ['PARAMETER_NAME']
+          region = os.environ['REGION']
+          
+          ssm_client = boto3.client('ssm', region_name=region)
+           
+          CREATE = 'Create'
+          DELETE = 'Delete'
+          response_data = {}
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                response = ssm_client.put_parameter(
+                  Name=parameter_name,
+                  Value=certificate,
+                  Type='String'
+                )
+                print(response)
+                
+              elif event['RequestType'] == DELETE:
+                response = ssm_client.delete_parameter(
+                  Name=parameter_name
+                )
+                print(response)
+              
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      Environment:
+        Variables:
+          CERTIFICATE: !Ref Certificate
+          PARAMETER_NAME: !Ref ACMParameterStoreName
+          REGION: !Ref AppRegion
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: CreateSSMParameterStorePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:PutParameter
+                  - ssm:DeleteParameter
+                Resource: "*"

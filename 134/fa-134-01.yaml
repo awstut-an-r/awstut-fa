@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ACMParameterStoreName:
+    Type: String
+
+  AppRegion:
+    Type: String
+    
+  DomainName:
+    Type: String
+    
+  HostedZoneId:
+    Type: String
+    
+  LambdaHandler:
+    Type: String
+    
+  LambdaRuntime:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  TemplateDir:
+    Type: String
+
+
+Resources:
+  ACMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-acm.yaml"
+      Parameters:
+        DomainName: !Ref DomainName
+        HostedZoneId: !Ref HostedZoneId
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-ssm.yaml"
+      Parameters:
+        ACMParameterStoreName: !Ref ACMParameterStoreName
+        AppRegion: !Ref AppRegion
+        Certificate: !GetAtt ACMStack.Outputs.Certificate
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime

@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ACMParameterStoreName:
+    Type: String
+
+  #AppRegion:
+  #  Type: String
+
+  DistributionHostedZoneId:
+    Type: String
+
+  DomainName:
+    Type: String
+    
+  HostedZoneId:
+    Type: String
+    
+  LambdaHandler:
+    Type: String
+    
+  LambdaRuntime:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  TemplateDir:
+    Type: String
+
+
+Resources:
+  #ACMStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "${TemplateDir}/${Prefix}-acm.yaml"
+  #    Parameters:
+  #      DomainName: !Ref DomainName
+  #      HostedZoneId: !Ref HostedZoneId
+  #      
+  #SSMStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  Properties:
+  #    TemplateURL: !Sub "${TemplateDir}/${Prefix}-ssm.yaml"
+  #    Parameters:
+  #      ACMParameterStoreName: !Ref ACMParameterStoreName
+  #      AppRegion: !Ref AppRegion
+  #      Certificate: !GetAtt ACMStack.Outputs.Certificate
+  #      Handler: !Ref LambdaHandler
+  #      Prefix: !Ref Prefix
+  #      Runtime: !Ref LambdaRuntime
+        
+  S3Stack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-s3-01.yaml"
+      Parameters:
+        #Prefix: !Ref Prefix
+        DomainName: !Ref DomainName
+        
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-cloudfront.yaml"
+      Parameters:
+        ACMParameterStoreName: !Ref ACMParameterStoreName
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        #BucketWebsiteURL: !GetAtt S3Stack1.Outputs.BucketWebsiteURL
+        BucketRegionalDomainName: !GetAtt S3Stack1.Outputs.BucketRegionalDomainName
+        #DomainName: !Ref DomainName
+        DomainName: !Ref DomainName
+        Prefix: !Ref Prefix
+        
+  S3Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CloudFrontStack
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-s3-02.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        Distribution: !GetAtt CloudFrontStack.Outputs.Distribution
+        #DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
+        #OAI: !GetAtt CloudFrontStack.Outputs.OAI
+        #Prefix: !Ref Prefix
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack2
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-customresource.yaml"
+      Parameters:
+        BucketArn: !GetAtt S3Stack1.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        #FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        #Prefix: !Ref Prefix
+        
+  Route53Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CloudFrontStack
+    Properties:
+      TemplateURL: !Sub "${TemplateDir}/${Prefix}-route53.yaml"
+      Parameters:
+        #ALBDnsName: !GetAtt ALBStack.Outputs.ALBDnsName
+        #ALBHostedZoneId: !Ref ALBHostedZoneId
+        DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
+        DistributionHostedZoneId: !Ref DistributionHostedZoneId
+        DomainName: !Ref DomainName
+        HostedZoneId: !Ref HostedZoneId
+        #Prefix: !Ref Prefix
