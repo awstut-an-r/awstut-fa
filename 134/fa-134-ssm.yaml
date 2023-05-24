@@ -21,13 +21,6 @@ Parameters:
     
     
 Resources:
-  #CertificateId:
-  #  Type: AWS::SSM::Parameter
-  #  Properties:
-  #    Name: !Sub "${Prefix}-CertificateId"
-  #    Type: String
-  #    Value: !Ref Certificate
-        
   CustomResource:
     Type: Custom::CustomResource
     Properties:
