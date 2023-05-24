@@ -43,8 +43,6 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
-      #Parameters:
-      #  Prefix: !Ref Prefix
         
   StackSetsStack1:
     Type: AWS::CloudFormation::Stack
@@ -81,68 +79,3 @@ Resources:
         LambdaRuntime: !Ref LambdaRuntime
         Prefix: !Ref Prefix
         TemplateDir: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}"
-
-
-  #S3Stack1:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
-  #    Parameters:
-  #      #Prefix: !Ref Prefix
-  #      DomainName: !Ref DomainName
-  #      
-  #CloudFrontStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - S3Stack1
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
-  #    Parameters:
-  #      BucketName: !GetAtt S3Stack1.Outputs.BucketName
-  #      #BucketWebsiteURL: !GetAtt S3Stack1.Outputs.BucketWebsiteURL
-  #      BucketRegionalDomainName: !GetAtt S3Stack1.Outputs.BucketRegionalDomainName
-  #      #DomainName: !Ref DomainName
-  #      Prefix: !Ref Prefix
-  #      
-  #S3Stack2:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - CloudFrontStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3-02.yaml"
-  #    Parameters:
-  #      BucketName: !GetAtt S3Stack1.Outputs.BucketName
-  #      Distribution: !GetAtt CloudFrontStack.Outputs.Distribution
-  #      #DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
-  #      #OAI: !GetAtt CloudFrontStack.Outputs.OAI
-  #      #Prefix: !Ref Prefix
-  #      
-  #CustomResourceStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - S3Stack2
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
-  #    Parameters:
-  #      BucketArn: !GetAtt S3Stack1.Outputs.BucketArn
-  #      BucketName: !GetAtt S3Stack1.Outputs.BucketName
-  #      Handler: index.lambda_handler
-  #      Prefix: !Ref Prefix
-  #      Runtime: python3.8
-  #      #FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
-  #      #Prefix: !Ref Prefix
-  #      
-  #Route53Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - CloudFrontStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-route53.yaml"
-  #    Parameters:
-  #      #ALBDnsName: !GetAtt ALBStack.Outputs.ALBDnsName
-  #      #ALBHostedZoneId: !Ref ALBHostedZoneId
-  #      DistributionDomainName: !GetAtt CloudFrontStack.Outputs.DistributionDomainName
-  #      DistributionHostedZoneId: !Ref DistributionHostedZoneId
-  #      DomainName: !Ref DomainName
-  #      HostedZoneId: !Ref HostedZoneId
-  #      #Prefix: !Ref Prefix
