@@ -3,22 +3,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   BranchName:
     Type: String
-    
-  #BucketArn:
-  #  Type: String
 
   BucketName:
     Type: String
-    
-  #ECRRepositoryName:
-  #  Type: String
-  #  
-  #PipelineBuildArtifact:
-  #  Type: String
-  
-  #PipelineSourceArtifact:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -30,49 +18,20 @@ Parameters:
     
   ProjectEnvironmentType:
     Type: String
-    
-  #SSMParameterDockerHubPassword:
-  #  Type: String
-  #  
-  #SSMParameterDockerHubUsername:
-  #  Type: String
 
 Resources:
   CodeCommitRepository:
     Type: AWS::CodeCommit::Repository
     Properties: 
-      #Code:
-      #RepositoryDescription:
       RepositoryName: !Ref Prefix
-      #Triggers:
       
   CodeBuildProject:
     Type: AWS::CodeBuild::Project
     Properties: 
       Artifacts:
-        #ArtifactIdentifier: String
-        #EncryptionDisabled: Boolean
-        #Location: String
-        #Name: String
-        #NamespaceType: String
-        #OverrideArtifactName: Boolean
-        #Packaging: String
-        #Path: String
-        #Type: CODEPIPELINE
         Type: NO_ARTIFACTS
-      #BadgeEnabled: Boolean
-      #BuildBatchConfig: 
-      #  BatchReportMode: String
-      #  CombineArtifacts: Boolean
-      #  Restrictions: 
-      #    BatchRestrictions
-      #  ServiceRole: String
-      #  TimeoutInMins: Integer
       Cache: 
         Type: NO_CACHE
-      #ConcurrentBuildLimit: Integer
-      #Description: String
-      #EncryptionKey: String
       Environment: 
         ComputeType: !Ref ProjectEnvironmentComputeType
         EnvironmentVariables:
@@ -92,25 +51,14 @@ Resources:
         ImagePullCredentialsType: CODEBUILD
         Type: !Ref ProjectEnvironmentType
         PrivilegedMode: true
-      #FileSystemLocations: 
-      #  - ProjectFileSystemLocation
       LogsConfig: 
         CloudWatchLogs:
           Status: DISABLED
         S3Logs:
           Status: DISABLED
       Name: !Ref Prefix
-      #QueuedTimeoutInMinutes: 480
-      #ResourceAccessRole: String
-      #SecondaryArtifacts: 
-      #  - Artifacts
-      #SecondarySources: 
-      #  - Source
-      #SecondarySourceVersions: 
-      #  - ProjectSourceVersion
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Source: 
-        #Type: CODEPIPELINE
         Type: NO_SOURCE
         BuildSpec: !Sub |
           version: 0.2
@@ -127,17 +75,7 @@ Resources:
                 - echo "$dt" 
                 - zip -yr $dt-$REPOSITORY_NAME-backup.zip ./
                 - aws s3 cp $dt-$REPOSITORY_NAME-backup.zip s3://$BUCKET_NAME/
-        #  artifacts:
-        #      files: imagedefinitions.json
-      #SourceVersion: String
-      #Tags: 
-      #  - Tag
-      #TimeoutInMinutes: 60
-      #Triggers: 
-      #  ProjectTriggers
       Visibility: PRIVATE
-      #VpcConfig: 
-      #  VpcConfig
         
   CodeBuildRole:
     Type: AWS::IAM::Role
@@ -151,54 +89,24 @@ Resources:
                 - codebuild.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
       Policies:
         - PolicyName: CodeBuildExecutionPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              #- Effect: Allow
-              #  Action:
-              #    - ssm:GetParameters
-              #  Resource:
-              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
-              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                  #- s3:GetObject
-                  #- s3:GetObjectVersion
-                  #- s3:GetBucketAcl
-                  #- s3:GetBucketLocation
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/*"
               - Effect: Allow
                 Action:
                   - codecommit:GitPull
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
-                  #- !Sub "arn:aws:s3:::${BucketName}"
-                  #- !Sub "arn:aws:s3:::${BucketName}/*"
                   - !GetAtt CodeCommitRepository.Arn
-              #- Effect: Allow
-              #  Action:
-              #    - codebuild:CreateReportGroup
-              #    - codebuild:CreateReport
-              #    - codebuild:UpdateReport
-              #    - codebuild:BatchPutTestCases
-              #    - codebuild:BatchPutCodeCoverages
-              #  Resource:
-              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
               
   EventsRule:
     Type: AWS::Events::Rule
-    #DependsOn:
-    #  - Pipeline
     Properties: 
       EventPattern:
         source:
@@ -217,7 +125,6 @@ Resources:
             - !Ref BranchName
       Name: !Ref Prefix
       Targets:
-        #- Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
         - Arn: !GetAtt CodeBuildProject.Arn
           Id: !Sub "${Prefix}-CodeBuild"
           InputTransformer:
@@ -243,8 +150,6 @@ Resources:
                 - events.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
       Policies:
         - PolicyName: PipelineExecutionPolicy
           PolicyDocument:
@@ -252,112 +157,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- codepipeline:StartPipelineExecution
                   - codebuild:StartBuild
                 Resource:
-                  #- !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
                   - !GetAtt CodeBuildProject.Arn
-  
-
-  #Pipeline:
-  #  Type: AWS::CodePipeline::Pipeline
-  #  #DependsOn:
-  #  #  - CodeCommitRepository
-  #  Properties:
-  #    ArtifactStore:
-  #      #EncryptionKey:
-  #      Location: !Ref BucketName
-  #      Type: S3
-  #    #ArtifactStores:
-  #    #DisableInboundStageTransitions:
-  #    Name: !Ref Prefix
-  #    #RestartExecutionOnUpdate
-  #    RoleArn: !GetAtt CodePipelineRole.Arn
-  #    Stages:
-  #      - Actions:
-  #          - ActionTypeId: 
-  #              Category: Source
-  #              Owner: AWS
-  #              Provider: CodeCommit
-  #              Version: 1
-  #            Configuration:
-  #              BranchName: !Ref BranchName
-  #              OutputArtifactFormat: CODE_ZIP
-  #              PollForSourceChanges: false
-  #              RepositoryName: !GetAtt CodeCommitRepository.Name
-  #            #InputArtifacts:
-  #            Name: SourceAction
-  #            #Namespace:
-  #            OutputArtifacts:
-  #              - Name: !Ref PipelineSourceArtifact
-  #            Region: !Ref AWS::Region
-  #            #RoleArn:
-  #            RunOrder: 1
-  #        Name: Source
-  #      - Actions:
-  #          - ActionTypeId:
-  #              Category: Build
-  #              Owner: AWS
-  #              Provider: CodeBuild
-  #              Version: 1
-  #            Configuration:
-  #              ProjectName: !Ref CodeBuildProject
-  #            InputArtifacts:
-  #              - Name: !Ref PipelineSourceArtifact
-  #            Name: Build
-  #            #Namespace:
-  #            OutputArtifacts:
-  #              - Name: !Ref PipelineBuildArtifact
-  #            Region: !Ref AWS::Region
-  #            #RoleArn:
-  #            RunOrder: 1
-  #        Name: Build
-  #        
-  #CodePipelineRole:
-  #  Type: AWS::IAM::Role
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Principal:
-  #            Service:
-  #              - codepipeline.amazonaws.com
-  #          Action:
-  #            - sts:AssumeRole
-  #    #ManagedPolicyArns:
-  #    #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
-  #    Policies:
-  #      - PolicyName: PipelinePolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - codecommit:CancelUploadArchive
-  #                - codecommit:GetBranch
-  #                - codecommit:GetCommit
-  #                - codecommit:GetRepository
-  #                - codecommit:GetUploadArchiveStatus
-  #                - codecommit:UploadArchive
-  #              Resource:
-  #                - !GetAtt CodeCommitRepository.Arn
-  #            - Effect: Allow
-  #              Action:
-  #                - codebuild:BatchGetBuilds
-  #                - codebuild:StartBuild
-  #                - codebuild:BatchGetBuildBatches
-  #                - codebuild:StartBuildBatch
-  #              Resource:
-  #                - !GetAtt CodeBuildProject.Arn
-  #            - Effect: Allow
-  #              Action:
-  #                - s3:PutObject
-  #                - s3:GetObject
-  #                - s3:GetObjectVersion
-  #                - s3:GetBucketAcl
-  #                - s3:GetBucketLocation
-  #              Resource:
-  #                - !Sub "arn:aws:s3:::${BucketName}"
-  #                - !Sub "arn:aws:s3:::${BucketName}/*"
-                  
