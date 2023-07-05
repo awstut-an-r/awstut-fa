@@ -1,0 +1,722 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  ArtifactBucket:
+    Type: String
+    
+  #DevelopBranchName:
+  #  Type: String
+    
+  #MasterBranchName:
+  #  Type: String
+  
+  LambdaHandler:
+    Type: String
+    
+  LambdaMemory:
+    Type: Number
+  
+  LambdaRuntime:
+    Type: String
+    
+  LambdaTimeout:
+    Type: String
+    
+  PipelineBuildArtifact:
+    Type: String
+    
+  PipelineSourceArtifact:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    
+  ProjectEnvironmentImage:
+    Type: String
+    
+  ProjectEnvironmentType:
+    Type: String
+    
+  ReleaseBranch:
+    Type: String
+    
+  SourceBranch:
+    Type: String
+    
+  TopicArn:
+    Type: String
+
+
+Resources:
+  Pipeline:
+    Type: AWS::CodePipeline::Pipeline
+    #DependsOn:
+    #  - CodeCommitRepository
+    Properties:
+      ArtifactStore:
+        #EncryptionKey:
+        Location: !Ref ArtifactBucket
+        Type: S3
+      #ArtifactStores:
+      #DisableInboundStageTransitions:
+      Name: !Ref Prefix
+      #RestartExecutionOnUpdate
+      RoleArn: !GetAtt CodePipelineRole.Arn
+      Stages:
+        - Actions:
+            - ActionTypeId: 
+                Category: Source
+                Owner: AWS
+                Provider: CodeCommit
+                Version: 1
+              Configuration:
+                BranchName: !Ref SourceBranch
+                OutputArtifactFormat: CODE_ZIP
+                PollForSourceChanges: false
+                RepositoryName: !GetAtt CodeCommitRepository.Name
+              #InputArtifacts:
+              Name: SourceAction
+              #Namespace:
+              OutputArtifacts:
+                - Name: !Ref PipelineSourceArtifact
+              Region: !Ref AWS::Region
+              #RoleArn:
+              RunOrder: 1
+          Name: Source
+        - Actions:
+            - ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              Configuration:
+                ProjectName: !Ref CodeBuildProject
+              InputArtifacts:
+                - Name: !Ref PipelineSourceArtifact
+              Name: Build
+              #Namespace:
+              OutputArtifacts:
+                - Name: !Ref PipelineBuildArtifact
+              Region: !Ref AWS::Region
+              #RoleArn:
+              RunOrder: 2
+          Name: Build
+        - Actions:
+            - ActionTypeId:
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: 1
+              Configuration:
+                #CustomData: hoge hoge hoge.
+                ExternalEntityLink: !Sub "https://${AWS::Region}.console.aws.amazon.com/s3/buckets/${ArtifactBucket}?region=${AWS::Region}&tab=objects"
+                NotificationArn: !Ref TopicArn
+              #InputArtifacts: []
+              Name: Approval
+              #OutputArtifacts: []
+              Region: !Ref AWS::Region
+              RunOrder: 3
+          Name: Approval
+        - Actions:
+            - ActionTypeId:
+                Category: Invoke
+                Owner: AWS
+                Provider: Lambda
+                Version: 1
+              Configuration:
+                FunctionName: !Ref GitMergeFunction
+              Name: GitMerge
+              Region: !Ref AWS::Region
+              RunOrder: 4
+          Name: Deploy
+  
+  CodePipelineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codepipeline.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PipelinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetBucketVersioning
+                  - s3:ListBucket
+                  - s3:ListBucketVersions
+                Resource:
+                  - !Sub "arn:aws:s3:::${ArtifactBucket}"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${ArtifactBucket}/*"
+              - Effect: Allow
+                Action:
+                  - cloudformation:CreateChangeSet
+                  - cloudformation:CreateStack
+                  - cloudformation:DeleteChangeSet
+                  - cloudformation:DeleteStack
+                  - cloudformation:DescribeChangeSet
+                  - cloudformation:DescribeStacks
+                  - cloudformation:ExecuteChangeSet
+                  - cloudformation:SetStackPolicy
+                  - cloudformation:UpdateStack
+                  - cloudformation:ValidateTemplate
+                Resource: !Sub "arn:${AWS::Partition}:cloudformation:*:*:*"
+              - Effect: Allow
+                Action:
+                  - iam:PassRole 
+                Resource: "*"
+                Condition:
+                  StringEquals:
+                    iam:PassedToService: cloudformation.amazonaws.com
+              - Effect: Allow
+                Action:
+                  - codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                Resource: !GetAtt CodeBuildProject.Arn
+              #- Effect: Allow
+              #  Action:
+              #    - lambda:GetAccountSettings
+              #    - lambda:GetAlias
+              #    - lambda:GetEventSourceMapping
+              #    - lambda:GetFunction
+              #    - lambda:GetFunctionConfiguration
+              #    - lambda:GetPolicy
+              #    - lambda:InvokeFunction
+              #    - lambda:ListAliases
+              #    - lambda:ListEventSourceMappings
+              #    - lambda:ListFunctions
+              #    - lambda:ListTags
+              #    - lambda:ListVersionsByFunction
+              #  Resource: arn:*:lambda:*:*:*
+              - Effect: Allow
+                Action:
+                  - lambda:invokeFunction
+                Resource:
+                  - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${GitMergeFunction}"
+              - Effect: Allow
+                Action:
+                  - codecommit:CancelUploadArchive
+                  - codecommit:GetBranch
+                  - codecommit:GetCommit
+                  - codecommit:GetRepository
+                  - codecommit:GetUploadArchiveStatus
+                  - codecommit:UploadArchive
+                Resource:
+                  - !GetAtt CodeCommitRepository.Arn
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  - !Ref TopicArn
+      
+  #CloudFormationRole:
+  #  Type: AWS::IAM::Role
+  #  DeletionPolicy: Delete
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Principal:
+  #            Service:
+  #              - cloudformation.amazonaws.com
+  #          Action:
+  #            - sts:AssumeRole
+  #    ManagedPolicyArns:
+  #      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+  #    Policies:
+  #      - PolicyName: CloudFormationDeployPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - ec2:*
+  #            #  Resource:
+  #            #    - "*"
+  #            - Effect: Allow
+  #              Action:
+  #                #- iam:AttachRolePolicy
+  #                #- iam:CreateRole
+  #                #- iam:PutRolePolicy
+  #                #- iam:GetRole
+  #                - iam:*
+  #                - lambda:*
+  #              Resource: "*"
+      
+  CodeCommitRepository:
+    Type: AWS::CodeCommit::Repository
+    Properties: 
+      #Code:
+      #RepositoryDescription:
+      RepositoryName: !Ref Prefix
+      #Triggers:
+
+  EventsRule:
+    Type: AWS::Events::Rule
+    #DependsOn:
+    #  - Pipeline
+    Properties: 
+      EventPattern:
+        source:
+          - aws.codecommit
+        detail-type:
+          - CodeCommit Repository State Change
+        resources:
+          - !GetAtt CodeCommitRepository.Arn
+        detail:
+          event:
+            - referenceCreated
+            - referenceUpdated
+          referenceType:
+            - branch
+          referenceName:
+            - !Ref SourceBranch
+      Name: !Ref Prefix
+      Targets:
+        - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
+          Id: !Sub "${Prefix}-CodePipeline-CodeCommit"
+          RoleArn: !GetAtt EventsRuleRole.Arn
+          
+  EventsRuleRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codepipeline:StartPipelineExecution
+                Resource:
+                  - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
+                  
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts:
+        #ArtifactIdentifier: String
+        #EncryptionDisabled: Boolean
+        #Location: String
+        #Name: String
+        #NamespaceType: String
+        #OverrideArtifactName: Boolean
+        #Packaging: String
+        #Path: String
+        Type: CODEPIPELINE
+      #BadgeEnabled: Boolean
+      #BuildBatchConfig: 
+      #  BatchReportMode: String
+      #  CombineArtifacts: Boolean
+      #  Restrictions: 
+      #    BatchRestrictions
+      #  ServiceRole: String
+      #  TimeoutInMins: Integer
+      Cache: 
+        Type: NO_CACHE
+      #ConcurrentBuildLimit: Integer
+      #Description: String
+      #EncryptionKey: String
+      Environment: 
+        ComputeType: !Ref ProjectEnvironmentComputeType
+        EnvironmentVariables:
+          - Name: ARTIFACT_BUCKET
+            Type: PLAINTEXT
+            Value: !Ref ArtifactBucket
+          #- Name: CONTAINER_NAME
+          #  Type: PLAINTEXT
+          #  Value: !Ref ContainerName
+          #- Name: DOCKERHUB_PASSWORD
+          #  Type: PARAMETER_STORE
+          #  Value: !Ref SSMParameterDockerHubPassword
+          #- Name: DOCKERHUB_USERNAME
+          #  Type: PARAMETER_STORE
+          #  Value: !Ref SSMParameterDockerHubUsername
+          #- Name: IMAGE_DEFINITION
+          #  Type: PLAINTEXT
+          #  Value: !Ref ImageDefinitionFileName
+          - Name: REGION
+            Type: PLAINTEXT
+            Value: !Ref AWS::Region
+          - Name: REPOSITORY_URL
+            Type: PLAINTEXT
+            Value: !GetAtt CodeCommitRepository.CloneUrlHttp
+          - Name: RELEASE_BRANCH
+            Type: PLAINTEXT
+            Value: !Ref ReleaseBranch
+          - Name: SOURCE_BRANCH
+            Type: PLAINTEXT
+            Value: !Ref SourceBranch
+        Image: !Ref ProjectEnvironmentImage
+        ImagePullCredentialsType: CODEBUILD
+        Type: !Ref ProjectEnvironmentType
+        PrivilegedMode: true
+      #FileSystemLocations: 
+      #  - ProjectFileSystemLocation
+      LogsConfig: 
+        CloudWatchLogs:
+          GroupName: !Ref LogGroup
+          Status: ENABLED
+          #Status: DISABLED
+        S3Logs:
+          Status: DISABLED
+      Name: !Sub "${Prefix}-project"
+      #QueuedTimeoutInMinutes: 480
+      #ResourceAccessRole: String
+      #SecondaryArtifacts: 
+      #  - Artifacts
+      #SecondarySources: 
+      #  - Source
+      #SecondarySourceVersions: 
+      #  - ProjectSourceVersion
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        Type: CODEPIPELINE
+        #Type: NO_SOURCE
+        #BuildSpec: !Sub |
+        BuildSpec: |
+          version: 0.2
+
+          env:
+            shell: bash
+            #secrets-manager:
+            #  GITHUB_TOKEN: ${Secrets}:Token
+            #  GITHUB_USERNAME: ${Secrets}:Username
+            #  TASKCAT_OVERRIDES: arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${GitHubRepoName}
+
+          phases:
+            install:
+              runtime-versions:
+                python: 3.x
+              commands:
+                - echo "Entered the install phase..."
+                #- apt-get -qy update
+                #- apt-get update
+                - echo "Installing system dependencies..."
+                #- apt-get -qy install zip gzip tar
+                - echo "Installing python dependencies..."
+                #- pip3 -q install cfn-lint==0.66.1 pre-commit taskcat yq
+                - pip3 -q install taskcat
+                #- echo "Configuring taskcat..."
+                #- |
+                #  #cat << EOF > ~/.taskcat.yml
+                #  cat << EOF > ./.taskcat.yml
+                #  #general:
+                #  #  s3_regional_buckets: true
+                #  project:
+                #    name: taskcat-ci
+                #    regions:
+                #      - $REGION
+                #  tests:
+                #    default:
+                #      #regions:
+                #      #  - $REGION
+                #      parameters:
+                #        Handler: index.lambda_handler
+                #        Memory: 128
+                #        Prefix: taskcat-ci
+                #        Runtime: python3.8
+                #      template: ./test-template.yaml
+                #  EOF
+                #- echo "Configuring pre-commit..."
+                #- |
+                #  cat << EOF > ./.pre-commit-config.yaml
+                #  fail_fast: false
+                #  minimum_pre_commit_version: 2.6.0
+                #  repos:
+                #    - repo: https://github.com/aws-quickstart/qs-cfn-lint-rules
+                #      rev: d4f788d6df2c62c763ecb1182ef9df623db538a2
+                #      hooks:
+                #        - id: qs-cfn-lint-wrapped
+                #          files: ^templates/.*
+                #          args:
+                #            - --format=pretty
+                #          require_serial: true
+                #  EOF
+            pre_build:
+              commands:
+                - echo "Entered the pre_build phase..."
+                - echo "Current directory is $CODEBUILD_SRC_DIR"
+                - ls -lA
+                #- dirname=${!PWD##*/}
+                - dirname=`pwd`
+                - echo "Directory name $dirname"
+                #- cd ..
+                #- mv $dirname $PROJECT_NAME
+                #- ls -lA
+                #- cd $PROJECT_NAME
+                #- echo "Temporarily adding git credential store..."
+                #- echo "https://$GITHUB_USERNAME:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+                #- git config --global credential.helper store
+                #- git config --global url."https://github.com/".insteadOf "git@github.com:"
+                #- git config --global init.defaultBranch ${ReleaseBranch}
+                #- git config --global init.defaultBranch $RELEASE_BRANCH
+                #- git init
+                ##- git remote add origin https://github.com/$PROJECT_OWNER/$PROJECT_NAME.git
+                #- git remote add origin $REPOSITORY_URL
+                #- git fetch
+                #- git clone $REPOSITORY_URL
+                #- git checkout --force --track origin/$SOURCE_BRANCH
+                #- git submodule init
+                #- git submodule update --init --recursive
+                #- echo "Creating TaskCat overrides file..."
+                #- echo $TASKCAT_OVERRIDES | yq -y > ./.taskcat_overrides.yml
+                - ls -lA
+                - echo "Verifying TaskCat installation..."
+                - taskcat
+                #- echo "Removing git credential store..."
+                #- rm -f ~/.git-credentials
+            build:
+              commands:
+                - echo "Entered the build phase..."
+                #- echo "Running lint tests..."
+                #- pre-commit run --all-files
+                - echo "Running TaskCat tests..."
+                #- taskcat test run --minimal-output --lint-disable
+                - taskcat test run
+                - |
+                  if $(grep -Fq "CREATE_FAILED" taskcat_outputs/index.html)
+                  then
+                    echo "Build failed!"
+                    exit 1
+                  else
+                    echo "Build passed!"
+                    exit 0
+                  fi
+              finally:
+                - ls -1 taskcat_outputs
+                - ls -1 taskcat_outputs | while read LOG; do cat taskcat_outputs/$LOG; done
+                - >- # Do not remove
+                  echo "Zipping and uploading report to S3 bucket: '$ARTIFACT_BUCKET'..."
+                - zip -r taskcat_report.zip taskcat_outputs
+                - aws s3 cp taskcat_report.zip s3://$ARTIFACT_BUCKET/taskcat_reports/$CODEBUILD_BUILD_ID.zip
+      #SourceVersion: String
+      #Tags: 
+      #  - Tag
+      #TimeoutInMinutes: 60
+      #Triggers: 
+      #  ProjectTriggers
+      Visibility: PRIVATE
+      #VpcConfig: 
+      #  VpcConfig
+        
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - !Sub "arn:${AWS::Partition}:iam::aws:policy/AdministratorAccess"
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+      #Policies:
+      #  - PolicyName: PipelineExecutionPolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - codecommit:CancelUploadArchive
+      #            - codecommit:GetBranch
+      #            - codecommit:GetCommit
+      #            - codecommit:GetRepository
+      #            - codecommit:GetUploadArchiveStatus
+      #            - codecommit:UploadArchive
+      #          Resource:
+      #            - !GetAtt CodeCommitRepository.Arn
+      #      
+      #        - Effect: Allow
+      #          Action:
+      #            - ssm:GetParameters
+      #          Resource:
+      #            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
+      #            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:PutObject
+      #            - s3:GetObject
+      #            - s3:GetObjectVersion
+      #            - s3:GetBucketAcl
+      #            - s3:GetBucketLocation
+      #          Resource:
+      #            #- !Ref BucketArn
+      #            #- !Sub "${BucketArn}/*"
+      #            - !Sub "arn:aws:s3:::${BucketName}"
+      #            - !Sub "arn:aws:s3:::${BucketName}/*"
+      #        - Effect: Allow
+      #          Action:
+      #            - codebuild:CreateReportGroup
+      #            - codebuild:CreateReport
+      #            - codebuild:UpdateReport
+      #            - codebuild:BatchPutTestCases
+      #            - codebuild:BatchPutCodeCoverages
+      #          Resource:
+      #            - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
+      #        - Effect: Allow
+      #          Action:
+      #            - logs:CreateLogGroup
+      #            - logs:CreateLogStream
+      #            - logs:PutLogEvents
+      #          Resource:
+      #            - !GetAtt LogGroup.Arn
+      #            - !Sub
+      #              - "${LogGroupArn}:log-stream:*"
+      #              - LogGroupArn: !GetAtt LogGroup.Arn
+      #        #- Effect: Allow
+      #        #  Action:
+      #        #    - codebuild:CreateReportGroup
+      #        #    - codebuild:CreateReport
+      #        #    - codebuild:UpdateReport
+      #        #    - codebuild:BatchPutTestCases
+      #        #    - codebuild:BatchPutCodeCoverages
+      #        #  Resource:
+      #        #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
+      
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-LogGroup"
+      
+      
+  GitMergeFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          RELEASE_BRANCH: !Ref ReleaseBranch
+          REPOSITORY: !GetAtt CodeCommitRepository.Name
+          SOURCE_BRANCH: !Ref SourceBranch
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import os
+          
+          region = os.environ['REGION']
+          release_branch = os.environ['RELEASE_BRANCH']
+          repository = os.environ['REPOSITORY']
+          source_branch = os.environ['SOURCE_BRANCH']
+          
+          codecommit_client = boto3.client('codecommit', region_name=region)
+          codepipeline_client = boto3.client('codepipeline', region_name=region)
+          
+          def lambda_handler(event, context):
+            job_id = event['CodePipeline.job']['id']
+            
+            try:
+              merge_response = codecommit_client.merge_branches_by_fast_forward(
+                repositoryName=repository,
+                sourceCommitSpecifier=source_branch,
+                destinationCommitSpecifier=release_branch
+              )
+              print(merge_response)
+              
+              codepipeline_client.put_job_success_result(
+                jobId=job_id
+              )
+              
+              return True
+              
+            except Exception as e:
+              print(e)
+              
+              codepipeline_client.put_job_failure_result(
+                jobId=job_id,
+                failureDetails={
+                  'type': 'JobFailed',
+                  'message': 'Something happened.'
+                }
+              )
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-GitMergeFunction"
+      Handler: !Ref LambdaHandler
+      #Layers:
+      #  - !Ref LambdaLayer
+      MemorySize: !Ref LambdaMemory
+      Runtime: !Ref LambdaRuntime
+      Role: !GetAtt GitMergeFunctionRole.Arn
+      Timeout: !Ref LambdaTimeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  GitMergeFunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: GitMergePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codecommit:MergeBranchesByFastForward
+                Resource: !Sub 
+                  - "arn:${AWS::Partition}:codecommit:${AWS::Region}:${AWS::AccountId}:${Repository}*"
+                  - Repository: !GetAtt CodeCommitRepository.Name
+              - Effect: Allow
+                Action:
+                  - codepipeline:PutJobSuccessResult
+                  - codepipeline:PutJobFailureResult
+                Resource: "*"
+      
+      
+#Outputs:
+#  CodeCommitRepositoryName:
+#    Value: !GetAtt CodeCommitRepository.Name

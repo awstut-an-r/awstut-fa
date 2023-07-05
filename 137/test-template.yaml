@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Handler:
+    Type: String
+    
+  Memory:
+    Type: Number
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+    
+Resources:
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          MEMORY: !Ref Memory
+      Code:
+        ZipFile: |
+          import json
+          import os
+          
+          region = os.environ['REGION']
+          memory = os.environ['MEMORY']
+          
+          def lambda_handler(event, context):
+            data = {
+              'region': region,
+              'memory': memory
+            }
+          
+            return {
+              'statusCode': 200,
+              'body': json.dumps(data, indent=2)
+            }
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      MemorySize: !Ref Memory
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      #Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          MEMORY: !Ref Memory
+      Code:
+        ZipFile: |
+          import json
+          import os
+          
+          region = os.environ['REGION']
+          memory = os.environ['MEMORY']
+          
+          def lambda_handler(event, context):
+            data = {
+              'region': region,
+              'memory': memory
+            }
+          
+            return {
+              'statusCode': 200,
+              'body': json.dumps(data, indent=2)
+            }
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function2"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      MemorySize: !Ref Memory
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      #Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      #Policies:
+      #  - PolicyName: CreateLambdaLayerPackagePolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - ssm:GetParameter
+      #          Resource:
+      #            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${UrlsParameter}"
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:PutObject
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${CodeS3Bucket}/*"

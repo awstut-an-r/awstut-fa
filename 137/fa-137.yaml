@@ -1,0 +1,174 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-137
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaMemory:
+    Type: Number
+    Default: 128
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+  LambdaTimeout:
+    Type: Number
+    Default: 30
+    
+  MailAddress:
+    Type: String
+    Default: [mail-address]
+    
+  #DevelopBranchName:
+  SourceBranch:
+    Type: String
+    Default: dev
+    
+  #DepStackName:
+  #  Type: String
+  #  Default: DevStack
+ 
+  #MasterBranchName:
+  ReleaseBranch:
+    Type: String
+    Default: master
+    
+  #ChangeSetName:
+  #  Type: String
+  #  Default: UpdatePreview-MyLambdaFunction
+    
+  #ProdStackConfig:
+  #  Type: String
+  #  Default: prod-stack-configuration.json
+    
+  #ProdStackName:
+  #  Type: String
+  #  Default: ProdStack
+  
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_GENERAL1_SMALL
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux2-aarch64-standard:2.0
+    #Default: aws/codebuild/standard:5.0
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_CONTAINER
+    #Default: LINUX_CONTAINER
+    
+  #TemplateFileName:
+  #  Type: String
+  #  Default: sample-lambda.yaml
+  #  
+  #TestStackConfig:
+  #  Type: String
+  #  Default: test-stack-configuration.json
+  #  
+  #TestStackName:
+  #  Type: String
+  #  Default: TestStack
+    
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        MailAddress: !Ref MailAddress
+        Prefix: !Ref Prefix
+        
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+      #- SNSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        ArtifactBucket: !GetAtt S3Stack.Outputs.BucketName
+        #DevelopBranchName: !Ref DevelopBranchName
+        #MasterBranchName: !Ref MasterBranchName
+        LambdaHandler: !Ref LambdaHandler
+        LambdaMemory: !Ref LambdaMemory
+        LambdaRuntime: !Ref LambdaRuntime
+        LambdaTimeout: !Ref LambdaTimeout
+        PipelineBuildArtifact: BuildArtifact
+        PipelineSourceArtifact: SourceArtifact
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        ReleaseBranch: !Ref ReleaseBranch
+        SourceBranch: !Ref SourceBranch
+        TopicArn: !GetAtt SNSStack.Outputs.TopicArn
+        
+  #CodeStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  DependsOn:
+  #    - S3Stack
+  #    #- SNSStack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+  #    Parameters:
+  #      ArtifactBucket: !GetAtt S3Stack.Outputs.BucketName
+  #      #DevelopBranchName: !Ref DevelopBranchName
+  #      #MasterBranchName: !Ref MasterBranchName
+  #      PipelineBuildArtifact: BuildArtifact
+  #      PipelineSourceArtifact: SourceArtifact
+  #      Prefix: !Ref Prefix
+  #      ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+  #      ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+  #      ProjectEnvironmentType: !Ref ProjectEnvironmentType
+  #      ReleaseBranch: !Ref ReleaseBranch
+  #      SourceBranch: !Ref SourceBranch
+  #      
+  #LambdaStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  DependsOn:
+  #    #- S3Stack
+  #    - CodeStack
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+  #    Parameters:
+  #      Architecture: !Ref LambdaArchitecture
+  #      BucketName: !GetAtt S3Stack.Outputs.BucketName
+  #      #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
+  #      #CodeS3Bucket: !Ref TemplateBucketName
+  #      #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
+  #      #EphemeralStorageSize: !Ref EphemeralStorageSize
+  #      #FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
+  #      Handler: !Ref LambdaHandler
+  #      Memory: !Ref LambdaMemory
+  #      ReleaseBranch: !Ref ReleaseBranch
+  #      Repository: !GetAtt CodeStack.Outputs.CodeCommitRepositoryName
+  #      Prefix: !Ref Prefix
+  #      Runtime: !Ref LambdaRuntime
+  #      SourceBranch: !Ref SourceBranch
+  #      Timeout: !Ref LambdaTimeout
+  #      #UrlsParameter: !GetAtt SSMStack.Outputs.UrlsParameter
