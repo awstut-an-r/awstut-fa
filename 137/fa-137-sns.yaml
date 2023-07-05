@@ -12,15 +12,9 @@ Resources:
   Topic:
     Type: AWS::SNS::Topic
     Properties:
-      #ContentBasedDeduplication: Boolean
-      #DisplayName: String
-      #FifoTopic: Boolean
-      #KmsMasterKeyId: String
       Subscription: 
         - Endpoint: !Ref MailAddress
           Protocol: email
-      #Tags: 
-      #  - Tag
       TopicName: !Ref Prefix
       
       
