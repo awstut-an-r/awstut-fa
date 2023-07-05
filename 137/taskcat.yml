@@ -4,8 +4,6 @@ project:
     - ap-northeast-1
 tests:
   default:
-    #regions:
-    #  - $REGION
     parameters:
       Handler: index.lambda_handler
       Memory: 128
