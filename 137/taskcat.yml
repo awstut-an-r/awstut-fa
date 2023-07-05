@@ -1,0 +1,14 @@
+project:
+  name: taskcat-ci
+  regions:
+    - ap-northeast-1
+tests:
+  default:
+    #regions:
+    #  - $REGION
+    parameters:
+      Handler: index.lambda_handler
+      Memory: 128
+      Prefix: taskcat-ci
+      Runtime: python3.8
+    template: ./test-template.yaml
