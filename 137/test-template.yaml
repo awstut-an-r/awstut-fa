@@ -45,38 +45,50 @@ Resources:
       MemorySize: !Ref Memory
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
-
-  Function2:
-    Type: AWS::Lambda::Function
-    Properties:
-      Environment:
-        Variables:
-          REGION: !Ref AWS::Region
-          MEMORY: !Ref Memory
-      Code:
-        ZipFile: |
-          import json
-          import os
-          
-          region = os.environ['REGION']
-          memory = os.environ['MEMORY']
-          
-          def lambda_handler(event, context):
-            data = {
-              'region': region,
-              'memory': memory
-            }
-          
-            return {
-              'statusCode': 200,
-              'body': json.dumps(data, indent=2)
-            }
-      FunctionName: !Sub "${Prefix}-function2"
-      Handler: !Ref Handler
-      MemorySize: !Ref Memory
-      Runtime: !Ref Runtime
-      Role: !GetAtt FunctionRole.Arn
-
+      
+  #Function2:
+  #  Type: AWS::Lambda::Function
+  #  Properties:
+  #    #Architectures:
+  #    #  - !Ref Architecture
+  #    Environment:
+  #      Variables:
+  #        REGION: !Ref AWS::Region
+  #        MEMORY: !Ref Memory
+  #    Code:
+  #      ZipFile: |
+  #        import json
+  #        import os
+  #        
+  #        region = os.environ['REGION']
+  #        memory = os.environ['MEMORY']
+  #        
+  #        def lambda_handler(event, context):
+  #          data = {
+  #            'region': region,
+  #            'memory': memory
+  #          }
+  #        
+  #          return {
+  #            'statusCode': 200,
+  #            'body': json.dumps(data, indent=2)
+  #          }
+  #    #EphemeralStorage:
+  #    #  Size: !Ref EphemeralStorageSize
+  #    FunctionName: !Sub "${Prefix}-function2"
+  #    Handler: !Ref Handler
+  #    #Layers:
+  #    #  - !Ref LambdaLayer
+  #    MemorySize: !Ref Memory
+  #    Runtime: !Ref Runtime
+  #    Role: !GetAtt FunctionRole.Arn
+  #    #Timeout: !Ref Timeout
+  #    #VpcConfig:
+  #    #  SecurityGroupIds:
+  #    #    - !Ref FunctionSecurityGroup
+  #    #  SubnetIds:
+  #    #    - !Ref FunctionSubnet
+      
   FunctionRole:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
