@@ -4,9 +4,6 @@ Parameters:
   AvailabilityZone:
     Type: String
 
-  #DBClusterIdentifier:
-  #  Type: String
-    
   DBEngine:
     Type: String
     
@@ -15,10 +12,7 @@ Parameters:
     
   DBInstanceClass:
     Type: String
-    
-  #DBInstanceIdentifier:
-  #  Type: String
-    
+
   DBMasterUsername:
     Type: String
     
@@ -58,10 +52,7 @@ Resources:
       DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
       DBSubnetGroupName: !Ref DBSubnetGroup
       Engine: !Ref DBEngine
-      #Engine: aurora-mysql
-      #EngineMode: serverless
       EngineVersion: !Ref DBEngineVersion
-      #EngineVersion: 8.0.mysql_aurora.3.02.0
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
       ServerlessV2ScalingConfiguration:
@@ -76,11 +67,8 @@ Resources:
     Properties:
       DBClusterIdentifier: !Ref DBCluster
       DBSubnetGroupName: !Ref DBSubnetGroup
-      #DBParameterGroupName: !Ref DBParameterGroup
       DBInstanceIdentifier: !Sub "${Prefix}-dbinstance"
       DBInstanceClass: !Ref DBInstanceClass
       Engine: !Ref DBEngine
-      #Engine: aurora-mysql
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       PubliclyAccessible: false
-      #PromotionTier: 1
