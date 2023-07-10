@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+
+  #DBClusterIdentifier:
+  #  Type: String
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBInstanceClass:
+    Type: String
+    
+  #DBInstanceIdentifier:
+  #  Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBSecurityGroup:
+    Type: String
+
+  DBSubnet1:
+    Type: String
+    
+  DBSubnet2:
+    Type: String
+    
+  Prefix:
+    Type: String
+
+
+Resources:
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: dbsubnetgroup
+      DBSubnetGroupDescription: test subnet group
+      SubnetIds:
+        - !Ref DBSubnet1
+        - !Ref DBSubnet2
+        
+  DBCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      DatabaseName: !Ref DBName
+      DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      #Engine: aurora-mysql
+      #EngineMode: serverless
+      EngineVersion: !Ref DBEngineVersion
+      #EngineVersion: 8.0.mysql_aurora.3.02.0
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      ServerlessV2ScalingConfiguration:
+        MaxCapacity: 1.0
+        MinCapacity: 0.5
+      StorageEncrypted: true
+      VpcSecurityGroupIds:
+        - !Ref DBSecurityGroup
+        
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DBCluster
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      #DBParameterGroupName: !Ref DBParameterGroup
+      DBInstanceIdentifier: !Sub "${Prefix}-dbinstance"
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: !Ref DBEngine
+      #Engine: aurora-mysql
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      PubliclyAccessible: false
+      #PromotionTier: 1
