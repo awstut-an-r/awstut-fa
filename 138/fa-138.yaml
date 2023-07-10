@@ -47,7 +47,6 @@ Parameters:
     
   ImageId:
     Type: String
-    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-arm64
     
   InstanceType:
@@ -107,11 +106,9 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-aurora.yaml"
       Parameters:
         AvailabilityZone: !Ref AvailabilityZone1
-        #DBClusterIdentifier: !Sub "${Prefix}-dbcluster"
         DBEngine: !Ref DBEngine
         DBEngineVersion: !Ref DBEngineVersion
         DBInstanceClass: !Ref DBInstanceClass
-        #DBInstanceIdentifier: !Sub "${Prefix}-dbinstance"
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
         DBName: !Ref DBName
