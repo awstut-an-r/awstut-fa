@@ -13,7 +13,13 @@ Parameters:
   InstanceSecurityGroup:
     Type: String
     
-  InstanceType:
+  InstanceType1:
+    Type: String
+    
+  InstanceType2:
+    Type: String
+    
+  InstanceType3:
     Type: String
     
   MaxSize:
@@ -40,13 +46,13 @@ Resources:
         IamInstanceProfile:
           Arn: !GetAtt InstanceProfile.Arn
         ImageId: !Ref ImageId
-        InstanceType: !Ref InstanceType
+        InstanceType: !Ref InstanceType1
         SecurityGroupIds: 
           - !Ref InstanceSecurityGroup
         UserData: !Base64 |
           #!/bin/bash -xe
-          dnf update -y
-          dnf install -y httpd
+          yum update -y
+          yum install -y httpd
           systemctl start httpd
           systemctl enable httpd
           ec2-metadata -i > /var/www/html/index.html
@@ -69,6 +75,10 @@ Resources:
           LaunchTemplateSpecification: 
             LaunchTemplateId: !Ref LaunchTemplate
             Version: !GetAtt LaunchTemplate.LatestVersionNumber
+          Overrides: 
+            - InstanceType: !Ref InstanceType1
+            - InstanceType: !Ref InstanceType2
+            - InstanceType: !Ref InstanceType3
       VPCZoneIdentifier:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
