@@ -69,9 +69,11 @@ Resources:
       Parameters:
         ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup
         DesiredCapacity: 2
-        ImageId: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-arm64
+        ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        InstanceType: t4g.nano
+        InstanceType1: t3a.nano
+        InstanceType2: t3.nano
+        InstanceType3: t2.nano
         MaxSize: 2
         MinSize: 2
         Prefix: !Ref Prefix
