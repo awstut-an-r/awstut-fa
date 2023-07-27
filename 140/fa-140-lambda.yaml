@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+
+
+Resources:
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import datetime
+        
+          def lambda_handler(event, context):
+            now = datetime.datetime.now()
+            
+            if now.second % 2 == 0:
+              return True
+            return False
+      FunctionName: !Sub "${Prefix}-function-01"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          def lambda_handler(event, context):
+            return 'finish!'
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      #Policies:
+      #  - PolicyName: !Sub "${Prefix}-S3GetObjectPolicy"
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:GetObject
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${BulkS3Bucket}/*"
+        
+      
+Outputs:
+  FunctionArn1:
+    Value: !GetAtt Function1.Arn
+
+  FunctionArn2:
+    Value: !GetAtt Function2.Arn

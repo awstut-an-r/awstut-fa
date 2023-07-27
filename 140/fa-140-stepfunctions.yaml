@@ -1,0 +1,112 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  FunctionArn1:
+    Type: String
+    
+  FunctionArn2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  WaitSeconds:
+    Type: Number
+    
+    
+Resources:
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: !Sub "${Prefix}-StateMachine"
+        StartAt: FirstState
+        States:
+          FirstState:
+            Type: Task
+            Resource: !Ref FunctionArn1
+            Next: ChoiceState
+          ChoiceState:
+            Type: Choice
+            Choices:
+              - Variable: $
+                BooleanEquals: false
+                Next: WaitState
+              - Variable: $
+                BooleanEquals: true
+                Next: LastState
+            #Choices:
+            #  - Variable: $.epoch_time.is_even
+            #    BooleanEquals: true
+            #    Next: EvenState
+            #  - Variable: $.epoch_time.is_even
+            #    BooleanEquals: false
+            #    Next: OddState
+          WaitState:
+            Type: Wait
+            Seconds: !Ref WaitSeconds
+            Next: FirstState
+          LastState:
+            Type: Task
+            Resource: !Ref FunctionArn2
+            End: true
+      LoggingConfiguration:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt LogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      RoleArn: !GetAtt StateMachineRole.Arn
+      StateMachineName: !Ref Prefix
+      StateMachineType: STANDARD
+      #TracingConfiguration:
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-StateMachineLogGroup"
+      
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - states.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref FunctionArn1
+                  - !Ref FunctionArn2
+        - PolicyName: !Sub "${Prefix}-DeliverToCloudWatchLogPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                #Resource: !GetAtt LogGroup.Arn
+                Resource: "*"
+                #Resource: !Sub
+                #  - "${LogGroupArn}:*"
+                #  - LogGroupArn: !GetAtt LogGroup.Arn

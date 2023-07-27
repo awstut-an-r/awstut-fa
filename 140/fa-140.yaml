@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-140
+    
+  Handler:
+    Type: String
+    Default: index.lambda_handler
+    
+  Runtime:
+    Type: String
+    Default: python3.8
+    
+  #Timeout:
+  #  Type: Number
+  #  Default: 10
+  
+  WaitSeconds:
+    Type: Number
+    Default: 3
+    
+    
+Resources:
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - OpenSearchStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Handler: !Ref Handler
+        Prefix: !Ref Prefix
+        Runtime: !Ref Runtime
+        #Timeout: !Ref Timeout
+
+  StepFunctionsStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-stepfunctions.yaml"
+      Parameters:
+        FunctionArn1: !GetAtt LambdaStack.Outputs.FunctionArn1
+        FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
+        Prefix: !Ref Prefix
+        WaitSeconds: !Ref WaitSeconds
