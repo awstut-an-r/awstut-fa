@@ -16,11 +16,7 @@ Parameters:
   Runtime:
     Type: String
     Default: python3.8
-    
-  #Timeout:
-  #  Type: Number
-  #  Default: 10
-  
+
   WaitSeconds:
     Type: Number
     Default: 3
@@ -29,15 +25,12 @@ Parameters:
 Resources:
   LambdaStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - OpenSearchStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
         Handler: !Ref Handler
         Prefix: !Ref Prefix
         Runtime: !Ref Runtime
-        #Timeout: !Ref Timeout
 
   StepFunctionsStack:
     Type: AWS::CloudFormation::Stack
