@@ -35,13 +35,6 @@ Resources:
               - Variable: $
                 BooleanEquals: true
                 Next: LastState
-            #Choices:
-            #  - Variable: $.epoch_time.is_even
-            #    BooleanEquals: true
-            #    Next: EvenState
-            #  - Variable: $.epoch_time.is_even
-            #    BooleanEquals: false
-            #    Next: OddState
           WaitState:
             Type: Wait
             Seconds: !Ref WaitSeconds
@@ -59,7 +52,6 @@ Resources:
       RoleArn: !GetAtt StateMachineRole.Arn
       StateMachineName: !Ref Prefix
       StateMachineType: STANDARD
-      #TracingConfiguration:
 
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -77,8 +69,6 @@ Resources:
             Principal:
               Service:
                 - states.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
           PolicyDocument:
@@ -105,8 +95,4 @@ Resources:
                   - logs:PutResourcePolicy
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
-                #Resource: !GetAtt LogGroup.Arn
                 Resource: "*"
-                #Resource: !Sub
-                #  - "${LogGroupArn}:*"
-                #  - LogGroupArn: !GetAtt LogGroup.Arn
