@@ -1,17 +1,11 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #AppSource:
-  #  Type: String
-    
   BucketName:
     Type: String
     
   EnvironmentType:
     Type: String
 
-  #InstanceSecurityGroup:
-  #  Type: String
-    
   InstanceType:
     Type: String
 
@@ -42,15 +36,11 @@ Resources:
     Type: AWS::ElasticBeanstalk::Application
     Properties: 
       ApplicationName: !Sub "${Prefix}-application"
-      #Description: String
-      #ResourceLifecycleConfig: 
-      #  ApplicationResourceLifecycleConfig
 
   ApplicationVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
     Properties: 
       ApplicationName: !Ref Application
-      #Description: String
       SourceBundle: 
         S3Bucket: !Ref BucketName
         S3Key: !Ref SourceBundleName
@@ -60,89 +50,46 @@ Resources:
     Properties: 
       ApplicationName: !Ref Application
       CNAMEPrefix: !Ref Prefix
-      #Description: String
       EnvironmentName: !Sub "${Prefix}-env"
-      #OperationsRole: String
-      #OptionSettings: 
-      #  - OptionSetting
-      #PlatformArn: !Ref PlatformArn
-      #SolutionStackName: !Ref SolutionStackName
-      #Tags: 
-      #  - Tag
       TemplateName: !Ref ConfigurationTemplate
       Tier: 
         Name: WebServer
         Type: Standard
-        #Version: 1.0
       VersionLabel: !Ref ApplicationVersion
   
   ConfigurationTemplate:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties: 
       ApplicationName: !Ref Application
-      #Description: String
-      #EnvironmentId: !Ref Environment
       OptionSettings: 
         - Namespace: aws:autoscaling:asg
           OptionName: MaxSize
-          #ResourceName: AWSEBAutoScalingGroup
           Value: !Ref MaxSize
         - Namespace: aws:autoscaling:asg
           OptionName: MinSize
-          #ResourceName: AWSEBAutoScalingGroup
           Value: !Ref MinSize
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: IamInstanceProfile
-          #ResourceName: AWSEBAutoScalingLaunchConfiguration
           Value: !Ref InstanceProfile
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: InstanceType
-          #ResourceName: String
           Value: !Ref InstanceType
-        #- Namespace: aws:autoscaling:launchconfiguration
-        #  OptionName: SecurityGroups
-        #  #ResourceName: AWSEBAutoScalingLaunchConfiguration
-        #  Value: !Ref InstanceSecurityGroup
-        #- Namespace: aws:cloudformation:template:parameter
-        #  OptionName: AppSource
-        #  #ResourceName: String
-        #  Value: !Ref AppSource
-        #- Namespace: aws:ec2:instances
-        #  OptionName: InstanceTypes
-        #  #ResourceName: String
-        #  Value: !Ref InstanceType
         - Namespace: aws:ec2:vpc
           OptionName: AssociatePublicIpAddress
-          #ResourceName: AWSEBAutoScalingLaunchConfiguration
           Value: true
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: EnvironmentType
-          #ResourceName: String
           Value: !Ref EnvironmentType
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: ServiceRole
-          #ResourceName: String
           Value: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/aws-elasticbeanstalk-service-role"
-        #- Namespace: aws:elasticbeanstalk:managedactions
-        #  OptionName: ServiceRoleForManagedUpdates
-        #  #ResourceName: String
-        #  Value: !Sub "arn:aws:iam::${AWS::AccountId}:role/service-role/aws-elasticbeanstalk-service-role"
         - Namespace: aws:ec2:vpc
           OptionName: VPCId
-          #ResourceName: AWSEBSecurityGroup
           Value: !Ref VPC
-        #- Namespace: aws:ec2:vpc
-        #  OptionName: ELBSubnets
-        #  #ResourceName: AWSEBSecurityGroup
-        #  Value: !Ref PublicSubnet1
         - Namespace: aws:ec2:vpc
           OptionName: Subnets
-          #ResourceName: AWSEBSecurityGroup
           Value: !Ref PublicSubnet1
-      #PlatformArn: String
       SolutionStackName: !Ref SolutionStackName
-      #SourceConfiguration: 
-      #  SourceConfiguration
       
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
