@@ -12,15 +12,7 @@ Parameters:
   HTTPPort:
     Type: Number
     Default: 80
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-  
-  #AppSource:
-  #  Type: String
-  #  Default: https://elasticbeanstalk-platform-assets-ap-northeast-1.s3.ap-northeast-1.amazonaws.com/stalks/eb_python311_amazon_linux_2023_1.0.306.0_20230727192134/sampleapp/EBSampleApp-Python.zip
-    
+
   EnvironmentType:
     Type: String
     Default: SingleInstance
@@ -93,7 +85,6 @@ Resources:
         ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
         ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
         ProjectEnvironmentType: !Ref ProjectEnvironmentType
-        #Secret: !GetAtt SecretsManagerStack.Outputs.Secret
         SourceBundleName: !Ref SourceBundleName
         SourceFileName: !Ref SourceFileName
         
@@ -105,8 +96,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
@@ -118,14 +107,8 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
         AvailabilityZone1: a
-        #AvailabilityZone2: c
-        #AvailabilityZone3: d
         CidrIp1: 10.0.1.0/24
-        #CidrIp2: 10.0.2.0/24
-        #CidrIp5: 10.0.5.0/24
-        #CidrIp6: 10.0.6.0/24
         HTTPPort: !Ref HTTPPort
-        #HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
 
@@ -137,10 +120,8 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eb.yaml"
       Parameters:
-        #AppSource: !Ref AppSource
         BucketName: !GetAtt S3Stack.Outputs.BucketName
         EnvironmentType: !Ref EnvironmentType
-        #InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
         MaxSize: !Ref MaxSize
         MinSize: !Ref MinSize
