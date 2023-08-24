@@ -11,20 +11,11 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Ref Prefix
-      #LifecycleConfiguration:
-      #  Rules:
-      #    - NoncurrentVersionExpirationInDays: 30
-      #      Status: Enabled
-      #VersioningConfiguration:
-      #  Status: Enabled
       NotificationConfiguration:
         EventBridgeConfiguration: 
           EventBridgeEnabled: true
 
 
 Outputs:
-  #BucketArn:
-  #  Value: !GetAtt Bucket.Arn
-    
   BucketName:
     Value: !Ref Bucket
