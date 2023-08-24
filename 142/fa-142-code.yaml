@@ -43,32 +43,18 @@ Resources:
           - Name: SOURCE_FILE_NAME
             Type: PLAINTEXT
             Value: !Ref SourceFileName
-          #- Name: DOCKERHUB_PASSWORD
-          #  Type: SECRETS_MANAGER
-          #  Value: !Sub "${Secret}:password"
         Image: !Ref ProjectEnvironmentImage
         ImagePullCredentialsType: CODEBUILD
         Type: !Ref ProjectEnvironmentType
         PrivilegedMode: true
-      #FileSystemLocations: 
-      #  - ProjectFileSystemLocation
       LogsConfig: 
         CloudWatchLogs:
           Status: DISABLED
         S3Logs:
           Status: DISABLED
       Name: !Ref Prefix
-      #QueuedTimeoutInMinutes: 480
-      #ResourceAccessRole: String
-      #SecondaryArtifacts: 
-      #  - Artifacts
-      #SecondarySources: 
-      #  - Source
-      #SecondarySourceVersions: 
-      #  - ProjectSourceVersion
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Source: 
-        #Type: CODEPIPELINE
         Type: NO_SOURCE
         BuildSpec: !Sub |
           version: 0.2
@@ -102,46 +88,17 @@ Resources:
                 - codebuild.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
       Policies:
         - PolicyName: PutS3ObjectPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              #- Effect: Allow
-              #  Action:
-              #    - secretsmanager:GetSecretValue
-              #  Resource:
-              #    - !Ref Secret
-              #- Effect: Allow
-              #  Action:
-              #    - ssm:GetParameters
-              #  Resource:
-              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
-              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                  #- s3:GetObject
-                  #- s3:GetObjectVersion
-                  #- s3:GetBucketAcl
-                  #- s3:GetBucketLocation
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - codebuild:CreateReportGroup
-              #    - codebuild:CreateReport
-              #    - codebuild:UpdateReport
-              #    - codebuild:BatchPutTestCases
-              #    - codebuild:BatchPutCodeCoverages
-              #  Resource:
-              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
-              
+
               
 Outputs:
   CodeBuildProject:
