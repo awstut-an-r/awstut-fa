@@ -4,15 +4,9 @@ Parameters:
   Architecture:
     Type: String
 
-  #BucketArn:
-  #  Type: String
-  #  
   BucketName:
     Type: String
-  
-  #CodeBuildProject:
-  #  Type: String
-  
+
   EventBusName:
     Type: String
     
@@ -33,11 +27,6 @@ Parameters:
     
     
 Resources:
-  #CustomResource:
-  #  Type: Custom::CustomResource
-  #  Properties:
-  #    ServiceToken: !GetAtt Function.Arn
-  
   WaitConditionHandle:
     Type: AWS::CloudFormation::WaitConditionHandle
 
@@ -50,7 +39,6 @@ Resources:
   EventsRule:
     Type: AWS::Events::Rule
     Properties: 
-      #Description: String
       EventBusName: !Ref EventBusName
       EventPattern:
         source:
@@ -62,8 +50,6 @@ Resources:
             name:
               - !Ref BucketName
       Name: !Sub "${Prefix}-EventsRule"
-      #RoleArn: String
-      #ScheduleExpression: String
       State: ENABLED
       Targets: 
         - Arn: !GetAtt Function2.Arn
@@ -73,11 +59,6 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      #Condition:
-      #  ArnLike:
-      #    aws:SourceArn: !Sub "arn:aws:s3:::${BucketName}"
-      #  StringEquals:
-      #    aws:SourceAccount: !Ref AWS::AccountId
       FunctionName: !Ref Function2
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventsRule.Arn
@@ -89,8 +70,6 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
           SIGNAL_URL: !Ref WaitConditionHandle
       Code:
         ZipFile: |
@@ -120,30 +99,9 @@ Resources:
     Properties:
       Architectures:
         - !Ref Architecture
-      #Environment:
-      #  Variables:
-      #    #CODEBUILD_PROJECT: !Ref CodeBuildProject
-      #    #SECRET_ARN: !Ref Secret
-      #    SIGNAL_URL: !Ref WaitConditionHandle
       Code:
         S3Bucket: !Ref BucketName
         S3Key: !Ref SourceBundleName
-      #Code:
-      #  ZipFile: |
-      #    import json
-      #    import os
-      #    import urllib3
-      #    import uuid
-      
-      #    def lambda_handler(event, context):
-      #      body = json.dumps({
-      #          "Status": "SUCCESS",
-      #          "Reason": "Lambda Deploy Package Setup Successed",
-      #          "UniqueId": str(uuid.uuid4()),
-      #          "Data": "Lambda Deploy Package Setup Successed"
-      #      })
-      #      http = urllib3.PoolManager()
-      #      http.request('PUT', os.environ['SIGNAL_URL'], body=body)
       FunctionName: !Sub "${Prefix}-function-03"
       Handler: !Ref Handler
       PackageType: Zip
@@ -164,21 +122,3 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: StartCodeBuildPolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - codebuild:StartBuild
-      #          Resource:
-      #            - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProject}" 
-
-
-#Outputs:
-#  Function2:
-#    Value: !Ref Function2
-#    
-#  FunctionArn2:
-#    Value: !GetAtt Function2.Arn
