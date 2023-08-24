@@ -8,27 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-142
-    
-  #HTTPPort:
-  #  Type: Number
-  #  Default: 80
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
   
-  #AppSource:
-  #  Type: String
-  #  Default: https://elasticbeanstalk-platform-assets-ap-northeast-1.s3.ap-northeast-1.amazonaws.com/stalks/eb_python311_amazon_linux_2023_1.0.306.0_20230727192134/sampleapp/EBSampleApp-Python.zip
-    
-  #EnvironmentType:
-  #  Type: String
-  #  Default: SingleInstance
-  #
-  #InstanceType:
-  #  Type: String
-  #  Default: t3.nano
-  #  
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -44,16 +24,7 @@ Parameters:
   WaitConditionTimeout:
     Type: Number
     Default: 600
-    
-  #
-  #MaxSize:
-  #  Type: Number
-  #  Default: 1
-  #  
-  #MinSize:
-  #  Type: Number
-  #  Default: 1
-  #  
+  
   ProjectEnvironmentComputeType:
     Type: String
     Default: BUILD_GENERAL1_SMALL
@@ -65,11 +36,7 @@ Parameters:
   ProjectEnvironmentType:
     Type: String
     Default: ARM_CONTAINER
-  
-  #SolutionStackName:
-  #  Type: String
-  #  Default: 64bit Amazon Linux 2023 v4.0.3 running Python 3.11
-    
+
   SourceBundleName:
     Type: String
     Default: deploy.zip
@@ -98,7 +65,6 @@ Resources:
         ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
         ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
         ProjectEnvironmentType: !Ref ProjectEnvironmentType
-        #Secret: !GetAtt SecretsManagerStack.Outputs.Secret
         SourceBundleName: !Ref SourceBundleName
         SourceFileName: !Ref SourceFileName
         
@@ -110,13 +76,10 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
-        #WaitConditionTimeout: !Ref WaitConditionTimeout
         
   LambdaStack2:
     Type: AWS::CloudFormation::Stack
@@ -126,9 +89,7 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
         BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
         EventBusName: default
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
