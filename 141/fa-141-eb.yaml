@@ -29,7 +29,7 @@ Parameters:
     
   VPC:
     Type: String
-
+    
 
 Resources:
   Application:
@@ -111,4 +111,5 @@ Resources:
               Service:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
