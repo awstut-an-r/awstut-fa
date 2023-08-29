@@ -64,6 +64,10 @@ Parameters:
   SourceFileName:
     Type: String
     Default: application.py
+    
+  WaitConditionTimeout:
+    Type: Number
+    Default: 600
 
 Resources:
   S3Stack:
@@ -96,10 +100,13 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
         CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
+        EventBusName: default
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
+        WaitConditionTimeout: !Ref WaitConditionTimeout
         
   VPCStack:
     Type: AWS::CloudFormation::Stack
