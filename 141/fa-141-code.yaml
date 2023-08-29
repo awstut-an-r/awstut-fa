@@ -103,7 +103,7 @@ Resources:
                   - s3:PutObject
                 Resource:
                   - !Sub "arn:aws:s3:::${BucketName}/*"
-
+              
               
 Outputs:
   CodeBuildProject:
