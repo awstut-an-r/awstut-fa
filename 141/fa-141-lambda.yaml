@@ -4,7 +4,13 @@ Parameters:
   Architecture:
     Type: String
 
+  BucketName:
+    Type: String
+  
   CodeBuildProject:
+    Type: String
+    
+  EventBusName:
     Type: String
     
   Handler:
@@ -15,15 +21,18 @@ Parameters:
     
   Runtime:
     Type: String
-
+    
+  WaitConditionTimeout:
+    Type: Number
+    
     
 Resources:
   CustomResource:
     Type: Custom::CustomResource
     Properties:
-      ServiceToken: !GetAtt Function.Arn
+      ServiceToken: !GetAtt Function1.Arn
       
-  Function:
+  Function1:
     Type: AWS::Lambda::Function
     Properties:
       Architectures:
@@ -57,12 +66,12 @@ Resources:
             except Exception as e:
               print(e)
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
-      FunctionName: !Sub "${Prefix}-function"
+      FunctionName: !Sub "${Prefix}-function-01"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
-      Role: !GetAtt FunctionRole.Arn
+      Role: !GetAtt FunctionRole1.Arn
       
-  FunctionRole:
+  FunctionRole1:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
     Properties:
@@ -86,3 +95,84 @@ Resources:
                   - codebuild:StartBuild
                 Resource:
                   - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProject}" 
+                  
+                  
+  WaitConditionHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref WaitConditionHandle
+      Timeout: !Ref WaitConditionTimeout
+      
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - !Ref BucketName
+      Name: !Sub "${Prefix}-EventsRule"
+      State: ENABLED
+      Targets: 
+        - Arn: !GetAtt Function2.Arn
+          Id: !Ref Function2
+          
+  EventsRulePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function2
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventsRule.Arn
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          SIGNAL_URL: !Ref WaitConditionHandle
+      Code:
+        ZipFile: |
+          import json
+          import os
+          import urllib3
+          import uuid
+    
+          def lambda_handler(event, context):
+            body = json.dumps({
+                "Status": "SUCCESS",
+                "Reason": "CodeBuild Project Finished Successfully",
+                "UniqueId": str(uuid.uuid4()),
+                "Data": "CodeBuild Project Finished Successfully"
+            })
+            http = urllib3.PoolManager()
+            http.request('PUT', os.environ['SIGNAL_URL'], body=body)
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
