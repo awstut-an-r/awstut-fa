@@ -62,21 +62,12 @@ Resources:
     Properties: 
       ApplicationName: !Ref Application
       OptionSettings: 
-        - Namespace: aws:autoscaling:asg
-          OptionName: MaxSize
-          Value: !Ref MaxSize
-        - Namespace: aws:autoscaling:asg
-          OptionName: MinSize
-          Value: !Ref MinSize
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: IamInstanceProfile
           Value: !Ref InstanceProfile
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: InstanceType
           Value: !Ref InstanceType
-        - Namespace: aws:ec2:vpc
-          OptionName: AssociatePublicIpAddress
-          Value: true
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: EnvironmentType
           Value: !Ref EnvironmentType
