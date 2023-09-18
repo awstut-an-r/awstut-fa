@@ -21,10 +21,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #SourceBundleName:
-  #  Type: String
-  
+
   WaitConditionTimeout:
     Type: Number
     
@@ -43,7 +40,6 @@ Resources:
       Environment:
         Variables:
           CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
       Code:
         ZipFile: |
           import boto3
@@ -113,7 +109,6 @@ Resources:
   EventsRule:
     Type: AWS::Events::Rule
     Properties: 
-      #Description: String
       EventBusName: !Ref EventBusName
       EventPattern:
         source:
@@ -125,8 +120,6 @@ Resources:
             name:
               - !Ref BucketName
       Name: !Sub "${Prefix}-EventsRule"
-      #RoleArn: String
-      #ScheduleExpression: String
       State: ENABLED
       Targets: 
         - Arn: !GetAtt Function2.Arn
@@ -136,11 +129,6 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      #Condition:
-      #  ArnLike:
-      #    aws:SourceArn: !Sub "arn:aws:s3:::${BucketName}"
-      #  StringEquals:
-      #    aws:SourceAccount: !Ref AWS::AccountId
       FunctionName: !Ref Function2
       Principal: events.amazonaws.com
       SourceArn: !GetAtt EventsRule.Arn
@@ -152,8 +140,6 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
           SIGNAL_URL: !Ref WaitConditionHandle
       Code:
         ZipFile: |
@@ -190,15 +176,3 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-                  
-
-
-#Outputs:
-#  #Function:
-#  #  Value: !Ref Function
-#  #  
-#  #FunctionArn:
-#  #  Value: !GetAtt Function.Arn
-#  
-#  WaitCondition:
-#    Value: !Ref WaitCondition
