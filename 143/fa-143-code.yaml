@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    
+  ProjectEnvironmentImage:
+    Type: String
+    
+  ProjectEnvironmentType:
+    Type: String
+    
+  SourceBundleName:
+    Type: String
+    
+  SourceFileName:
+    Type: String
+    
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Cache: 
+        Type: NO_CACHE
+      Environment: 
+        ComputeType: !Ref ProjectEnvironmentComputeType
+        EnvironmentVariables:
+          - Name: BUCKET_NAME
+            Type: PLAINTEXT
+            Value: !Ref BucketName
+          - Name: SOURCE_BUNDLE_NAME
+            Type: PLAINTEXT
+            Value: !Ref SourceBundleName
+          - Name: SOURCE_FILE_NAME
+            Type: PLAINTEXT
+            Value: !Ref SourceFileName
+          #- Name: DOCKERHUB_PASSWORD
+          #  Type: SECRETS_MANAGER
+          #  Value: !Sub "${Secret}:password"
+        Image: !Ref ProjectEnvironmentImage
+        ImagePullCredentialsType: CODEBUILD
+        Type: !Ref ProjectEnvironmentType
+        PrivilegedMode: true
+      #FileSystemLocations: 
+      #  - ProjectFileSystemLocation
+      LogsConfig: 
+        CloudWatchLogs:
+          Status: DISABLED
+        S3Logs:
+          Status: DISABLED
+      Name: !Ref Prefix
+      #QueuedTimeoutInMinutes: 480
+      #ResourceAccessRole: String
+      #SecondaryArtifacts: 
+      #  - Artifacts
+      #SecondarySources: 
+      #  - Source
+      #SecondarySourceVersions: 
+      #  - ProjectSourceVersion
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        #Type: CODEPIPELINE
+        Type: NO_SOURCE
+        BuildSpec: !Sub |
+          version: 0.2
+          
+          phases:
+            pre_build:
+              commands:
+                - |
+                  cat << EOF > $SOURCE_FILE_NAME
+                  import datetime
+                  import subprocess
+                  
+                  def application(environ, start_response):
+                      result = subprocess.run(
+                        ['ec2-metadata', '-i'],
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        encoding='utf-8'
+                      )
+                      start_response("200 OK", [
+                          ("Content-Type", "text/html")
+                      ])
+                      return [bytes(result.stdout, 'utf-8')]
+                      
+                      #response = str(datetime.datetime.now())
+                      #start_response("200 OK", [
+                      #    ("Content-Type", "text/html")
+                      #])
+                      #return [bytes(response, 'utf-8')]
+                  EOF
+            build:
+              commands:
+                - zip $SOURCE_BUNDLE_NAME -r * .[^.]*
+            post_build:
+              commands:
+                - aws s3 cp $SOURCE_BUNDLE_NAME s3://$BUCKET_NAME/
+      Visibility: PRIVATE
+        
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+      Policies:
+        - PolicyName: PutS3ObjectPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              #- Effect: Allow
+              #  Action:
+              #    - secretsmanager:GetSecretValue
+              #  Resource:
+              #    - !Ref Secret
+              #- Effect: Allow
+              #  Action:
+              #    - ssm:GetParameters
+              #  Resource:
+              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
+              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  #- s3:GetObject
+                  #- s3:GetObjectVersion
+                  #- s3:GetBucketAcl
+                  #- s3:GetBucketLocation
+                Resource:
+                  #- !Ref BucketArn
+                  #- !Sub "${BucketArn}/*"
+                  #- !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              #- Effect: Allow
+              #  Action:
+              #    - codebuild:CreateReportGroup
+              #    - codebuild:CreateReport
+              #    - codebuild:UpdateReport
+              #    - codebuild:BatchPutTestCases
+              #    - codebuild:BatchPutCodeCoverages
+              #  Resource:
+              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
+              
+              
+Outputs:
+  CodeBuildProject:
+    Value: !Ref CodeBuildProject
