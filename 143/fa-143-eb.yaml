@@ -1,29 +1,14 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #ALBSecurityGroup:
-  #  Type: String
-
-  #AppSource:
-  #  Type: String
-    
   BucketName:
     Type: String
     
   EnvironmentType:
     Type: String
 
-  #InstanceSecurityGroup:
-  #  Type: String
-  
-  #InstanceCapacity:
-  #  Type: Number
-  
   InstanceArchitecture:
     Type: String
-    
-  #InstanceSecurityGroup:
-  #  Type: String
-    
+
   InstanceType:
     Type: String
     
@@ -59,9 +44,6 @@ Parameters:
     
   VPC:
     Type: String
-    
-  #WaitCondition:
-  #  Type: String
 
 
 Resources:
@@ -69,17 +51,12 @@ Resources:
     Type: AWS::ElasticBeanstalk::Application
     Properties: 
       ApplicationName: !Sub "${Prefix}-application"
-      #Description: String
-      #ResourceLifecycleConfig: 
-      #  ApplicationResourceLifecycleConfig
 
   ApplicationVersion:
     Type: AWS::ElasticBeanstalk::ApplicationVersion
-    #DependsOn:
-    #  - !Ref 
+
     Properties: 
       ApplicationName: !Ref Application
-      #Description: String
       SourceBundle: 
         S3Bucket: !Ref BucketName
         S3Key: !Ref SourceBundleName
@@ -89,28 +66,17 @@ Resources:
     Properties: 
       ApplicationName: !Ref Application
       CNAMEPrefix: !Ref Prefix
-      #Description: String
       EnvironmentName: !Sub "${Prefix}-env"
-      #OperationsRole: String
-      #OptionSettings: 
-      #  - OptionSetting
-      #PlatformArn: !Ref PlatformArn
-      #SolutionStackName: !Ref SolutionStackName
-      #Tags: 
-      #  - Tag
       TemplateName: !Ref ConfigurationTemplate
       Tier: 
         Name: WebServer
         Type: Standard
-        #Version: 1.0
       VersionLabel: !Ref ApplicationVersion
   
   ConfigurationTemplate:
     Type: AWS::ElasticBeanstalk::ConfigurationTemplate
     Properties: 
       ApplicationName: !Ref Application
-      #Description: String
-      #EnvironmentId: !Ref Environment
       OptionSettings: 
         - Namespace: aws:autoscaling:asg
           OptionName: MaxSize
@@ -121,9 +87,6 @@ Resources:
         - Namespace: aws:autoscaling:launchconfiguration
           OptionName: IamInstanceProfile
           Value: !Ref InstanceProfile
-        #- Namespace: aws:autoscaling:launchconfiguration
-        #  OptionName: SecurityGroups
-        #  Value: !Ref InstanceSecurityGroup
         - Namespace: aws:ec2:instances
           OptionName: InstanceTypes
           Value: !Ref InstanceType
@@ -154,13 +117,7 @@ Resources:
         - Namespace: aws:elasticbeanstalk:environment
           OptionName: LoadBalancerType
           Value: !Ref LoadBalancerType
-        #- Namespace: aws:elbv2:loadbalancer
-        #  OptionName: SecurityGroups
-        #  Value: !Ref ALBSecurityGroup
-      #PlatformArn: String
       SolutionStackName: !Ref SolutionStackName
-      #SourceConfiguration: 
-      #  SourceConfiguration
       
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -182,30 +139,4 @@ Resources:
               Service:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
-        #- arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
-        
-  #ALBSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-ALBSecurityGroup"
-  #    GroupDescription: Allow HTTP Only.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: 80
-  #        ToPort: 80
-  #        CidrIp: 0.0.0.0/0
-  #       
-  #InstanceSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
-  #    GroupDescription: Allow HTTP from ALBSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: 80
-  #        ToPort: 80
-  #        CidrIp: 0.0.0.0/0
-  #        #SourceSecurityGroupId: !Ref ALBSecurityGroup
