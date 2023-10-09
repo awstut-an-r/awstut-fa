@@ -4,15 +4,6 @@ Parameters:
   Architecture:
     Type: String
 
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
-  #CodeBuildProject:
-  #  Type: String
-  
   EventBusName:
     Type: String
     
@@ -24,10 +15,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #SourceBundleName:
-  #  Type: String
-  
+
   WaitConditionTimeout:
     Type: Number
     
@@ -52,7 +40,6 @@ Resources:
       Name: !Sub "${Prefix}-EventsRule"
       State: ENABLED
       Targets: 
-        #- Arn: !Ref FunctionArn2
         - Arn: !GetAtt Function4.Arn
           Id: !Ref Function4
           
@@ -71,10 +58,7 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
           SIGNAL_URL: !Ref WaitConditionHandle
-          #PARAMETER: !Ref WaitConditionHandle
       Code:
         ZipFile: |
           import boto3
@@ -113,21 +97,3 @@ Resources:
                 - lambda.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      #Policies:
-      #  - PolicyName: UpdateSSMParameter
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        - Effect: Allow
-      #          Action:
-      #            - ssm:GetParameter
-      #          Resource:
-      #            - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterWaitConditionHandleSignalUrl}"
-      
-
-#Outputs:
-#  Function2:
-#    Value: !Ref Function2
-#    
-#  FunctionArn2:
-#    Value: !GetAtt Function2.Arn
