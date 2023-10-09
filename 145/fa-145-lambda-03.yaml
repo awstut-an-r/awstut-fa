@@ -4,15 +4,6 @@ Parameters:
   Architecture:
     Type: String
 
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
-  #CodeBuildProject:
-  #  Type: String
-    
   Handler:
     Type: String
     
@@ -24,13 +15,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #SourceBundleName:
-  #  Type: String
-  
-  #WaitConditionTimeout:
-  #  Type: Number
-    
+
     
 Resources:
   CustomResource:
@@ -45,9 +30,6 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
-          #SIGNAL_URL: !Ref WaitConditionHandle
           IMAGE_PIPELINE_ARN: !Ref ImagePipelineArn
       Code:
         ZipFile: |
@@ -65,8 +47,7 @@ Resources:
             try:
               if event['RequestType'] == CREATE:
                 response = client.start_image_pipeline_execution(
-                  imagePipelineArn=image_pipeline_arn,
-                  #clientToken='string'
+                  imagePipelineArn=image_pipeline_arn
                 )
                 print(response)
                 
@@ -103,7 +84,6 @@ Resources:
                 Action:
                   - imagebuilder:StartImagePipelineExecution
                 Resource:
-                  #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterWaitConditionHandleSignalUrl}"
                   - !Ref ImagePipelineArn
       
 
@@ -113,12 +93,3 @@ Outputs:
     
   FunctionArn2:
     Value: !GetAtt Function3.Arn
-
-  #WaitCondition:
-  #  Value: WaitCondition
-  #
-  #WaitConditionHandle:
-  #  Value: !Ref WaitConditionHandle
-  
-  #ParameterWaitConditionHandleSignalUrl:
-  #  Value: !Ref ParameterWaitConditionHandleSignalUrl
