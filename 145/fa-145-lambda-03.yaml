@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  #BucketArn:
+  #  Type: String
+  #  
+  #BucketName:
+  #  Type: String
+  
+  #CodeBuildProject:
+  #  Type: String
+    
+  Handler:
+    Type: String
+    
+  ImagePipelineArn:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  #SourceBundleName:
+  #  Type: String
+  
+  #WaitConditionTimeout:
+  #  Type: Number
+    
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function3.Arn
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          #CODEBUILD_PROJECT: !Ref CodeBuildProject
+          #SECRET_ARN: !Ref Secret
+          #SIGNAL_URL: !Ref WaitConditionHandle
+          IMAGE_PIPELINE_ARN: !Ref ImagePipelineArn
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          image_pipeline_arn = os.environ['IMAGE_PIPELINE_ARN']
+          client = boto3.client('imagebuilder')
+          
+          CREATE = 'Create'
+          response_data = {}
+    
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                response = client.start_image_pipeline_execution(
+                  imagePipelineArn=image_pipeline_arn,
+                  #clientToken='string'
+                )
+                print(response)
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function-03"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole3.Arn
+      
+  FunctionRole3:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: UpdateSSMParameter
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - imagebuilder:StartImagePipelineExecution
+                Resource:
+                  #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterWaitConditionHandleSignalUrl}"
+                  - !Ref ImagePipelineArn
+      
+
+Outputs:
+  Function2:
+    Value: !Ref Function3
+    
+  FunctionArn2:
+    Value: !GetAtt Function3.Arn
+
+  #WaitCondition:
+  #  Value: WaitCondition
+  #
+  #WaitConditionHandle:
+  #  Value: !Ref WaitConditionHandle
+  
+  #ParameterWaitConditionHandleSignalUrl:
+  #  Value: !Ref ParameterWaitConditionHandleSignalUrl
