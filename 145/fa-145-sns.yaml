@@ -13,9 +13,6 @@ Parameters:
   FunctionArn2:
     Type: String
 
-  #Parameter1:
-  #  Type: String
-
   Prefix:
     Type: String
     
@@ -24,17 +21,11 @@ Resources:
   Topic:
     Type: AWS::SNS::Topic
     Properties:
-      #ContentBasedDeduplication: Boolean
-      #DisplayName: String
-      #FifoTopic: Boolean
-      #KmsMasterKeyId: String
       Subscription: 
         - Endpoint: !Ref FunctionArn1
           Protocol: lambda
         - Endpoint: !Ref FunctionArn2
           Protocol: lambda
-      #Tags: 
-      #  - Tag
       TopicName: !Ref Prefix
       
   SNSPermission1: 
