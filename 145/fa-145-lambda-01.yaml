@@ -4,30 +4,15 @@ Parameters:
   Architecture:
     Type: String
 
-  #BucketArn:
-  #  Type: String
-  #  
-  #BucketName:
-  #  Type: String
-  
-  #CodeBuildProject:
-  #  Type: String
-    
   Handler:
     Type: String
-    
-  #ParameterAmi:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
   Runtime:
     Type: String
-    
-  #SourceBundleName:
-  #  Type: String
-    
+
     
 Resources:
   ParameterAmi:
@@ -36,12 +21,7 @@ Resources:
       Name: !Sub "${Prefix}-Ami"
       Type: String
       Value: " "
-      
-  #CustomResource:
-  #  Type: Custom::CustomResource
-  #  Properties:
-  #    ServiceToken: !GetAtt Function1.Arn
-      
+
   Function1:
     Type: AWS::Lambda::Function
     Properties:
@@ -49,8 +29,6 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #CODEBUILD_PROJECT: !Ref CodeBuildProject
-          #SECRET_ARN: !Ref Secret
           PARAMETER: !Ref ParameterAmi
       Code:
         ZipFile: |
@@ -62,7 +40,6 @@ Resources:
           client = boto3.client('ssm')
           
           def lambda_handler(event, context):
-            #print(event)
             message = json.loads(event["Records"][0]["Sns"]["Message"])
             ami = message['outputResources']['amis'][0]['image']
             
