@@ -11,10 +11,7 @@ Parameters:
     
   DBName:
     Type: String
-    
-  #DBSecurityGroup:
-  #  Type: String
-  
+
   DomainName:
     Type: String
 
@@ -38,10 +35,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  #PrivateSubnet2:
-  #  Type: String
-    
+
   PublicSubnet2:
     Type: String
     
@@ -65,7 +59,6 @@ Resources:
   Component:
     Type: AWS::ImageBuilder::Component
     Properties: 
-      #ChangeDescription: String
       Data: !Sub |
         schemaVersion: 1.0
         phases:
@@ -93,103 +86,49 @@ Resources:
                     - wp core download --locale=ja
                     - wp core config --dbname="${DBName}" --dbuser="${DBMasterUsername}" --dbpass="${DBMasterUserPassword}" --dbhost="${DBInstanceEndpointAddress}"
                     - wp core install --url=http://"${DomainName}" --title="${WordPressTitle}" --admin_user="${WordPressAdminUser}" --admin_password="${WordPressAdminPassword}" --admin_email="${WordPressAdminEmail}"
-      #Description: String
-      #KmsKeyId: String
       Name: !Sub "${Prefix}-Component"
       Platform: !Ref ImageBuilderPlatform
       SupportedOsVersions: 
         - !Ref ImageBuilderSupportedOsVersion
-      #Tags: 
-      #  Key: Value
-      #Uri: String
       Version: !Ref ImageBuilderVersion
       
   ImageRecipe:
     Type: AWS::ImageBuilder::ImageRecipe
     Properties: 
-      #AdditionalInstanceConfiguration: 
-      #  SystemsManagerAgent: 
-      #    UninstallAfterBuild: fales
-      #  UserDataOverride: String
-      #BlockDeviceMappings: 
-      #  - InstanceBlockDeviceMapping
       Components: 
         - ComponentArn: !Ref Component
-          #Parameters: 
-          #  - ComponentParameter
-      #Description: String
       Name: !Sub "${Prefix}-ImageRecipe"
       ParentImage: !Ref ImageBuilderParentImage
-      #Tags: 
-      #  Key: Value
       Version: !Ref ImageBuilderVersion
-      #WorkingDirectory: String
       
   InfrastructureConfiguration:
     Type: AWS::ImageBuilder::InfrastructureConfiguration
     Properties: 
-      #Description: String
-      #InstanceMetadataOptions: 
-      #  InstanceMetadataOptions
       InstanceProfileName: !Ref ImageBuilderRoleProfile
-      #InstanceProfileName: !Ref AWSServiceRoleForImageBuilder
       InstanceTypes: 
         - !Ref InstanceType
-      #KeyPair: String
-      #Logging: 
-      #  Logging
       Name: !Sub "${Prefix}-InfrastructureConfiguration"
-      #ResourceTags: 
-      #  Key: Value
       SecurityGroupIds: 
-        #- !Ref DBSecurityGroup
         - !Ref InstanceSecurityGroup
       SnsTopicArn: !Ref Topic
       SubnetId: !Ref PublicSubnet2
-      #SubnetId: !Ref PrivateSubnet2
-      #Tags: 
-      #  Key: Value
-      #TerminateInstanceOnFailure: Boolean
       
   DistributionConfiguration:
     Type: AWS::ImageBuilder::DistributionConfiguration
     Properties: 
-      #Description: String
       Distributions: 
         - Region: !Ref AWS::Region
           AmiDistributionConfiguration: {}
-          #ContainerDistributionConfiguration: 
-          #  ContainerDistributionConfiguration
-          #FastLaunchConfigurations: 
-          #  - FastLaunchConfiguration
-          #LaunchTemplateConfigurations: 
-          #  - LaunchTemplateConfiguration
-          #LicenseConfigurationArns: 
-          #  - String
       Name: !Sub "${Prefix}-DistributionConfiguration"
-      #Tags: 
-      #  Key: Value
         
   ImagePipeline:
     Type: AWS::ImageBuilder::ImagePipeline
     Properties: 
-      #ContainerRecipeArn: String
-      #Description: String
       DistributionConfigurationArn: !Ref DistributionConfiguration
-      #EnhancedImageMetadataEnabled: Boolean
       ImageRecipeArn: !Ref ImageRecipe
-      #ImageScanningConfiguration: 
-      #  ImageScanningConfiguration
-      #ImageTestsConfiguration: 
-      #  ImageTestsConfiguration
       InfrastructureConfigurationArn: !Ref InfrastructureConfiguration
       Name: !Sub "${Prefix}-ImagePipeline"
-      #Schedule: 
-      #  Schedule
       Status: ENABLED
-      #Tags: 
-      #  Key: Value
-
 
   ImageBuilderRoleProfile:
     Type: AWS::IAM::InstanceProfile
@@ -197,7 +136,6 @@ Resources:
       Path: /
       Roles:
         - !Ref ImageBuilderRole
-        #- !Ref AWSServiceRoleForImageBuilder
         
   ImageBuilderRole:
     Type: AWS::IAM::Role
@@ -214,13 +152,7 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
         - arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilder
-  
-  #AWSServiceRoleForImageBuilder:
-  #  Type: AWS::IAM::ServiceLinkedRole
-  #  DeletionPolicy: Delete
-  #  Properties: 
-  #    AWSServiceName: imagebuilder.amazonaws.com
-        
+
         
 Outputs:
   ImagePipelineArn:
