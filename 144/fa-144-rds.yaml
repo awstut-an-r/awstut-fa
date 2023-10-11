@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AvailabilityZone:
-  #  Type: String
-    
   DBAllocatedStorage:
     Type: Number
     
@@ -44,7 +41,6 @@ Resources:
     DeletionPolicy: Delete
     Properties:
       AllocatedStorage: !Ref DBAllocatedStorage
-      #AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       DBInstanceClass: !Ref DBInstanceClass
       DBInstanceIdentifier: dbinstance
       DBName: !Ref DBName
@@ -53,7 +49,6 @@ Resources:
       EngineVersion: !Ref DBEngineVersion
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
-      #MultiAZ: true
       VPCSecurityGroups:
         - !Ref DBSecurityGroup
         
