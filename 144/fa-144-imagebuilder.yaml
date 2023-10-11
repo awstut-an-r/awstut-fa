@@ -1,0 +1,227 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  DBInstanceEndpointAddress:
+    Type: String
+
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  #DBSecurityGroup:
+  #  Type: String
+  
+  DomainName:
+    Type: String
+
+  ImageBuilderParentImage:
+    Type: String
+
+  ImageBuilderPlatform:
+    Type: String
+    
+  ImageBuilderSupportedOsVersion:
+    Type: String
+    
+  ImageBuilderVersion:
+    Type: String
+    
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  #PrivateSubnet2:
+  #  Type: String
+    
+  PublicSubnet2:
+    Type: String
+    
+  Topic:
+    Type: String
+    
+  WordPressAdminEmail:
+    Type: String
+    
+  WordPressAdminPassword:
+    Type: String
+    
+  WordPressAdminUser:
+    Type: String
+    
+  WordPressTitle:
+    Type: String
+    
+
+Resources:
+  Component:
+    Type: AWS::ImageBuilder::Component
+    Properties: 
+      #ChangeDescription: String
+      Data: !Sub |
+        schemaVersion: 1.0
+        phases:
+          - name: build
+            steps:
+              - name: InstallWordPress
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - yum update -y
+                    - yum install -y httpd
+                    - amazon-linux-extras enable -y php7.4
+                    
+                    - yum install -y php php-gd php-mysqlnd php-xmlrpc -y
+                    - yum install -y mariadb
+                    
+                    - systemctl start httpd
+                    - systemctl enable httpd
+                    
+                    - cd /var/www/html
+                    
+                    - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+                    - chmod +x wp-cli.phar
+                    - mv wp-cli.phar /usr/local/bin/wp
+                    - wp core download --locale=ja
+                    - wp core config --dbname="${DBName}" --dbuser="${DBMasterUsername}" --dbpass="${DBMasterUserPassword}" --dbhost="${DBInstanceEndpointAddress}"
+                    - wp core install --url=http://"${DomainName}" --title="${WordPressTitle}" --admin_user="${WordPressAdminUser}" --admin_password="${WordPressAdminPassword}" --admin_email="${WordPressAdminEmail}"
+      #Description: String
+      #KmsKeyId: String
+      Name: !Sub "${Prefix}-Component"
+      Platform: !Ref ImageBuilderPlatform
+      SupportedOsVersions: 
+        - !Ref ImageBuilderSupportedOsVersion
+      #Tags: 
+      #  Key: Value
+      #Uri: String
+      Version: !Ref ImageBuilderVersion
+      
+  ImageRecipe:
+    Type: AWS::ImageBuilder::ImageRecipe
+    Properties: 
+      #AdditionalInstanceConfiguration: 
+      #  SystemsManagerAgent: 
+      #    UninstallAfterBuild: fales
+      #  UserDataOverride: String
+      #BlockDeviceMappings: 
+      #  - InstanceBlockDeviceMapping
+      Components: 
+        - ComponentArn: !Ref Component
+          #Parameters: 
+          #  - ComponentParameter
+      #Description: String
+      Name: !Sub "${Prefix}-ImageRecipe"
+      ParentImage: !Ref ImageBuilderParentImage
+      #Tags: 
+      #  Key: Value
+      Version: !Ref ImageBuilderVersion
+      #WorkingDirectory: String
+      
+  InfrastructureConfiguration:
+    Type: AWS::ImageBuilder::InfrastructureConfiguration
+    Properties: 
+      #Description: String
+      #InstanceMetadataOptions: 
+      #  InstanceMetadataOptions
+      InstanceProfileName: !Ref ImageBuilderRoleProfile
+      #InstanceProfileName: !Ref AWSServiceRoleForImageBuilder
+      InstanceTypes: 
+        - !Ref InstanceType
+      #KeyPair: String
+      #Logging: 
+      #  Logging
+      Name: !Sub "${Prefix}-InfrastructureConfiguration"
+      #ResourceTags: 
+      #  Key: Value
+      SecurityGroupIds: 
+        #- !Ref DBSecurityGroup
+        - !Ref InstanceSecurityGroup
+      SnsTopicArn: !Ref Topic
+      SubnetId: !Ref PublicSubnet2
+      #SubnetId: !Ref PrivateSubnet2
+      #Tags: 
+      #  Key: Value
+      #TerminateInstanceOnFailure: Boolean
+      
+  DistributionConfiguration:
+    Type: AWS::ImageBuilder::DistributionConfiguration
+    Properties: 
+      #Description: String
+      Distributions: 
+        - Region: !Ref AWS::Region
+          AmiDistributionConfiguration: {}
+          #ContainerDistributionConfiguration: 
+          #  ContainerDistributionConfiguration
+          #FastLaunchConfigurations: 
+          #  - FastLaunchConfiguration
+          #LaunchTemplateConfigurations: 
+          #  - LaunchTemplateConfiguration
+          #LicenseConfigurationArns: 
+          #  - String
+      Name: !Sub "${Prefix}-DistributionConfiguration"
+      #Tags: 
+      #  Key: Value
+        
+  ImagePipeline:
+    Type: AWS::ImageBuilder::ImagePipeline
+    Properties: 
+      #ContainerRecipeArn: String
+      #Description: String
+      DistributionConfigurationArn: !Ref DistributionConfiguration
+      #EnhancedImageMetadataEnabled: Boolean
+      ImageRecipeArn: !Ref ImageRecipe
+      #ImageScanningConfiguration: 
+      #  ImageScanningConfiguration
+      #ImageTestsConfiguration: 
+      #  ImageTestsConfiguration
+      InfrastructureConfigurationArn: !Ref InfrastructureConfiguration
+      Name: !Sub "${Prefix}-ImagePipeline"
+      #Schedule: 
+      #  Schedule
+      Status: ENABLED
+      #Tags: 
+      #  Key: Value
+
+
+  ImageBuilderRoleProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref ImageBuilderRole
+        #- !Ref AWSServiceRoleForImageBuilder
+        
+  ImageBuilderRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        - arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilder
+  
+  #AWSServiceRoleForImageBuilder:
+  #  Type: AWS::IAM::ServiceLinkedRole
+  #  DeletionPolicy: Delete
+  #  Properties: 
+  #    AWSServiceName: imagebuilder.amazonaws.com
+        
+        
+Outputs:
+  ImagePipelineArn:
+    Value: !Ref ImagePipeline

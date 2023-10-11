@@ -1,0 +1,72 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #AvailabilityZone:
+  #  Type: String
+    
+  DBAllocatedStorage:
+    Type: Number
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBInstanceClass:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBSecurityGroup:
+    Type: String
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+
+Resources:
+  DBInstance:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Delete
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      #AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: dbinstance
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      #MultiAZ: true
+      VPCSecurityGroups:
+        - !Ref DBSecurityGroup
+        
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: dbsubnetgroup
+      DBSubnetGroupDescription: dbsubnetgroup.
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+
+
+Outputs:
+  DBInstanceEndpointAddress:
+    Value: !GetAtt DBInstance.Endpoint.Address
