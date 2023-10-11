@@ -35,15 +35,6 @@ Resources:
           client = boto3.client('events')
           
           def lambda_handler(event, context):
-            #now = datetime.datetime.now()
-            #unix_time = int(time.mktime(now.timetuple()))
-          
-            #detail = json.dumps(
-            #  {
-            #    'now': now.strftime('%Y-%m-%d %H:%M:%S.%f'),
-            #    'unix_time': unix_time
-            #  }
-            #)
             detail = json.dumps({})
           
             entry = {
@@ -69,25 +60,6 @@ Resources:
       Handler: !Ref Handler
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      
-  #Function2:
-  #  Type: AWS::Lambda::Function
-  #  Properties:
-  #    Code:
-  #      ZipFile: |
-  #        def lambda_handler(event, context):
-  #          print(event)
-  #          
-  #          unix_time = event['detail']['unix_time']
-  #          
-  #          if (unix_time % 2) == 0:
-  #            print('{int} is even !'.format(int=unix_time))
-  #          else:
-  #            print('{int} is odd !'.format(int=unix_time))
-  #    FunctionName: !Sub "${Prefix}-function-02"
-  #    Handler: !Ref Handler
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole.Arn
 
   FunctionRole2:
     Type: AWS::IAM::Role
