@@ -1,14 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  #Architecture:
-  #  Type: String
-    
-  #Handler:
-  #  Type: String
-
-  #ImageId:
-  #  Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    
   InstanceSecurityGroup:
     Type: String
     
@@ -17,120 +8,20 @@ Parameters:
     
   ParameterAmi:
     Type: String
-    
-  #ParameterWaitConditionHandleSignalUrl:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
   PublicSubnet1:
     Type: String
-    
-  #Runtime:
-  #  Type: String
-  #  
-  #WaitConditionTimeout:
-  #  Type: Number
-    
+
     
 Resources:
-  #ParameterWaitConditionHandleSignalUrl:
-  #  Type: AWS::SSM::Parameter
-  #  Properties:
-  #    Name: !Sub "${Prefix}-WaitConditionHandleSignalUrl"
-  #    Type: String
-  #    Value: !Ref WaitConditionHandle
-
-  #WaitConditionHandle:
-  #  Type: AWS::CloudFormation::WaitConditionHandle
-  
-  #WaitCondition:
-  #  Type: AWS::CloudFormation::WaitCondition
-  #  Properties:
-  #    Handle: !Ref WaitConditionHandle
-  #    Timeout: !Ref WaitConditionTimeout
-  #    
-  #CustomResource:
-  #  Type: Custom::CustomResource
-  #  Properties:
-  #    ServiceToken: !GetAtt Function4.Arn
-      
-  #Function4:
-  #  Type: AWS::Lambda::Function
-  #  Properties:
-  #    Architectures:
-  #      - !Ref Architecture
-  #    Environment:
-  #      Variables:
-  #        #CODEBUILD_PROJECT: !Ref CodeBuildProject
-  #        PARAMETER: !Ref ParameterAmi
-  #        #SECRET_ARN: !Ref Secret
-  #    Code:
-  #      ZipFile: |
-  #        import boto3
-  #        import cfnresponse
-  #        import os
-  #        
-  #        codebuild_project = os.environ['CODEBUILD_PROJECT']
-  #        
-  #        CREATE = 'Create'
-  #        response_data = {}
-  #        
-  #        client = boto3.client('codebuild')
-  #        
-  #        def lambda_handler(event, context):
-  #          try:
-  #            if event['RequestType'] == CREATE:
-  #              response = client.start_build(
-  #                projectName=codebuild_project
-  #              )
-  #              print(response)
-  #              
-  #            cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
-  #            
-  #          except Exception as e:
-  #            print(e)
-  #            cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
-  #    FunctionName: !Sub "${Prefix}-function-01"
-  #    Handler: !Ref Handler
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole1.Arn
-  #    
-  #FunctionRole1:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - lambda.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  #    Policies:
-  #      - PolicyName: StartCodeBuildPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                - codebuild:StartBuild
-  #              Resource:
-  #                - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProject}" 
-  
   Instance:
     Type: AWS::EC2::Instance
-    #DependsOn:
-    #  - WaitCondition
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
-      #ImageId: !Ref ImageId
       ImageId: !Sub "{{resolve:ssm:${ParameterAmi}}}"
-      #ImageId: ami-097b982d19474adb6
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
@@ -138,11 +29,7 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup
           SubnetId: !Ref PublicSubnet1
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  dnf update -y
-      #  dnf install -y mariadb105
-      
+
   EIP:
     Type: AWS::EC2::EIP
     Properties:
@@ -153,18 +40,7 @@ Resources:
     Properties:
       AllocationId: !GetAtt EIP.AllocationId
       InstanceId: !Ref Instance
-      
-  #EIP2:
-  #  Type: AWS::EC2::EIP
-  #  Properties:
-  #    Domain: vpc
-  #    
-  #EIPAssociation2:
-  #  Type: AWS::EC2::EIPAssociation
-  #  Properties:
-  #    AllocationId: !GetAtt EIP2.AllocationId
-  #    InstanceId: !Ref Instance
-  
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -191,6 +67,3 @@ Resources:
 Outputs:
   EIP:
     Value: !GetAtt EIP.PublicIp
-    
-  #EIP2:
-  #  Value: !GetAtt EIP2.PublicIp
