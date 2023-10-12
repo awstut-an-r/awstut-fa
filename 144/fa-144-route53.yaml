@@ -1,33 +1,15 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ALBDnsName:
-  #  Type: String
-  #  
-  #ALBHostedZoneId:
-  #  Type: String
-  
-  #DistributionDomainName:
-  #  Type: String
-  #  
-  #DistributionHostedZoneId:
-  #  Type: String
-    
   DomainName:
     Type: String
     
   EIP:
     Type: String
-    
-  #EIP2:
-  #  Type: String
-    
+
   HostedZoneId:
     Type: String
-    
-  #Prefix:
-  #  Type: String
-  
+
   TTL:
     Type: Number
     
@@ -36,13 +18,9 @@ Resources:
   DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      #AliasTarget: 
-      #  DNSName: !Ref DistributionDomainName
-      #  HostedZoneId: !Ref DistributionHostedZoneId
       HostedZoneId: !Ref HostedZoneId
       Name: !Ref DomainName
       ResourceRecords:
         - !Ref EIP
-        #- !Ref EIP2
       TTL: !Ref TTL
       Type: A
