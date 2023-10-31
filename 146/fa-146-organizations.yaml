@@ -1,0 +1,40 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AccountName:
+    Type: String
+    
+  Email:
+    Type: String
+    
+  OUName:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Organization:
+    Type: AWS::Organizations::Organization
+    Properties:
+      FeatureSet: ALL
+      
+  OrganizationalUnit:
+    Type: AWS::Organizations::OrganizationalUnit
+    Properties:
+      Name: !Ref OUName
+      ParentId: !GetAtt Organization.RootId
+      #Tags: 
+      #  - Tag
+      
+  Account:
+    Type: AWS::Organizations::Account
+    Properties:
+      AccountName: !Ref AccountName
+      Email: !Ref Email
+      ParentIds: 
+        - !Ref OrganizationalUnit
+      RoleName: OrganizationAccountAccessRole
+      #Tags: 
+      #  - Tag

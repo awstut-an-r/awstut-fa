@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-146
+    
+  AccountName:
+    Type: String
+    Default: [account-name]
+    
+  Email:
+    Type: String
+    Default: [mail-address]
+    
+  OUName:
+    Type: String
+    Default: dev
+
+
+Resources:
+  OrganizationsStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-organizations.yaml"
+      Parameters:
+        AccountName: !Ref AccountName
+        Email: !Ref Email
+        OUName: !Ref OUName
+        Prefix: !Ref Prefix
