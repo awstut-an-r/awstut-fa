@@ -31,4 +31,3 @@ Resources:
         AccountName: !Ref AccountName
         Email: !Ref Email
         OUName: !Ref OUName
-        Prefix: !Ref Prefix
