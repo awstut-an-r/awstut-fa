@@ -10,9 +10,6 @@ Parameters:
   OUName:
     Type: String
 
-  Prefix:
-    Type: String
-    
     
 Resources:
   Organization:
