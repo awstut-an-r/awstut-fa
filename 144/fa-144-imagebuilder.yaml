@@ -85,7 +85,7 @@ Resources:
                     - mv wp-cli.phar /usr/local/bin/wp
                     - wp core download --locale=ja
                     - wp core config --dbname="${DBName}" --dbuser="${DBMasterUsername}" --dbpass="${DBMasterUserPassword}" --dbhost="${DBInstanceEndpointAddress}"
-                    - wp core install --url=http://"${DomainName}" --title="${WordPressTitle}" --admin_user="${WordPressAdminUser}" --admin_password="${WordPressAdminPassword}" --admin_email="${WordPressAdminEmail}"
+                    - wp core install --url="http://${DomainName}" --title="${WordPressTitle}" --admin_user="${WordPressAdminUser}" --admin_password="${WordPressAdminPassword}" --admin_email="${WordPressAdminEmail}"
       Name: !Sub "${Prefix}-Component"
       Platform: !Ref ImageBuilderPlatform
       SupportedOsVersions: 
