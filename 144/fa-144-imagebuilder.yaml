@@ -73,7 +73,6 @@ Resources:
                     - amazon-linux-extras enable -y php7.4
                     
                     - yum install -y php php-gd php-mysqlnd php-xmlrpc -y
-                    - yum install -y mariadb
                     
                     - systemctl start httpd
                     - systemctl enable httpd
