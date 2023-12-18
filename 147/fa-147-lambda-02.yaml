@@ -6,37 +6,19 @@ Parameters:
     
   Collection:
     Type: String
-    
-  #CollectionEndpoint:
-  #  Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-    
-  #EphemeralStorageSize:
-  #  Type: Number
-    
+
   Handler:
     Type: String
     
   LambdaLayer:
     Type: String
-    
-  #LayerPackage:
-  #  Type: String
 
   Prefix:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
-    
-  #Timeout:
-  #  Type: Number
-    
+
     
 Resources:
   DataAccessPolicy2:
@@ -44,7 +26,6 @@ Resources:
     DependsOn:
       - Function2
     Properties:
-      #Description: String
       Name: !Sub "${Prefix}-data-policy-02"
       Policy: !Sub
         - >-
@@ -58,7 +39,6 @@ Resources:
     DependsOn:
       - Function3
     Properties:
-      #Description: String
       Name: !Sub "${Prefix}-data-policy-03"
       Policy: !Sub
         - >-
@@ -74,13 +54,8 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #COLLECTION_ENDPOINT: !Ref CollectionEndpoint
           COLLECTION_ENDPOINT: !Sub "${Collection}.${AWS::Region}.aoss.amazonaws.com"
-          #LAYER_PACKAGE: !Ref LayerPackage
           REGION: !Ref AWS::Region
-          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
-          #S3_BUCKET: !Ref CodeS3Bucket
-          #S3_BUCKET_FOLDER: !Ref Prefix
       Code:
         ZipFile: |
           from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
@@ -118,25 +93,15 @@ Resources:
             
             index_response = client.index(
               index=index_name,
-              body=document,
-              #id='1',
-              #refresh=True
+              body=document
               )
             print(index_response)
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-02"
       Handler: !Ref Handler
       Layers:
         - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
       
   Function3:
     Type: AWS::Lambda::Function
@@ -145,13 +110,8 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #COLLECTION_ENDPOINT: !Ref CollectionEndpoint
           COLLECTION_ENDPOINT: !Sub "${Collection}.${AWS::Region}.aoss.amazonaws.com"
-          #LAYER_PACKAGE: !Ref LayerPackage
           REGION: !Ref AWS::Region
-          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
-          #S3_BUCKET: !Ref CodeS3Bucket
-          #S3_BUCKET_FOLDER: !Ref Prefix
       Code:
         ZipFile: |
           from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
@@ -192,21 +152,13 @@ Resources:
               index=index_name
               )
             print(search_response)
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-03"
       Handler: !Ref Handler
       Layers:
         - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole3.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
+
   FunctionRole2:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
@@ -228,10 +180,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- aoss:*
                   - aoss:APIAccessAll
-                  #- aoss:BatchGetCollection
-                  #- aoss:APIAccessAll
                 Resource:
                   - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${Collection}"
       
@@ -256,15 +205,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- aoss:BatchGetCollection
                   - aoss:APIAccessAll
-                #Resource: "*"
                 Resource:
                   - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${Collection}"
-      
-#Outputs:
-#  #RequirementsParameter:
-#  #  Value: !Ref RequirementsParameter
-#  
-#  LambdaLayer:
-#    Value: !Ref LambdaLayer
