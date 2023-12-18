@@ -30,14 +30,6 @@ Parameters:
     
     
 Resources:
-  #RequirementsParameter:
-  #  Type: AWS::SSM::Parameter
-  #  Properties:
-  #    Name: !Ref Prefix
-  #    Type: String
-  #    Value: |
-  #      opensearch-py
-        
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
     DependsOn:
@@ -52,8 +44,7 @@ Resources:
         S3Key: !Sub "${Prefix}/${LayerPackage}"
       Description: !Ref Prefix
       LayerName: !Ref Prefix
-      #LicenseInfo: MIT
-      
+
   CustomResource:
     Type: Custom::CustomResource
     Properties:
@@ -137,17 +128,10 @@ Resources:
         Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-01"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
       Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
+
   FunctionRole1:
     Type: AWS::IAM::Role
     Properties:
@@ -178,8 +162,5 @@ Resources:
                   - !Sub "arn:aws:s3:::${CodeS3Bucket}/*"
       
 Outputs:
-  #RequirementsParameter:
-  #  Value: !Ref RequirementsParameter
-  
   LambdaLayer:
     Value: !Ref LambdaLayer
