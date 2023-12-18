@@ -1,0 +1,21 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  RequirementsParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Ref Prefix
+      Type: String
+      Value: |
+        urllib3==1.26.6
+        opensearch-py
+        
+      
+Outputs:
+  RequirementsParameter:
+    Value: !Ref RequirementsParameter

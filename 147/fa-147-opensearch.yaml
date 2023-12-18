@@ -1,0 +1,173 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  CollectionName:
+    Type: String
+
+  #DomainName:
+  #  Type: String
+  #
+  #EngineVersion:
+  #  Type: String
+  #  
+  #InstanceCount:
+  #  Type: Number
+  #  
+  #InstanceType:
+  #  Type: String
+  #  
+  #MasterUserName:
+  #  Type: String
+  #  
+  #MasterUserPassword:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  #User1:
+  #  Type: String
+  #  
+  #User2:
+  #  Type: String
+    
+  User1Arn:
+    Type: String
+    
+  User2Arn:
+    Type: String
+    
+  #VolumeSize:
+  #  Type: Number
+    
+    
+Resources:
+  Collection:
+    Type: AWS::OpenSearchServerless::Collection
+    DependsOn:
+      - EncryptionSecurityPolicy
+    Properties:
+      #Description: String
+      #Name: !Sub "${Prefix}-collection"
+      Name: !Ref CollectionName
+      StandbyReplicas: DISABLED
+      #Tags: 
+      #  - Tag
+      Type: TIMESERIES
+      
+  DataAccessPolicy1:
+    Type: AWS::OpenSearchServerless::AccessPolicy
+    Properties:
+      #Description: String
+      Name: !Sub "${Prefix}-data-policy-01"
+      Policy: !Sub >-
+        [{"Description":"Access for cfn user","Rules":[{"ResourceType":"index","Resource":["index/*/*"],"Permission":["aoss:*"]},
+        {"ResourceType":"collection","Resource":["collection/${CollectionName}"],"Permission":["aoss:*"]}],
+        "Principal":["${User1Arn}"]}]
+      Type: data
+      
+  NetworkSecurityPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      #Description: String
+      Name: !Sub "${Prefix}-network-policy"
+      Policy: !Sub >-
+        [{"Rules":[{"ResourceType":"collection","Resource":["collection/${CollectionName}"]},
+        {"ResourceType":"dashboard","Resource":["collection/${CollectionName}"]}],"AllowFromPublic":true}]
+      Type: network
+      
+  EncryptionSecurityPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      #Description: String
+      Name: !Sub "${Prefix}-encryption-policy"
+      Policy: !Sub >-
+        {"Rules":[{"ResourceType":"collection","Resource":["collection/${CollectionName}"]}],"AWSOwnedKey":true}
+      Type: encryption
+
+  #Domain:
+  #  Type: AWS::OpenSearchService::Domain
+  #  Properties:
+  #    AccessPolicies:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Principal:
+  #            AWS: "*"
+  #          Action: es:*
+  #          Resource: !Sub "arn:aws:es:${AWS::Region}:${AWS::AccountId}:domain/${DomainName}/*"
+  #    #AdvancedOptions:
+  #    AdvancedSecurityOptions:
+  #      Enabled: true
+  #      InternalUserDatabaseEnabled: true
+  #      MasterUserOptions:
+  #        MasterUserName: !Ref MasterUserName
+  #        MasterUserPassword: !Ref MasterUserPassword
+  #    ClusterConfig:
+  #      DedicatedMasterEnabled: false
+  #      InstanceCount: !Ref InstanceCount
+  #      InstanceType: !Ref InstanceType
+  #      WarmEnabled: false
+  #      ZoneAwarenessEnabled: false
+  #    CognitoOptions:
+  #      Enabled: false
+  #    DomainEndpointOptions:
+  #      CustomEndpointEnabled: false
+  #      EnforceHTTPS: true
+  #      TLSSecurityPolicy: Policy-Min-TLS-1-0-2019-07
+  #    DomainName: !Ref DomainName
+  #    EBSOptions:
+  #      EBSEnabled: true
+  #      VolumeSize: !Ref VolumeSize
+  #      VolumeType: gp2
+  #    EncryptionAtRestOptions:
+  #      Enabled: true
+  #      KmsKeyId: !Ref Key
+  #    EngineVersion: !Ref EngineVersion
+  #    NodeToNodeEncryptionOptions:
+  #      Enabled: true
+  #    
+  #      
+  #Key:
+  #  Type: AWS::KMS::Key
+  #  Properties:
+  #    Enabled: true
+  #    KeyPolicy:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Principal:
+  #            AWS: "*"
+  #          Action:
+  #            - kms:Encrypt
+  #            - kms:Decrypt
+  #            - kms:ReEncrypt*
+  #            - kms:GenerateDataKey*
+  #            - kms:CreateGrant
+  #            - kms:DescribeKey
+  #          Resource: "*"
+  #          Condition:
+  #            StringEquals:
+  #              kms:ViaService: !Sub "es.${AWS::Region}.amazonaws.com"
+  #              kms:CallerAccount: !Ref AWS::AccountId
+  #        - Effect: Allow
+  #          Principal:
+  #            AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+  #          Action: "*"
+  #          Resource: "*"
+  #        - Effect: Allow
+  #          Principal:
+  #            Service: es.amazonaws.com
+  #          Action:
+  #            - kms:Describe*
+  #            - kms:Get*
+  #            - kms:List*
+  #          Resource: "*"
+  
+  
+Outputs:
+  Collection:
+    Value: !Ref Collection
+
+  #CollectionEndpoint:
+  #  Value: !GetAtt Collection.CollectionEndpoint

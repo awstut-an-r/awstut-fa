@@ -1,0 +1,270 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  Collection:
+    Type: String
+    
+  #CollectionEndpoint:
+  #  Type: String
+    
+  #CodeS3Bucket:
+  #  Type: String
+    
+  #EphemeralStorageSize:
+  #  Type: Number
+    
+  Handler:
+    Type: String
+    
+  LambdaLayer:
+    Type: String
+    
+  #LayerPackage:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  #RequirementsParameter:
+  #  Type: String
+    
+  Runtime:
+    Type: String
+    
+  #Timeout:
+  #  Type: Number
+    
+    
+Resources:
+  DataAccessPolicy2:
+    Type: AWS::OpenSearchServerless::AccessPolicy
+    DependsOn:
+      - Function2
+    Properties:
+      #Description: String
+      Name: !Sub "${Prefix}-data-policy-02"
+      Policy: !Sub
+        - >-
+          [{"Description":"Access for Function2","Rules":[{"ResourceType":"index","Resource":["index/*/*"],"Permission":["aoss:CreateIndex","aoss:WriteDocument","aoss:UpdateIndex"]}],
+          "Principal":["${FunctionRole2Arn}"]}]
+        - FunctionRole2Arn: !GetAtt FunctionRole2.Arn
+      Type: data
+      
+  DataAccessPolicy3:
+    Type: AWS::OpenSearchServerless::AccessPolicy
+    DependsOn:
+      - Function3
+    Properties:
+      #Description: String
+      Name: !Sub "${Prefix}-data-policy-03"
+      Policy: !Sub
+        - >-
+          [{"Description":"Access for Function3","Rules":[{"ResourceType":"index","Resource":["index/*/*"],"Permission":["aoss:ReadDocument"]}],
+          "Principal":["${FunctionRole3Arn}"]}]
+        - FunctionRole3Arn: !GetAtt FunctionRole3.Arn
+      Type: data
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          #COLLECTION_ENDPOINT: !Ref CollectionEndpoint
+          COLLECTION_ENDPOINT: !Sub "${Collection}.${AWS::Region}.aoss.amazonaws.com"
+          #LAYER_PACKAGE: !Ref LayerPackage
+          REGION: !Ref AWS::Region
+          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
+          #S3_BUCKET: !Ref CodeS3Bucket
+          #S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
+          import boto3
+          import os
+          
+          host = os.environ['COLLECTION_ENDPOINT']
+          region = os.environ['REGION']
+          
+          service = 'aoss'
+          credentials = boto3.Session().get_credentials()
+          auth = AWSV4SignerAuth(credentials, region, service)
+          
+          client = OpenSearch(
+            hosts=[{'host': host, 'port': 443}],
+            http_auth=auth,
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection,
+            pool_maxsize=20,
+            )
+          
+          def lambda_handler(event, context):
+            index_name = "python-test-index"
+            create_response = client.indices.create(
+              index_name
+            )
+            print(create_response)
+            
+            document = {
+              'title': 'Moneyball',
+              'director': 'Bennett Miller',
+              'year': '2011'
+              }
+            
+            index_response = client.index(
+              index=index_name,
+              body=document,
+              #id='1',
+              #refresh=True
+              )
+            print(index_response)
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      #Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          #COLLECTION_ENDPOINT: !Ref CollectionEndpoint
+          COLLECTION_ENDPOINT: !Sub "${Collection}.${AWS::Region}.aoss.amazonaws.com"
+          #LAYER_PACKAGE: !Ref LayerPackage
+          REGION: !Ref AWS::Region
+          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
+          #S3_BUCKET: !Ref CodeS3Bucket
+          #S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          from opensearchpy import OpenSearch, RequestsHttpConnection, AWSV4SignerAuth
+          import boto3
+          import os
+          
+          host = os.environ['COLLECTION_ENDPOINT']
+          region = os.environ['REGION']
+          
+          service = 'aoss'
+          credentials = boto3.Session().get_credentials()
+          auth = AWSV4SignerAuth(credentials, region, service)
+          
+          client = OpenSearch(
+            hosts=[{'host': host, 'port': 443}],
+            http_auth=auth,
+            use_ssl=True,
+            verify_certs=True,
+            connection_class=RequestsHttpConnection,
+            pool_maxsize=20,
+            )
+          
+          def lambda_handler(event, context):
+            index_name = "python-test-index"
+            q = 'miller'
+            query = {
+              'size': 5,
+              'query': {
+                'multi_match': {
+                  'query': q,
+                  'fields': ['title^2', 'director']
+                }
+              }
+            }
+            
+            search_response = client.search(
+              body=query,
+              index=index_name
+              )
+            print(search_response)
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-03"
+      Handler: !Ref Handler
+      Layers:
+        - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole3.Arn
+      #Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionRole2Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- aoss:*
+                  - aoss:APIAccessAll
+                  #- aoss:BatchGetCollection
+                  #- aoss:APIAccessAll
+                Resource:
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${Collection}"
+      
+  FunctionRole3:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionRole3Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- aoss:BatchGetCollection
+                  - aoss:APIAccessAll
+                #Resource: "*"
+                Resource:
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${Collection}"
+      
+#Outputs:
+#  #RequirementsParameter:
+#  #  Value: !Ref RequirementsParameter
+#  
+#  LambdaLayer:
+#    Value: !Ref LambdaLayer
