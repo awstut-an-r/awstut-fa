@@ -12,15 +12,8 @@ Resources:
   User1:
     Type: AWS::IAM::User
     Properties:
-      #Groups: 
-      #  - String
       LoginProfile: 
         Password: !Ref Password
-        #PasswordResetRequired: Boolean
-      #ManagedPolicyArns: 
-      #  - String
-      #Path: String
-      #PermissionsBoundary: String
       Policies: 
         - PolicyName: AllAllowPolicy
           PolicyDocument:
@@ -28,26 +21,15 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- aoss:APIAccessAll
-                  #- aoss:DashboardsAccessAll
                   - aoss:*
                 Resource: "*"
-      #Tags: 
-      #  - Tag
       UserName: !Sub "${Prefix}-user-01"
 
   User2:
     Type: AWS::IAM::User
     Properties:
-      #Groups: 
-      #  - String
       LoginProfile: 
         Password: !Ref Password
-        #PasswordResetRequired: Boolean
-      #ManagedPolicyArns: 
-      #  - String
-      #Path: String
-      #PermissionsBoundary: String
       Policies: 
         - PolicyName: AllAllowPolicy
           PolicyDocument:
@@ -55,22 +37,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- aoss:APIAccessAll
-                  #- aoss:DashboardsAccessAll
                   - aoss:*
                 Resource: "*"
-      #Tags: 
-      #  - Tag
       UserName: !Sub "${Prefix}-user-02"
 
 
 Outputs:
-  #User1:
-  #  Value: User1
-  #  
-  #User2:
-  #  Value: User2
-  
   User1Arn:
     Value: !GetAtt User1.Arn
     
