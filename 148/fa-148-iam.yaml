@@ -12,15 +12,8 @@ Resources:
   User:
     Type: AWS::IAM::User
     Properties:
-      #Groups: 
-      #  - String
       LoginProfile: 
         Password: !Ref Password
-        #PasswordResetRequired: Boolean
-      #ManagedPolicyArns: 
-      #  - String
-      #Path: String
-      #PermissionsBoundary: String
       Policies: 
         - PolicyName: AllAllowPolicy
           PolicyDocument:
@@ -28,41 +21,10 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- aoss:APIAccessAll
-                  #- aoss:DashboardsAccessAll
                   - aoss:*
                 Resource: "*"
-      #Tags: 
-      #  - Tag
       UserName: !Sub "${Prefix}-user"
 
-  #User2:
-  #  Type: AWS::IAM::User
-  #  Properties:
-  #    #Groups: 
-  #    #  - String
-  #    LoginProfile: 
-  #      Password: !Ref Password
-  #      #PasswordResetRequired: Boolean
-  #    #ManagedPolicyArns: 
-  #    #  - String
-  #    #Path: String
-  #    #PermissionsBoundary: String
-  #    Policies: 
-  #      - PolicyName: AllAllowPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            - Effect: Allow
-  #              Action:
-  #                #- aoss:APIAccessAll
-  #                #- aoss:DashboardsAccessAll
-  #                - aoss:*
-  #              Resource: "*"
-  #    #Tags: 
-  #    #  - Tag
-  #    UserName: !Sub "${Prefix}-user-02"
-  
   FunctionRole2:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
@@ -84,28 +46,15 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- aoss:*
                   - aoss:APIAccessAll
-                  #- aoss:BatchGetCollection
-                  #- aoss:APIAccessAll
-                #Resource: "*"
                 Resource:
                   - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
       RoleName: !Sub "${Prefix}-FunctionRole2"
 
 
 Outputs:
-  #User1:
-  #  Value: User1
-  #  
-  #User2:
-  #  Value: User2
-  
   UserArn:
     Value: !GetAtt User.Arn
-    
-  #User2Arn:
-  #  Value: !GetAtt User2.Arn
-  
+
   FunctionRoleArn2:
     Value: !GetAtt FunctionRole2.Arn
