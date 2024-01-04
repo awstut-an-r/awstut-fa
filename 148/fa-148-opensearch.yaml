@@ -39,7 +39,7 @@ Resources:
     Properties:
       Name: !Sub "${Prefix}-data-policy-02"
       Policy: !Sub >-
-        [{"Description":"Access for Function2","Rules":[{"ResourceType":"index","Resource":["index/*/*"],"Permission":["aoss:CreateIndex","aoss:WriteDocument","aoss:UpdateIndex"]}],
+        [{"Description":"Access for Function2","Rules":[{"ResourceType":"index","Resource":["index/*/*"],"Permission":["aoss:CreateIndex"]}],
         "Principal":["${FunctionRoleArn2}"]}]
       Type: data
       
