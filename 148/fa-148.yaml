@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-148
+
+  IAMUserPassword:
+    Type: String
+    Default: P@ssw0rd
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaEphemeralStorageSize:
+    Type: Number
+    Default: 512
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaLayerPackage:
+    Type: String
+    Default: layer.zip
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.8
+    
+  LambdaTimeout:
+    Type: Number
+    Default: 300
+    
+  OpenSearchIndexName:
+    Type: String
+    Default: python-test-index
+
+
+Resources:
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
+      Parameters:
+        Password: !Ref IAMUserPassword
+        Prefix: !Ref Prefix
+
+  OpenSearchStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IAMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-opensearch.yaml"
+      Parameters:
+        CollectionName: !Sub "${Prefix}-collection"
+        #DomainName: !Ref Prefix
+        #EngineVersion: OpenSearch_1.2
+        FunctionRoleArn2: !GetAtt IAMStack.Outputs.FunctionRoleArn2
+        #InstanceCount: 1
+        #InstanceType: t3.small.search
+        #MasterUserName: test
+        #MasterUserPassword: P@ssw0rd
+        Prefix: !Ref Prefix
+        #User1: !GetAtt IAMStack.Outputs.User1
+        #User2: !GetAtt IAMStack.Outputs.User2
+        UserArn: !GetAtt IAMStack.Outputs.UserArn
+        #User2Arn: !GetAtt IAMStack.Outputs.User2Arn
+        #VolumeSize: 10
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  LambdaStack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-01.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        CodeS3Bucket: !Ref TemplateBucketName
+        EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
+        Handler: !Ref LambdaHandler
+        LayerPackage: !Ref LambdaLayerPackage
+        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
+        Prefix: !Ref Prefix
+        RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        Runtime: !Ref LambdaRuntime
+        Timeout: !Ref LambdaTimeout
+        
+  LambdaStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack1
+      - OpenSearchStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Collection: !GetAtt OpenSearchStack.Outputs.Collection
+        #CollectionEndpoint: !GetAtt OpenSearchStack.Outputs.CollectionEndpoint
+        #CodeS3Bucket: !Ref TemplateBucketName
+        #EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
+        FunctionRoleArn2: !GetAtt IAMStack.Outputs.FunctionRoleArn2
+        Handler: !Ref LambdaHandler
+        LambdaLayer: !GetAtt LambdaStack1.Outputs.LambdaLayer
+        #LayerPackage: !Ref LambdaLayerPackage
+        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
+        OpenSearchIndexName: !Ref OpenSearchIndexName
+        Prefix: !Ref Prefix
+        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
+        Runtime: !Ref LambdaRuntime
+        #Timeout: !Ref LambdaTimeout
+        
+  #CustomResourceStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  DependsOn:
+  #    - LambdaStack2
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+  #    Parameters:
+  #      FunctionArn2: !GetAtt LambdaStack2.Outputs.FunctionArn2
+  #      Prefix: !Ref Prefix

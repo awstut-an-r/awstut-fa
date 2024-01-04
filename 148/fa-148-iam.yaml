@@ -1,0 +1,111 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Password:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  User:
+    Type: AWS::IAM::User
+    Properties:
+      #Groups: 
+      #  - String
+      LoginProfile: 
+        Password: !Ref Password
+        #PasswordResetRequired: Boolean
+      #ManagedPolicyArns: 
+      #  - String
+      #Path: String
+      #PermissionsBoundary: String
+      Policies: 
+        - PolicyName: AllAllowPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- aoss:APIAccessAll
+                  #- aoss:DashboardsAccessAll
+                  - aoss:*
+                Resource: "*"
+      #Tags: 
+      #  - Tag
+      UserName: !Sub "${Prefix}-user"
+
+  #User2:
+  #  Type: AWS::IAM::User
+  #  Properties:
+  #    #Groups: 
+  #    #  - String
+  #    LoginProfile: 
+  #      Password: !Ref Password
+  #      #PasswordResetRequired: Boolean
+  #    #ManagedPolicyArns: 
+  #    #  - String
+  #    #Path: String
+  #    #PermissionsBoundary: String
+  #    Policies: 
+  #      - PolicyName: AllAllowPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                #- aoss:APIAccessAll
+  #                #- aoss:DashboardsAccessAll
+  #                - aoss:*
+  #              Resource: "*"
+  #    #Tags: 
+  #    #  - Tag
+  #    UserName: !Sub "${Prefix}-user-02"
+  
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionRole2Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- aoss:*
+                  - aoss:APIAccessAll
+                  #- aoss:BatchGetCollection
+                  #- aoss:APIAccessAll
+                #Resource: "*"
+                Resource:
+                  - !Sub "arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/*"
+      RoleName: !Sub "${Prefix}-FunctionRole2"
+
+
+Outputs:
+  #User1:
+  #  Value: User1
+  #  
+  #User2:
+  #  Value: User2
+  
+  UserArn:
+    Value: !GetAtt User.Arn
+    
+  #User2Arn:
+  #  Value: !GetAtt User2.Arn
+  
+  FunctionRoleArn2:
+    Value: !GetAtt FunctionRole2.Arn
