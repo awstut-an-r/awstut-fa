@@ -1,0 +1,610 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BranchName:
+  #  Type: String
+    
+  #BucketArn:
+  #  Type: String
+
+  BucketName:
+    Type: String
+    
+  #ContainerName:
+  #  Type: String
+    
+  #ECRRepositoryName:
+  #  Type: String
+    
+  #ECSClusterName:
+  #  Type: String
+  #  
+  #ECSFunctionName:
+  #  Type: String
+  #  
+  #ECSServiceName:
+  #  Type: String
+  #  
+  #ImageDefinitionFileName:
+  #  Type: String
+    
+  #PipelineBuildArtifact:
+  #  Type: String
+  
+  #PipelineSourceArtifact:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    
+  ProjectEnvironmentImage:
+    Type: String
+    
+  ProjectEnvironmentType:
+    Type: String
+    
+  #ReportName:
+  #  Type: String
+  #  
+  #SSMParameterDockerHubPassword:
+  #  Type: String
+  #  
+  #SSMParameterDockerHubUsername:
+  #  Type: String
+    
+  #TopicArn:
+  #  Type: String
+    
+
+Resources:
+  #Pipeline:
+  #  Type: AWS::CodePipeline::Pipeline
+  #  #DependsOn:
+  #  #  - CodeCommitRepository
+  #  Properties:
+  #    ArtifactStore:
+  #      #EncryptionKey:
+  #      Location: !Ref BucketName
+  #      Type: S3
+  #    #ArtifactStores:
+  #    #DisableInboundStageTransitions:
+  #    Name: !Ref Prefix
+  #    #RestartExecutionOnUpdate
+  #    RoleArn: !GetAtt CodePipelineRole.Arn
+  #    Stages:
+  #      - Actions:
+  #          - ActionTypeId: 
+  #              Category: Source
+  #              Owner: AWS
+  #              Provider: CodeCommit
+  #              Version: 1
+  #            Configuration:
+  #              BranchName: !Ref BranchName
+  #              OutputArtifactFormat: CODE_ZIP
+  #              PollForSourceChanges: false
+  #              RepositoryName: !GetAtt CodeCommitRepository.Name
+  #            #InputArtifacts:
+  #            Name: Source
+  #            #Namespace:
+  #            OutputArtifacts:
+  #              - Name: !Ref PipelineSourceArtifact
+  #            Region: !Ref AWS::Region
+  #            #RoleArn:
+  #            RunOrder: 1
+  #        Name: Source
+  #      - Actions:
+  #          - ActionTypeId:
+  #              Category: Test
+  #              Owner: AWS
+  #              Provider: CodeBuild
+  #              Version: 1
+  #            Configuration:
+  #              ProjectName: !Ref CodeBuildProject1
+  #            InputArtifacts:
+  #              - Name: !Ref PipelineSourceArtifact
+  #            Name: Test
+  #            #Namespace:
+  #            OutputArtifacts: []
+  #            Region: !Ref AWS::Region
+  #            #RoleArn:
+  #            RunOrder: 1
+  #        Name: Test
+  #      - Actions:
+  #          - ActionTypeId:
+  #              Category: Build
+  #              Owner: AWS
+  #              Provider: CodeBuild
+  #              Version: 1
+  #            Configuration:
+  #              ProjectName: !Ref CodeBuildProject2
+  #            InputArtifacts:
+  #              - Name: !Ref PipelineSourceArtifact
+  #            Name: Build
+  #            #Namespace:
+  #            OutputArtifacts:
+  #              - Name: !Ref PipelineBuildArtifact
+  #            Region: !Ref AWS::Region
+  #            #RoleArn:
+  #            RunOrder: 1
+  #        Name: Build
+  #      #- Actions:
+  #      #    - ActionTypeId:
+  #      #        Category: Approval
+  #      #        Owner: AWS
+  #      #        Provider: Manual
+  #      #        Version: 1
+  #      #      Configuration:
+  #      #        CustomData: hoge hoge hoge.
+  #      #        ExternalEntityLink: http://example.com
+  #      #        NotificationArn: !Ref TopicArn
+  #      #      InputArtifacts: []
+  #      #      Name: Approval
+  #      #      OutputArtifacts: []
+  #      #      Region: !Ref AWS::Region
+  #      #      RunOrder: 1
+  #      #  Name: Approval
+  #      #- Actions:
+  #      #    - ActionTypeId:
+  #      #        Category: Deploy
+  #      #        Owner: AWS
+  #      #        Provider: ECS
+  #      #        Version: 1
+  #      #      Configuration:
+  #      #        ClusterName: !Ref ECSClusterName
+  #      #        FileName: !Ref ImageDefinitionFileName
+  #      #        ServiceName: !Ref ECSServiceName
+  #      #      InputArtifacts:
+  #      #        - Name: !Ref PipelineBuildArtifact
+  #      #      Name: Deploy
+  #      #      Region: !Ref AWS::Region
+  #      #      #RoleArn: !GetAtt ECSRole.Arn
+  #      #      RunOrder: 1
+  #      #  Name: Deploy
+  #      #- Actions:
+  #      #    - ActionTypeId:
+  #      #        Category: Invoke
+  #      #        Owner: AWS
+  #      #        Provider: Lambda
+  #      #        Version: 1
+  #      #      Configuration:
+  #      #        FunctionName: !Ref ECSFunctionName
+  #      #        #UserParameters:
+  #      #      InputArtifacts: []
+  #      #      Name: Invoke
+  #      #      OutputArtifacts: []
+  #      #      Region: !Ref AWS::Region
+  #      #      RunOrder: 1
+  #      #  Name: Invoke
+  #        
+  #CodePipelineRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Principal:
+  #            Service:
+  #              - codepipeline.amazonaws.com
+  #          Action:
+  #            - sts:AssumeRole
+  #    #ManagedPolicyArns:
+  #    #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+  #    Policies:
+  #      - PolicyName: PipelinePolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - lambda:invokeFunction
+  #            #  Resource:
+  #            #    - !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${ECSFunctionName}"
+  #            - Effect: Allow
+  #              Action:
+  #                - codecommit:CancelUploadArchive
+  #                - codecommit:GetBranch
+  #                - codecommit:GetCommit
+  #                - codecommit:GetRepository
+  #                - codecommit:GetUploadArchiveStatus
+  #                - codecommit:UploadArchive
+  #              Resource:
+  #                - !GetAtt CodeCommitRepository.Arn
+  #            - Effect: Allow
+  #              Action:
+  #                - codebuild:BatchGetBuilds
+  #                - codebuild:StartBuild
+  #                - codebuild:BatchGetBuildBatches
+  #                - codebuild:StartBuildBatch
+  #              Resource:
+  #                - !GetAtt CodeBuildProject1.Arn
+  #                - !GetAtt CodeBuildProject2.Arn
+  #            - Effect: Allow
+  #              Action:
+  #                - s3:PutObject
+  #                - s3:GetObject
+  #                - s3:GetObjectVersion
+  #                - s3:GetBucketAcl
+  #                - s3:GetBucketLocation
+  #              Resource:
+  #                - !Sub "arn:aws:s3:::${BucketName}"
+  #                - !Sub "arn:aws:s3:::${BucketName}/*"
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - sns:Publish
+  #            #  Resource:
+  #            #    - !Ref TopicArn
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    #- ecs:DescribeServices
+  #            #    #- ecs:CreateTaskSet
+  #            #    #- ecs:UpdateServicePrimaryTaskSet
+  #            #    #- ecs:DeleteTaskSet
+  #            #    - ecs:*
+  #            #  Resource: "*"
+  #            #    #- !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}"
+  #            #    #- !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}/${ECSServiceName}"
+  #            #- Effect: Allow
+  #            #  Action:
+  #            #    - iam:PassRole
+  #            #  Resource: "*"
+  #            #  Condition:
+  #            #    StringLike:
+  #            #      iam:PassedToService:
+  #            #        - ecs-tasks.amazonaws.com
+              
+  #ECSRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Principal:
+  #            Service:
+  #              - ecs-tasks.amazonaws.com
+  #          Action:
+  #            - sts:AssumeRole
+  #    Policies:
+  #      - PolicyName: ECSPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - ecs:DescribeServices
+  #                - ecs:CreateTaskSet
+  #                - ecs:UpdateServicePrimaryTaskSet
+  #                - ecs:DeleteTaskSet
+  #              Resource:
+  #                - !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}"
+  #                - !Sub "arn:aws:ecs:${AWS::Region}:${AWS::AccountId}:cluster/${ECSClusterName}/${ECSServiceName}"
+                  
+  #CodeCommitRepository:
+  #  Type: AWS::CodeCommit::Repository
+  #  Properties: 
+  #    #Code:
+  #    #RepositoryDescription:
+  #    RepositoryName: !Ref Prefix
+  #    #Triggers:
+  #    
+  #EventsRule:
+  #  Type: AWS::Events::Rule
+  #  #DependsOn:
+  #  #  - Pipeline
+  #  Properties: 
+  #    EventPattern:
+  #      source:
+  #        - aws.codecommit
+  #      detail-type:
+  #        - CodeCommit Repository State Change
+  #      resources:
+  #        - !GetAtt CodeCommitRepository.Arn
+  #      detail:
+  #        event:
+  #          - referenceCreated
+  #          - referenceUpdated
+  #        referenceType:
+  #          - branch
+  #        referenceName:
+  #          - !Ref BranchName
+  #    Name: !Ref Prefix
+  #    Targets:
+  #      - Arn: !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
+  #        Id: !Sub "${Prefix}-CodePipeline-CodeCommit"
+  #        RoleArn: !GetAtt EventsRuleRole.Arn
+  #        
+  #EventsRuleRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Principal:
+  #            Service:
+  #              - events.amazonaws.com
+  #          Action:
+  #            - sts:AssumeRole
+  #    #ManagedPolicyArns:
+  #    #  - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+  #    Policies:
+  #      - PolicyName: PipelineExecutionPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - codepipeline:StartPipelineExecution
+  #              Resource:
+  #                - !Sub "arn:aws:codepipeline:${AWS::Region}:${AWS::AccountId}:${Pipeline}"
+  #                
+  #CodeBuildReportGroup:
+  #  Type: AWS::CodeBuild::ReportGroup
+  #  Properties:
+  #    DeleteReports: true
+  #    ExportConfig:
+  #      ExportConfigType: NO_EXPORT
+  #      #S3Destination:
+  #    Name: !Sub "${CodeBuildProject1}-${ReportName}"
+  #    Type: TEST
+                  
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Cache: 
+        Type: NO_CACHE
+      Environment: 
+        ComputeType: !Ref ProjectEnvironmentComputeType
+        EnvironmentVariables:
+        #  - Name: CONTAINER_NAME
+        #    Type: PLAINTEXT
+        #    Value: !Ref ContainerName
+        #  - Name: DOCKERHUB_PASSWORD
+        #    Type: PARAMETER_STORE
+        #    Value: !Ref SSMParameterDockerHubPassword
+        #  - Name: DOCKERHUB_USERNAME
+        #    Type: PARAMETER_STORE
+        #    Value: !Ref SSMParameterDockerHubUsername
+        #  - Name: REPORT_NAME
+        #    Type: PLAINTEXT
+        #    Value: !Ref ReportName
+          - Name: BUCKET_NAME
+            Type: PLAINTEXT
+            Value: !Ref BucketName
+        Image: !Ref ProjectEnvironmentImage
+        ImagePullCredentialsType: CODEBUILD
+        Type: !Ref ProjectEnvironmentType
+        #PrivilegedMode: true
+      #FileSystemLocations: 
+      #  - ProjectFileSystemLocation
+      LogsConfig: 
+        CloudWatchLogs:
+          GroupName: !Ref LogGroup
+          Status: ENABLED
+          #StreamName: 
+        #S3Logs:
+        #  Status: DISABLED
+      Name: !Sub "${Prefix}-project"
+      #QueuedTimeoutInMinutes: 480
+      #ResourceAccessRole: String
+      #SecondaryArtifacts: 
+      #  - Artifacts
+      #SecondarySources: 
+      #  - Source
+      #SecondarySourceVersions: 
+      #  - ProjectSourceVersion
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        #Type: CODEPIPELINE
+        Type: NO_SOURCE
+        BuildSpec: !Sub |
+          version: 0.2
+          
+          phases:
+            install:
+              #runtime-versions:
+              #  python: 3.7
+              commands:
+                - pip3 install yt-dlp
+            build:
+              commands:
+                #- echo $BUCKET_NAME
+                - yt-dlp -o /tmp/output.mp4 'https://www.youtube.com/watch?v=TqqaSD2qTdY'
+                
+                - ls -al /tmp
+                - aws s3 cp /tmp/output.mp4 s3://$BUCKET_NAME/
+          #reports:
+          #  $REPORT_NAME:
+          #    files:
+          #      - pytest_reports.xml
+          #    base-directory: reports
+          #    file-format: JUNITXML
+      Visibility: PRIVATE
+  
+  #CodeBuildProject2:
+  #  Type: AWS::CodeBuild::Project
+  #  Properties: 
+  #    Artifacts:
+  #      #ArtifactIdentifier: String
+  #      #EncryptionDisabled: Boolean
+  #      #Location: String
+  #      #Name: String
+  #      #NamespaceType: String
+  #      #OverrideArtifactName: Boolean
+  #      #Packaging: String
+  #      #Path: String
+  #      Type: CODEPIPELINE
+  #    #BadgeEnabled: Boolean
+  #    #BuildBatchConfig: 
+  #    #  BatchReportMode: String
+  #    #  CombineArtifacts: Boolean
+  #    #  Restrictions: 
+  #    #    BatchRestrictions
+  #    #  ServiceRole: String
+  #    #  TimeoutInMins: Integer
+  #    Cache: 
+  #      Type: NO_CACHE
+  #    #ConcurrentBuildLimit: Integer
+  #    #Description: String
+  #    #EncryptionKey: String
+  #    Environment: 
+  #      ComputeType: !Ref ProjectEnvironmentComputeType
+  #      EnvironmentVariables:
+  #        #- Name: CONTAINER_NAME
+  #        #  Type: PLAINTEXT
+  #        #  Value: !Ref ContainerName
+  #        - Name: DOCKERHUB_PASSWORD
+  #          Type: PARAMETER_STORE
+  #          Value: !Ref SSMParameterDockerHubPassword
+  #        - Name: DOCKERHUB_USERNAME
+  #          Type: PARAMETER_STORE
+  #          Value: !Ref SSMParameterDockerHubUsername
+  #        #- Name: IMAGE_DEFINITION
+  #        #  Type: PLAINTEXT
+  #        #  Value: !Ref ImageDefinitionFileName
+  #      Image: !Ref ProjectEnvironmentImage
+  #      ImagePullCredentialsType: CODEBUILD
+  #      Type: !Ref ProjectEnvironmentType
+  #      PrivilegedMode: true
+  #    #FileSystemLocations: 
+  #    #  - ProjectFileSystemLocation
+  #    LogsConfig: 
+  #      CloudWatchLogs:
+  #        Status: DISABLED
+  #      S3Logs:
+  #        Status: DISABLED
+  #    Name: !Sub "${Prefix}-project-02"
+  #    #QueuedTimeoutInMinutes: 480
+  #    #ResourceAccessRole: String
+  #    #SecondaryArtifacts: 
+  #    #  - Artifacts
+  #    #SecondarySources: 
+  #    #  - Source
+  #    #SecondarySourceVersions: 
+  #    #  - ProjectSourceVersion
+  #    ServiceRole: !GetAtt CodeBuildRole.Arn
+  #    Source: 
+  #      Type: CODEPIPELINE
+  #      #Type: NO_SOURCE
+  #      BuildSpec: !Sub |
+  #        version: 0.2
+  #        
+  #        phases:
+  #          pre_build:
+  #            commands:
+  #              - echo Logging in to Amazon ECR...
+  #              - aws --version
+  #              - aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
+  #              - REPOSITORY_URI=${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${ECRRepositoryName}
+  #              - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+  #              - IMAGE_TAG=${!COMMIT_HASH:=latest}
+  #              - echo Logging in to Docker Hub...
+  #              - echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin
+  #          build:
+  #            commands:
+  #              - echo Build started on `date`
+  #              - echo Building the Docker image...
+  #              - docker build -t $REPOSITORY_URI:latest .
+  #              - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  #          post_build:
+  #            commands:
+  #              - echo Build completed on `date`
+  #              - echo Pushing the Docker images...
+  #              - docker push $REPOSITORY_URI:latest
+  #              - docker push $REPOSITORY_URI:$IMAGE_TAG
+  #              - echo Writing image definitions file...
+  #              #- printf '[{"name":"%s","imageUri":"%s"}]' $CONTAINER_NAME $REPOSITORY_URI:$IMAGE_TAG > $IMAGE_DEFINITION
+  #        #artifacts:
+  #        #  files: $IMAGE_DEFINITION
+  #    #SourceVersion: String
+  #    #Tags: 
+  #    #  - Tag
+  #    #TimeoutInMinutes: 60
+  #    #Triggers: 
+  #    #  ProjectTriggers
+  #    Visibility: PRIVATE
+  #    #VpcConfig: 
+  #    #  VpcConfig
+        
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              #- Effect: Allow
+              #  Action:
+              #    - ssm:GetParameters
+              #  Resource:
+              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
+              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  #- s3:GetObject
+                  #- s3:GetObjectVersion
+                  #- s3:GetBucketAcl
+                  #- s3:GetBucketLocation
+                Resource:
+                  #- !Ref BucketArn
+                  #- !Sub "${BucketArn}/*"
+                  #- !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              #- Effect: Allow
+              #  Action:
+              #    - codebuild:CreateReportGroup
+              #    - codebuild:CreateReport
+              #    - codebuild:UpdateReport
+              #    - codebuild:BatchPutTestCases
+              #    - codebuild:BatchPutCodeCoverages
+              #  Resource:
+              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !GetAtt LogGroup.Arn
+                  - !Sub
+                    - "${LogGroupArn}:log-stream:*"
+                    - LogGroupArn: !GetAtt LogGroup.Arn
+              #- Effect: Allow
+              #  Action:
+              #    - codebuild:CreateReportGroup
+              #    - codebuild:CreateReport
+              #    - codebuild:UpdateReport
+              #    - codebuild:BatchPutTestCases
+              #    - codebuild:BatchPutCodeCoverages
+              #  Resource:
+              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
+              
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-LogGroup"
+  
+  #CodeDeployApplication:
+  #  Type: AWS::CodeDeploy::Application
+  #  Properties:
+  #    ApplicationName: !Sub Prefix
+  #    ComputePlatform: ECS
