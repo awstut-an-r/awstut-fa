@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #CodeBuildProjectArn:
-  #  Type: String
-  
   CodeBuildProjectName:
     Type: String
 
@@ -41,12 +38,9 @@ Resources:
               ProjectName: !Ref CodeBuildProjectName
             ResultPath: $.codebuild_response
             Next: CheckVideoNameState
-            #End: true
-          CheckVideoNameState:
+          ListBucketState:
             Type: Task
             Resource: !Ref FunctionArn2
-            #Parameters:
-            #  codebuild_envs.$: $.codebuild_response.Build.Environment.EnvironmentVariables
             End: true
       LoggingConfiguration:
         Destinations:
@@ -57,7 +51,6 @@ Resources:
       RoleArn: !GetAtt StateMachineRole.Arn
       StateMachineName: !Sub "${Prefix}-statemachine"
       StateMachineType: STANDARD
-      #TracingConfiguration:
         
   StateMachineLogGroup:
     Type: AWS::Logs::LogGroup
@@ -75,8 +68,6 @@ Resources:
             Principal:
               Service:
                 - states.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: StateMachinePolicy
           PolicyDocument:
@@ -84,14 +75,10 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- codebuild:BatchGetBuilds
                   - codebuild:StartBuild
                   - codebuild:StopBuild
                   - codebuild:BatchGetBuilds
-                  #- codebuild:BatchGetBuildBatches
-                  #- codebuild:StartBuildBatch
                 Resource:
-                  #- !GetAtt CodeBuildProject1.Arn
                   - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProjectName}"
               - Effect: Allow
                 Action:
@@ -108,10 +95,6 @@ Resources:
                   - !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventForCodeBuildStartBuildRule"
               - Effect: Allow
                 Action:
-                  #- logs:CreateLogGroup
-                  #- logs:CreateLogStream
-                  #- logs:PutLogEvents
-                
                   - logs:CreateLogDelivery
                   - logs:GetLogDelivery
                   - logs:UpdateLogDelivery
@@ -121,11 +104,4 @@ Resources:
                   - logs:PutResourcePolicy
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
-                #Resource: !GetAtt LogGroup.Arn
                 Resource: "*"
-                #Resource:
-                #  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StateMachineLogGroup}"
-                #  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StateMachineLogGroup}:log-stream:*"
-                #Resource: !Sub
-                #  - "${LogGroupArn}:*"
-                #  - LogGroupArn: !GetAtt LogGroup.Arn
