@@ -1,39 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BranchName:
-  #  Type: String
-    
-  #BucketArn:
-  #  Type: String
-
   BucketName:
     Type: String
-    
-  #ContainerName:
-  #  Type: String
-    
-  #ECRRepositoryName:
-  #  Type: String
-    
-  #ECSClusterName:
-  #  Type: String
-  #  
-  #ECSFunctionName:
-  #  Type: String
-  #  
-  #ECSServiceName:
-  #  Type: String
-  #  
-  #ImageDefinitionFileName:
-  #  Type: String
-    
-  #PipelineBuildArtifact:
-  #  Type: String
-  
-  #PipelineSourceArtifact:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -45,19 +15,7 @@ Parameters:
     
   ProjectEnvironmentType:
     Type: String
-    
-  #ReportName:
-  #  Type: String
-  #  
-  #SSMParameterDockerHubPassword:
-  #  Type: String
-  #  
-  #SSMParameterDockerHubUsername:
-  #  Type: String
-    
-  #TopicArn:
-  #  Type: String
-    
+
 
 Resources:
   CodeBuildProject:
@@ -70,18 +28,6 @@ Resources:
       Environment: 
         ComputeType: !Ref ProjectEnvironmentComputeType
         EnvironmentVariables:
-        #  - Name: CONTAINER_NAME
-        #    Type: PLAINTEXT
-        #    Value: !Ref ContainerName
-        #  - Name: DOCKERHUB_PASSWORD
-        #    Type: PARAMETER_STORE
-        #    Value: !Ref SSMParameterDockerHubPassword
-        #  - Name: DOCKERHUB_USERNAME
-        #    Type: PARAMETER_STORE
-        #    Value: !Ref SSMParameterDockerHubUsername
-        #  - Name: REPORT_NAME
-        #    Type: PLAINTEXT
-        #    Value: !Ref ReportName
           - Name: BUCKET_NAME
             Type: PLAINTEXT
             Value: !Ref BucketName
@@ -91,28 +37,13 @@ Resources:
         Image: !Ref ProjectEnvironmentImage
         ImagePullCredentialsType: CODEBUILD
         Type: !Ref ProjectEnvironmentType
-        #PrivilegedMode: true
-      #FileSystemLocations: 
-      #  - ProjectFileSystemLocation
       LogsConfig: 
         CloudWatchLogs:
           GroupName: !Ref CodeBuildLogGroup
           Status: ENABLED
-          #StreamName: 
-        #S3Logs:
-        #  Status: DISABLED
       Name: !Sub "${Prefix}-project"
-      #QueuedTimeoutInMinutes: 480
-      #ResourceAccessRole: String
-      #SecondaryArtifacts: 
-      #  - Artifacts
-      #SecondarySources: 
-      #  - Source
-      #SecondarySourceVersions: 
-      #  - ProjectSourceVersion
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Source: 
-        #Type: CODEPIPELINE
         Type: NO_SOURCE
         BuildSpec: !Sub |
           version: 0.2
@@ -147,40 +78,16 @@ Resources:
                 - codebuild.amazonaws.com
             Action:
               - sts:AssumeRole
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryPowerUser
       Policies:
         - PolicyName: CodeBuildPolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              #- Effect: Allow
-              #  Action:
-              #    - ssm:GetParameters
-              #  Resource:
-              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubPassword}"
-              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${SSMParameterDockerHubUsername}"
               - Effect: Allow
                 Action:
                   - s3:PutObject
-                  #- s3:GetObject
-                  #- s3:GetObjectVersion
-                  #- s3:GetBucketAcl
-                  #- s3:GetBucketLocation
                 Resource:
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - codebuild:CreateReportGroup
-              #    - codebuild:CreateReport
-              #    - codebuild:UpdateReport
-              #    - codebuild:BatchPutTestCases
-              #    - codebuild:BatchPutCodeCoverages
-              #  Resource:
-              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
               - Effect: Allow
                 Action:
                   - logs:CreateLogGroup
@@ -189,26 +96,8 @@ Resources:
                 Resource:
                   - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CodeBuildLogGroup}"
                   - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${CodeBuildLogGroup}:log-stream:*"
-              #- Effect: Allow
-              #  Action:
-              #    - codebuild:CreateReportGroup
-              #    - codebuild:CreateReport
-              #    - codebuild:UpdateReport
-              #    - codebuild:BatchPutTestCases
-              #    - codebuild:BatchPutCodeCoverages
-              #  Resource:
-              #    - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:report-group/*"
-              
-  #CodeDeployApplication:
-  #  Type: AWS::CodeDeploy::Application
-  #  Properties:
-  #    ApplicationName: !Sub Prefix
-  #    ComputePlatform: ECS
-  
+
   
 Outputs:
-  #CodeBuildProjectArn:
-  #  Value: !GetAtt CodeBuildProject.Arn
-  
   CodeBuildProjectName:
     Value: !Ref CodeBuildProject
