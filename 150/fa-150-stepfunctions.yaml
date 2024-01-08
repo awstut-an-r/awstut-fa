@@ -1,0 +1,131 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #CodeBuildProjectArn:
+  #  Type: String
+  
+  CodeBuildProjectName:
+    Type: String
+
+  FunctionArn1:
+    Type: String
+    
+  FunctionArn2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: !Sub "${Prefix}-statemachine"
+        StartAt: GetVideoIdState
+        States:
+          GetVideoIdState:
+            Type: Task
+            Resource: !Ref FunctionArn1
+            ResultPath: $.video_id
+            Next: DownloadVideoState
+          DownloadVideoState:
+            Type: Task
+            Resource: arn:aws:states:::codebuild:startBuild.sync
+            Parameters:
+              EnvironmentVariablesOverride:
+                - Name: VIDEO_ID
+                  Type: PLAINTEXT
+                  Value.$: $.video_id
+              ProjectName: !Ref CodeBuildProjectName
+            ResultPath: $.codebuild_response
+            Next: CheckVideoNameState
+            #End: true
+          CheckVideoNameState:
+            Type: Task
+            Resource: !Ref FunctionArn2
+            #Parameters:
+            #  codebuild_envs.$: $.codebuild_response.Build.Environment.EnvironmentVariables
+            End: true
+      LoggingConfiguration:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt StateMachineLogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      RoleArn: !GetAtt StateMachineRole.Arn
+      StateMachineName: !Sub "${Prefix}-statemachine"
+      StateMachineType: STANDARD
+      #TracingConfiguration:
+        
+  StateMachineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-statemachine"
+      
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - states.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: StateMachinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- codebuild:BatchGetBuilds
+                  - codebuild:StartBuild
+                  - codebuild:StopBuild
+                  - codebuild:BatchGetBuilds
+                  #- codebuild:BatchGetBuildBatches
+                  #- codebuild:StartBuildBatch
+                Resource:
+                  #- !GetAtt CodeBuildProject1.Arn
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProjectName}"
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref FunctionArn1
+                  - !Ref FunctionArn2
+              - Effect: Allow
+                Action:
+                  - events:PutTargets
+                  - events:PutRule
+                  - events:DescribeRule
+                Resource:
+                  - !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/StepFunctionsGetEventForCodeBuildStartBuildRule"
+              - Effect: Allow
+                Action:
+                  #- logs:CreateLogGroup
+                  #- logs:CreateLogStream
+                  #- logs:PutLogEvents
+                
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                #Resource: !GetAtt LogGroup.Arn
+                Resource: "*"
+                #Resource:
+                #  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StateMachineLogGroup}"
+                #  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${StateMachineLogGroup}:log-stream:*"
+                #Resource: !Sub
+                #  - "${LogGroupArn}:*"
+                #  - LogGroupArn: !GetAtt LogGroup.Arn
