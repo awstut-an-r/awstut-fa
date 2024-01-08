@@ -8,35 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-150
-    
-  #BranchName:
-  #  Type: String
-  #  Default: master
-    
-  #ContainerName:
-  #  Type: String
-  #  Default: my-container
-    
-  #ImageDefinitionFileName:
-  #  Type: String
-  #  Default: imagedefinitions.json
-  #  
-  #ImageId:
-  #  Type: String
-  #  Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-  #  
-  #InstanceType:
-  #  Type: String
-  #  Default: t4g.nano
-  #  
-  #HTTPPort:
-  #  Type: Number
-  #  Default: 8080
-  #  
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -60,18 +32,6 @@ Parameters:
   ProjectEnvironmentType:
     Type: String
     Default: ARM_LAMBDA_CONTAINER
-    
-  #ReportName:
-  #  Type: String
-  #  Default: pytest_reports
-    
-  #TaskCpu:
-  #  Type: Number
-  #  Default: 512
-  #  
-  #TaskMemory:
-  #  Type: Number
-  #  Default: 1024
 
 
 Resources:
@@ -80,9 +40,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
       Parameters:
-        #Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
-        #Runtime: !Ref LambdaRuntime
   
   LambdaStack:
     Type: AWS::CloudFormation::Stack
@@ -93,46 +51,22 @@ Resources:
       Parameters:
         Architecture: !Ref LambdaArchitecture
         BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #EphemeralStorageSize: !Ref LambdaEphemeralStorageSize
         Handler: !Ref LambdaHandler
-        #LayerPackage: !Ref LambdaLayerPackage
-        #LayerS3Key: !Sub "${Prefix}/${LambdaLayerPackage}"
         Prefix: !Ref Prefix
-        #RequirementsParameter: !GetAtt SSMStack.Outputs.RequirementsParameter
         Runtime: !Ref LambdaRuntime
-        #Timeout: !Ref LambdaTimeout
 
   CodeStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - S3Stack
-      #- SSMStack
-      #- ECRStack
-      #- FargateStack
-      #- LambdaStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
       Parameters:
-        #BranchName: !Ref BranchName
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
         BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #ContainerName: !Ref ContainerName
-        #ECRRepositoryName: !GetAtt ECRStack.Outputs.ECRRepositoryName
-        #ECSClusterName: !GetAtt FargateStack.Outputs.ECSClusterName
-        #ECSFunctionName: !GetAtt LambdaStack.Outputs.ECSFunctionName
-        #ECSServiceName: !GetAtt FargateStack.Outputs.ECSServiceName
-        #ImageDefinitionFileName: !Ref ImageDefinitionFileName
-        #PipelineBuildArtifact: BuildArtifact
-        #PipelineSourceArtifact: SourceArtifact
         Prefix: !Ref Prefix
         ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
         ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
         ProjectEnvironmentType: !Ref ProjectEnvironmentType
-        #ReportName: !Ref ReportName
-        #SSMParameterDockerHubPassword: !GetAtt SSMStack.Outputs.SSMParameterDockerHubPassword
-        #SSMParameterDockerHubUsername: !GetAtt SSMStack.Outputs.SSMParameterDockerHubUsername
-        #TopicArn: !GetAtt SNSStack.Outputs.TopicArn
         
   StepFunctionsStack:
     Type: AWS::CloudFormation::Stack
@@ -142,7 +76,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-stepfunctions.yaml"
       Parameters:
-        #CodeBuildProjectArn: !GetAtt CodeStack.Outputs.CodeBuildProjectArn
         CodeBuildProjectName: !GetAtt CodeStack.Outputs.CodeBuildProjectName
         FunctionArn1: !GetAtt LambdaStack.Outputs.FunctionArn1
         FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
