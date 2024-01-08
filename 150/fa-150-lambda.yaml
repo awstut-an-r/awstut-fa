@@ -6,93 +6,32 @@ Parameters:
     
   BucketName:
     Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-  #  
-  #EphemeralStorageSize:
-  #  Type: Number
-    
+
   Handler:
     Type: String
-    
-  #LayerPackage:
-  #  Type: String
 
   Prefix:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
-    
-  #Timeout:
-  #  Type: Number
-    
+
     
 Resources:
-  #RequirementsParameter:
-  #  Type: AWS::SSM::Parameter
-  #  Properties:
-  #    Name: !Ref Prefix
-  #    Type: String
-  #    Value: |
-  #      opensearch-py
-        
-  #LambdaLayer:
-  #  Type: AWS::Lambda::LayerVersion
-  #  DependsOn:
-  #    - CustomResource1
-  #  Properties:
-  #    CompatibleArchitectures:
-  #      - !Ref Architecture
-  #    CompatibleRuntimes:
-  #      - !Ref Runtime
-  #    Content:
-  #      S3Bucket: !Ref CodeS3Bucket
-  #      S3Key: !Sub "${Prefix}/${LayerPackage}"
-  #    Description: !Ref Prefix
-  #    LayerName: !Ref Prefix
-  #    #LicenseInfo: MIT
-      
-  #CustomResource1:
-  #  Type: Custom::CustomResource
-  #  Properties:
-  #    ServiceToken: !GetAtt Function1.Arn
-      
   Function1:
     Type: AWS::Lambda::Function
     Properties:
       Architectures:
         - !Ref Architecture
-      #Environment:
-      #  Variables:
-      #    LAYER_PACKAGE: !Ref LayerPackage
-      #    REGION: !Ref AWS::Region
-      #    REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
-      #    S3_BUCKET: !Ref CodeS3Bucket
-      #    S3_BUCKET_FOLDER: !Ref Prefix
       Code:
         ZipFile: |
           def lambda_handler(event, context):
             return 'TqqaSD2qTdY'
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-01"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
+
   Function2:
     Type: AWS::Lambda::Function
     Properties:
@@ -100,11 +39,8 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #LAYER_PACKAGE: !Ref LayerPackage
           REGION: !Ref AWS::Region
-          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
           BUCKET_NAME: !Ref BucketName
-          #S3_BUCKET_FOLDER: !Ref Prefix
       Code:
         ZipFile: |
           import boto3
@@ -116,34 +52,17 @@ Resources:
           bucket_name = os.environ['BUCKET_NAME']
           
           s3_client = boto3.client('s3', region_name=region)
-          
-          def json_serial(obj):
-            # reference: https://www.yoheim.net/blog.php?q=20170703
-            if isinstance(obj, (datetime, date)):
-              return obj.isoformat()
-            raise TypeError ("Type %s not serializable" % type(obj))
-        
+
           def lambda_handler(event, context):
             response = s3_client.list_objects_v2(
               Bucket=bucket_name
             )
-            #return json.dumps(response, default=json_serial)
             return [obj['Key'] for obj in response['Contents']]
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-02"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
+
   FunctionRole1:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
@@ -185,12 +104,6 @@ Resources:
                   - !Sub "arn:aws:s3:::${BucketName}"
       
 Outputs:
-  #RequirementsParameter:
-  #  Value: !Ref RequirementsParameter
-  
-  #LambdaLayer:
-  #  Value: !Ref LambdaLayer
-  
   FunctionArn1:
     Value: !GetAtt Function1.Arn
     
