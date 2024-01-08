@@ -37,8 +37,8 @@ Resources:
                   Value.$: $.video_id
               ProjectName: !Ref CodeBuildProjectName
             ResultPath: $.codebuild_response
-            Next: CheckVideoNameState
-          ListBucketState:
+            Next: ListObjectsState
+          ListObjectsState:
             Type: Task
             Resource: !Ref FunctionArn2
             End: true
