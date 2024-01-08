@@ -44,9 +44,7 @@ Resources:
       Code:
         ZipFile: |
           import boto3
-          import json
           import os
-          from datetime import date, datetime
           
           region = os.environ['REGION']
           bucket_name = os.environ['BUCKET_NAME']
