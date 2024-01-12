@@ -3,7 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: [bucket-name]
+    Default: awstut-bucket
     
   Prefix:
     Type: String
@@ -16,6 +16,14 @@ Parameters:
   HTTPSPort:
     Type: Number
     Default: 443
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t3a.micro
     
     
 Resources:
@@ -42,7 +50,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
       Parameters:
-        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
         Prefix: !Ref Prefix
         PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
@@ -57,20 +64,13 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        ImageId: !Ref ImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        InstanceType: t3a.micro
+        InstanceType: !Ref InstanceType
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        UserData: !Base64 |
-          #!/bin/bash -xe
-          yum update -y
-          yum install -y httpd
-          systemctl start httpd
-          systemctl enable httpd
-          ec2-metadata -i > /var/www/html/index.html
-          
+
   ALBStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
