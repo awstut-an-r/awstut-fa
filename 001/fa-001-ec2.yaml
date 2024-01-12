@@ -33,8 +33,8 @@ Resources:
             - !Ref InstanceSecurityGroup
       UserData: !Base64 |
         #!/bin/bash -xe
-        yum update -y
-        yum install -y httpd
+        dnf update -y
+        dnf install -y httpd
         systemctl start httpd
         systemctl enable httpd
         ec2-metadata -i > /var/www/html/index.html
@@ -51,8 +51,8 @@ Resources:
             - !Ref InstanceSecurityGroup
       UserData: !Base64 |
         #!/bin/bash -xe
-        yum update -y
-        yum install -y httpd
+        dnf update -y
+        dnf install -y httpd
         systemctl start httpd
         systemctl enable httpd
         ec2-metadata -i > /var/www/html/index.html
