@@ -19,11 +19,11 @@ Parameters:
     
   ImageId:
     Type: String
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
     
   InstanceType:
     Type: String
-    Default: t3a.micro
+    Default: t4g.nano
     
     
 Resources:
