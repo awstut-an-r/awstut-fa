@@ -18,10 +18,7 @@ Parameters:
     
   PrivateSubnet2:
     Type: String
-    
-  UserData:
-    Type: String
-    
+
 
 Resources:
   Instance1:
@@ -34,7 +31,13 @@ Resources:
           SubnetId: !Ref PrivateSubnet1
           GroupSet:
             - !Ref InstanceSecurityGroup
-      UserData: !Ref UserData
+      UserData: !Base64 |
+        #!/bin/bash -xe
+        yum update -y
+        yum install -y httpd
+        systemctl start httpd
+        systemctl enable httpd
+        ec2-metadata -i > /var/www/html/index.html
             
   Instance2:
     Type: AWS::EC2::Instance
@@ -46,16 +49,18 @@ Resources:
           SubnetId: !Ref PrivateSubnet2
           GroupSet:
             - !Ref InstanceSecurityGroup
-      UserData: !Ref UserData
-        
+      UserData: !Base64 |
+        #!/bin/bash -xe
+        yum update -y
+        yum install -y httpd
+        systemctl start httpd
+        systemctl enable httpd
+        ec2-metadata -i > /var/www/html/index.html
+
       
 Outputs:
   Instance1:
     Value: !Ref Instance1
-    Export:
-      Name: !Sub ${Prefix}-Instance1
       
   Instance2:
     Value: !Ref Instance2
-    Export:
-      Name: !Sub ${Prefix}-Instance2
