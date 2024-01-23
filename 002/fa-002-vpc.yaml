@@ -59,21 +59,21 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp1
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone1}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone1}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp3
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone2}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       
       
   PublicRouteTable:
@@ -129,19 +129,14 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: tcp
-      #    FromPort: !Ref HTTPPort
-      #    ToPort: !Ref HTTPPort
-      #    SourceSecurityGroupId: !Ref ALBSecurityGroup
           
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
       GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -154,7 +149,7 @@ Resources:
 Outputs:
   VPC:
     Value: !Ref VPC
-      
+
   PublicSubnet:
     Value: !Ref PublicSubnet
       
