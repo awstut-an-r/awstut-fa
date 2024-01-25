@@ -1,4 +1,4 @@
-# Yum on private subnet instances
+# Dnf/Yum on private subnet instances
 
 https://awstut.com/en/2021/12/11/run-yum-on-a-private-subnet-instance/
 
