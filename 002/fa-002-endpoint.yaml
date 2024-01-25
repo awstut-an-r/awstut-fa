@@ -26,7 +26,7 @@ Resources:
             Action:
               - s3:GetObject
             Resource:
-              - !Sub "arn:aws:s3:::al2023-repos-${AWS::AccountId}-de612dc2/*"
+              - !Sub "arn:aws:s3:::al2023-repos-${AWS::Region}-de612dc2/*"
       RouteTableIds:
         - !Ref PrivateRouteTable2
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
