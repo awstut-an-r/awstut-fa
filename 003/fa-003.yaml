@@ -3,11 +3,31 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: [bucket-name]
+    Default: awstut-bucket
     
   Prefix:
     Type: String
     Default: fa-003
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  KeyName:
+    Type: String
+    Default: MyKeyPair
+    
+  SSHPort:
+    Type: Number
+    Default: 22
     
     
 Resources:
@@ -20,9 +40,9 @@ Resources:
         AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        HTTPSPort: 443
+        HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
-        SSHPort: 22
+        SSHPort: !Ref SSHPort
         VPCCidrBlock: 10.0.0.0/16
         
   EndpointStack:
@@ -33,7 +53,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
       Parameters:
         EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-        Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         VPC: !GetAtt VPCStack.Outputs.VPC
 
@@ -45,11 +64,12 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        ImageId: !Ref ImageId
         InstanceSecurityGroup1: !GetAtt VPCStack.Outputs.InstanceSecurityGroup1
         InstanceSecurityGroup2: !GetAtt VPCStack.Outputs.InstanceSecurityGroup2
-        InstanceType: t3a.micro
-        KeyName: MyKeyPair
+        InstanceSecurityGroup3: !GetAtt VPCStack.Outputs.InstanceSecurityGroup3
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
