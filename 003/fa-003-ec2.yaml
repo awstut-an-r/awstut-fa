@@ -9,6 +9,9 @@ Parameters:
     
   InstanceSecurityGroup2:
     Type: String
+    
+  InstanceSecurityGroup3:
+    Type: String
 
   InstanceType:
     Type: String
@@ -47,10 +50,23 @@ Resources:
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
-        - DeviceIndex: 0
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup2
+            
+  Instance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PrivateSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup3
             
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -70,6 +86,5 @@ Resources:
             Principal:
               Service:
                 - ec2.amazonaws.com
-                - ssm.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
