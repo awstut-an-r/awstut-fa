@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+
 Parameters:
   AvailabilityZone1:
     Type: String
@@ -47,14 +48,14 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp1
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone1}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone2}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -77,7 +78,7 @@ Resources:
   InstanceSecurityGroup1:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup1
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup1"
       GroupDescription: Allow SSH.
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -89,50 +90,48 @@ Resources:
   InstanceSecurityGroup2:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup2
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  InstanceSecurityGroup3:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup3"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
       
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-      GroupDescription: Allow HTTPS from InstanceSecurityGroup2.
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup3.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
-          SourceSecurityGroupId: !Ref InstanceSecurityGroup2
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup3
           
           
 Outputs:
   VPC:
     Value: !Ref VPC
-    Export:
-      Name: !Sub ${Prefix}-VPC
-      
+
   PublicSubnet:
     Value: !Ref PublicSubnet
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet
-      
+
   PrivateSubnet:
     Value: !Ref PrivateSubnet
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet
-      
+
   InstanceSecurityGroup1:
     Value: !Ref InstanceSecurityGroup1
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup1
-      
+
   InstanceSecurityGroup2:
     Value: !Ref InstanceSecurityGroup2
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup2
+
+  InstanceSecurityGroup3:
+    Value: !Ref InstanceSecurityGroup3
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-EndpointSecurityGroup
