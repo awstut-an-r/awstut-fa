@@ -7,10 +7,16 @@ Parameters:
   AvailabilityZone2:
     Type: String
     
+  AvailabilityZone3:
+    Type: String
+    
   CidrIp1:
     Type: String
     
   CidrIp2:
+    Type: String
+    
+  CidrIp3:
     Type: String
     
   HTTPSPort:
@@ -42,6 +48,17 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref IGW
+      
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+          
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet
 
   PublicSubnet:
     Type: AWS::EC2::Subnet
@@ -50,14 +67,21 @@ Resources:
       VpcId: !Ref VPC
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
-  PrivateSubnet:
+  PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp3
+      VpcId: !Ref VPC
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       
-  PublicRouteTable:
+  PublicSubnetRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
@@ -65,7 +89,7 @@ Resources:
   RouteToInternet:
     Type: AWS::EC2::Route
     Properties:
-      RouteTableId: !Ref PublicRouteTable
+      RouteTableId: !Ref PublicSubnetRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref IGW
   
@@ -73,7 +97,25 @@ Resources:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PublicSubnet
-      RouteTableId: !Ref PublicRouteTable
+      RouteTableId: !Ref PublicSubnetRouteTable
+      
+  PrivateSubnet1RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToNATGateway:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateSubnet1RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+      
+  PrivateRoute1TableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateSubnet1RouteTable
       
   InstanceSecurityGroup1:
     Type: AWS::EC2::SecurityGroup
@@ -93,7 +135,7 @@ Resources:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      
+
   InstanceSecurityGroup3:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -121,9 +163,12 @@ Outputs:
   PublicSubnet:
     Value: !Ref PublicSubnet
 
-  PrivateSubnet:
-    Value: !Ref PrivateSubnet
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
 
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+      
   InstanceSecurityGroup1:
     Value: !Ref InstanceSecurityGroup1
 
