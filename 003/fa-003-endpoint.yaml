@@ -4,7 +4,7 @@ Parameters:
   EndpointSecurityGroup:
     Type: String
 
-  PrivateSubnet:
+  PrivateSubnet2:
     Type: String
     
   VPC:
@@ -20,7 +20,7 @@ Resources:
         - !Ref EndpointSecurityGroup
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
       SubnetIds:
-        - !Ref PrivateSubnet
+        - !Ref PrivateSubnet2
       VpcEndpointType: Interface
       VpcId: !Ref VPC
 
@@ -32,7 +32,7 @@ Resources:
         - !Ref EndpointSecurityGroup
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
       SubnetIds:
-        - !Ref PrivateSubnet
+        - !Ref PrivateSubnet2
       VpcEndpointType: Interface
       VpcId: !Ref VPC
         
@@ -44,6 +44,6 @@ Resources:
         - !Ref EndpointSecurityGroup
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
       SubnetIds:
-        - !Ref PrivateSubnet
+        - !Ref PrivateSubnet2
       VpcEndpointType: Interface
       VpcId: !Ref VPC
