@@ -3,25 +3,13 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   AvailabilityZone1:
     Type: String
-    
-  #AvailabilityZone2:
-  #  Type: String
-    
-  #AvailabilityZone3:
-  #  Type: String
-    
+
   CidrIp1:
     Type: String
     
   CidrIp2:
     Type: String
-    
-  #CidrIp3:
-  #  Type: String
-    
-  #HTTPSPort:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
     
@@ -73,14 +61,7 @@ Resources:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC1
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
-      
-  #PrivateSubnet2:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    CidrBlock: !Ref CidrIp3
-  #    VpcId: !Ref VPC
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
-      
+
   PublicSubnetRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -135,65 +116,17 @@ Resources:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
       GroupDescription: Deny All.
       VpcId: !Ref VPC1
-      #SecurityGroupIngress:
-      #  - IpProtocol: tcp
-      #    FromPort: !Ref SSHPort
-      #    ToPort: !Ref SSHPort
-      #    CidrIp: 0.0.0.0/0
-      
-  #InstanceSecurityGroup3:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup3"
-  #    GroupDescription: Deny All.
-  #    VpcId: !Ref VPC
-  #    
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup3.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup3
-          
+
           
 Outputs:
-  #VPC1:
-  #  Value: !Ref VPC1
-    #Export:
-    #  Name: !Sub ${Prefix}-VPC
-      
   PublicSubnet:
     Value: !Ref PublicSubnet
-    #Export:
-    #  Name: !Sub ${Prefix}-PublicSubnet
-      
+
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
-    #Export:
-    #  Name: !Sub ${Prefix}-PrivateSubnet
-    
-  #PrivateSubnet2:
-  #  Value: !Ref PrivateSubnet2
-      
+
   InstanceSecurityGroup1:
     Value: !Ref InstanceSecurityGroup1
-    #Export:
-    #  Name: !Sub ${Prefix}-InstanceSecurityGroup1
-      
+
   InstanceSecurityGroup2:
     Value: !Ref InstanceSecurityGroup2
-    #Export:
-    #  Name: !Sub ${Prefix}-InstanceSecurityGroup2
-    
-  #InstanceSecurityGroup3:
-  #  Value: !Ref InstanceSecurityGroup3
-  #    
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
-  #  #Export:
-  #  #  Name: !Sub ${Prefix}-EndpointSecurityGroup
