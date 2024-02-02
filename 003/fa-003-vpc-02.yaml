@@ -1,21 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AvailabilityZone1:
-  #  Type: String
-    
   AvailabilityZone2:
     Type: String
-    
-  #AvailabilityZone3:
-  #  Type: String
-    
-  #CidrIp1:
-  #  Type: String
-  #  
-  #CidrIp2:
-  #  Type: String
-    
+
   CidrIp3:
     Type: String
     
@@ -24,10 +12,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  #SSHPort:
-  #  Type: Number
-    
+
   VPCCidrBlock:
     Type: String
 
@@ -40,107 +25,13 @@ Resources:
       EnableDnsHostnames: true
       EnableDnsSupport: true
 
-  #IGW:
-  #  Type: AWS::EC2::InternetGateway
-  #
-  #IGWAttachment:
-  #  Type: AWS::EC2::VPCGatewayAttachment
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    InternetGatewayId: !Ref IGW
-  #    
-  #EIP:
-  #  Type: AWS::EC2::EIP
-  #  Properties:
-  #    Domain: vpc
-  #        
-  #NATGateway:
-  #  Type: AWS::EC2::NatGateway
-  #  Properties:
-  #    AllocationId: !GetAtt EIP.AllocationId
-  #    SubnetId: !Ref PublicSubnet
-#
-  #PublicSubnet:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    CidrBlock: !Ref CidrIp1
-  #    VpcId: !Ref VPC
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
-  #    
-  #PrivateSubnet1:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    CidrBlock: !Ref CidrIp2
-  #    VpcId: !Ref VPC
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
-      
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp3
       VpcId: !Ref VPC2
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
-      
-  #PublicSubnetRouteTable:
-  #  Type: AWS::EC2::RouteTable
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    
-  #RouteToInternet:
-  #  Type: AWS::EC2::Route
-  #  Properties:
-  #    RouteTableId: !Ref PublicSubnetRouteTable
-  #    DestinationCidrBlock: 0.0.0.0/0
-  #    GatewayId: !Ref IGW
-  #
-  #PublicSubnetRouteTableAssociation:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PublicSubnet
-  #    RouteTableId: !Ref PublicSubnetRouteTable
-  #    
-  #PrivateSubnet1RouteTable:
-  #  Type: AWS::EC2::RouteTable
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    
-  #RouteToNATGateway:
-  #  Type: AWS::EC2::Route
-  #  Properties:
-  #    RouteTableId: !Ref PrivateSubnet1RouteTable
-  #    DestinationCidrBlock: 0.0.0.0/0
-  #    NatGatewayId: !Ref NATGateway
-  #    
-  #PrivateRoute1TableAssociation:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PrivateSubnet1
-  #    RouteTableId: !Ref PrivateSubnet1RouteTable
-  #    
-  #InstanceSecurityGroup1:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup1"
-  #    GroupDescription: Allow SSH.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref SSHPort
-  #        ToPort: !Ref SSHPort
-  #        CidrIp: 0.0.0.0/0
-  #        
-  #InstanceSecurityGroup2:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
-  #    GroupDescription: Deny All.
-  #    VpcId: !Ref VPC
-  #    #SecurityGroupIngress:
-  #    #  - IpProtocol: tcp
-  #    #    FromPort: !Ref SSHPort
-  #    #    ToPort: !Ref SSHPort
-  #    #    CidrIp: 0.0.0.0/0
-      
+
   InstanceSecurityGroup3:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -199,38 +90,11 @@ Resources:
           
           
 Outputs:
-  #VPC2:
-  #  Value: !Ref VPC2
-    #Export:
-    #  Name: !Sub ${Prefix}-VPC
-      
-  #PublicSubnet:
-  #  Value: !Ref PublicSubnet
-  #  #Export:
-  #  #  Name: !Sub ${Prefix}-PublicSubnet
-  #    
-  #PrivateSubnet1:
-  #  Value: !Ref PrivateSubnet1
-  #  #Export:
-  #  #  Name: !Sub ${Prefix}-PrivateSubnet
-    
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-      
-  #InstanceSecurityGroup1:
-  #  Value: !Ref InstanceSecurityGroup1
-  #  #Export:
-  #  #  Name: !Sub ${Prefix}-InstanceSecurityGroup1
-  #    
-  #InstanceSecurityGroup2:
-  #  Value: !Ref InstanceSecurityGroup2
-  #  #Export:
-  #  #  Name: !Sub ${Prefix}-InstanceSecurityGroup2
-    
+
   InstanceSecurityGroup3:
     Value: !Ref InstanceSecurityGroup3
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-EndpointSecurityGroup
