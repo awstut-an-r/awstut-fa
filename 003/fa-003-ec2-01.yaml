@@ -12,10 +12,7 @@ Parameters:
     
   InstanceSecurityGroup2:
     Type: String
-    
-  #InstanceSecurityGroup3:
-  #  Type: String
-  
+
   InstanceType:
     Type: String
     
@@ -27,10 +24,7 @@ Parameters:
     
   PrivateSubnet1:
     Type: String
-    
-  #PrivateSubnet2:
-  #  Type: String
-    
+
   PublicSubnet:
     Type: String
     
@@ -39,7 +33,6 @@ Resources:
   Instance1:
     Type: AWS::EC2::Instance
     Properties:
-      #IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
@@ -56,14 +49,12 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
           SubnetId: !Ref PublicSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup2
-            #- !Ref InstanceSecurityGroup1
             
   Instance3:
     Type: AWS::EC2::Instance
@@ -76,37 +67,3 @@ Resources:
           SubnetId: !Ref PrivateSubnet1
           GroupSet:
             - !Ref InstanceSecurityGroup2
-            
-  #Instance4:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet2
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup3
-            
-  #InstanceProfile:
-  #  Type: AWS::IAM::InstanceProfile
-  #  Properties:
-  #    Path: /
-  #    Roles:
-  #      - !Ref InstanceRole
-  #
-  #InstanceRole:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - ec2.amazonaws.com
-  #    ManagedPolicyArns:
-  #      - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
