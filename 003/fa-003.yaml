@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-003
+    
+  ImageId:
+    Type: String
+    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+    
+  InstanceType:
+    Type: String
+    #Default: t3a.micro
+    Default: t4g.nano
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  KeyName:
+    Type: String
+    Default: MyKeyPair
+    
+  SSHPort:
+    Type: Number
+    Default: 22
+    
+    
+Resources:
+  VPCStack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc-01.yaml"
+      Parameters:
+        AvailabilityZone1: a
+        #AvailabilityZone2: c
+        #AvailabilityZone3: d
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        #CidrIp3: 10.0.3.0/24
+        #HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        SSHPort: !Ref SSHPort
+        VPCCidrBlock: 10.0.0.0/16
+        
+  VPCStack2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc-02.yaml"
+      Parameters:
+        #AvailabilityZone1: a
+        AvailabilityZone2: c
+        #AvailabilityZone3: d
+        #CidrIp1: 10.0.1.0/24
+        #CidrIp2: 10.0.2.0/24
+        CidrIp3: 10.0.3.0/24
+        HTTPSPort: !Ref HTTPSPort
+        Prefix: !Ref Prefix
+        #SSHPort: !Ref SSHPort
+        VPCCidrBlock: 10.0.0.0/16
+        
+  #EndpointStack:
+  #  Type: AWS::CloudFormation::Stack
+  #  DependsOn:
+  #    - VPCStack2
+  #  Properties:
+  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
+  #    Parameters:
+  #      EndpointSecurityGroup: !GetAtt VPCStack2.Outputs.EndpointSecurityGroup
+  #      #Prefix: !Ref Prefix
+  #      PrivateSubnet2: !GetAtt VPCStack.Outputs2.PrivateSubnet2
+  #      VPC2: !GetAtt VPCStack.Outputs.VPC2
+  
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
+    
+  EC2Stack1:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack1
+      - IAMStack
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-01.yaml"
+      Parameters:
+        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt IAMStack.Outputs.InstanceProfile
+        InstanceSecurityGroup1: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup1
+        InstanceSecurityGroup2: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup2
+        #InstanceSecurityGroup3: !GetAtt VPCStack.Outputs.InstanceSecurityGroup3
+        #InstanceType: t3a.micro
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        Prefix: !Ref Prefix
+        PrivateSubnet1: !GetAtt VPCStack1.Outputs.PrivateSubnet1
+        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
+        PublicSubnet: !GetAtt VPCStack1.Outputs.PublicSubnet
+        
+  EC2Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack2
+      - IAMStack
+      #- EndpointStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-02.yaml"
+      Parameters:
+        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        ImageId: !Ref ImageId
+        InstanceProfile: !GetAtt IAMStack.Outputs.InstanceProfile
+        #InstanceSecurityGroup1: !GetAtt VPCStack.Outputs.InstanceSecurityGroup1
+        #InstanceSecurityGroup2: !GetAtt VPCStack.Outputs.InstanceSecurityGroup2
+        InstanceSecurityGroup3: !GetAtt VPCStack2.Outputs.InstanceSecurityGroup3
+        #InstanceType: t3a.micro
+        InstanceType: !Ref InstanceType
+        #KeyName: !Ref KeyName
+        Prefix: !Ref Prefix
+        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
+        PrivateSubnet2: !GetAtt VPCStack2.Outputs.PrivateSubnet2
+        #PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
