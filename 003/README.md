@@ -4,7 +4,7 @@ https://awstut.com/en/2021/12/11/accessing-a-linux-instance-via-ssm-session-mana
 
 # Architecture
 
-![fa-003-diagram](https://user-images.githubusercontent.com/84276199/188313934-085fbb92-29f7-4963-ad13-151dd745ba86.png)
+![fa-003-diagram](https://github.com/awstut-an-r/awstut-fa/assets/84276199/42540b90-56ed-4adc-a46d-5ad53bb5007a)
 
 # Requirements
 
