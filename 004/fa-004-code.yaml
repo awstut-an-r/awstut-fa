@@ -54,7 +54,7 @@ Resources:
       ServiceRole: !GetAtt CodeBuildRole.Arn
       Source: 
         Type: NO_SOURCE
-        BuildSpec: !Sub |
+        BuildSpec: |
           version: 0.2
           
           phases:
