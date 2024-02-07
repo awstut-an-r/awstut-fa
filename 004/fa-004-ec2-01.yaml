@@ -4,15 +4,15 @@ Parameters:
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     
+  InstanceProfile1:
+    Type: String
+    
   InstanceSecurityGroup:
     Type: String
     
   InstanceType:
     Type: String
-    
-  KeyName:
-    Type: AWS::EC2::KeyPair::KeyName
-    
+
   Prefix:
     Type: String
     
@@ -24,9 +24,9 @@ Resources:
   Instance1:
     Type: AWS::EC2::Instance
     Properties:
+      IamInstanceProfile: !Ref InstanceProfile1
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
