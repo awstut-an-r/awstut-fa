@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  PlaybookFileName:
+    Type: String
+    
+  PlaybookPackageName:
+    Type: String
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    
+  ProjectEnvironmentImage:
+    Type: String
+    
+  ProjectEnvironmentType:
+    Type: String
+
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Cache: 
+        Type: NO_CACHE
+      Environment: 
+        ComputeType: !Ref ProjectEnvironmentComputeType
+        EnvironmentVariables:
+          - Name: BUCKET_NAME
+            Type: PLAINTEXT
+            Value: !Ref BucketName
+          - Name: PLAYBOOK_FILE_NAME
+            Type: PLAINTEXT
+            Value: !Ref PlaybookFileName
+          - Name: PLAYBOOK_PACKAGE_NAME
+            Type: PLAINTEXT
+            Value: !Ref PlaybookPackageName
+        Image: !Ref ProjectEnvironmentImage
+        ImagePullCredentialsType: CODEBUILD
+        Type: !Ref ProjectEnvironmentType
+      LogsConfig: 
+        CloudWatchLogs:
+          GroupName: !Ref LogGroup
+          Status: ENABLED
+      Name: !Sub "${Prefix}-project"
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        Type: NO_SOURCE
+        BuildSpec: !Sub |
+          version: 0.2
+          
+          phases:
+            pre_build:
+              commands:
+                - |
+                  cat << EOF > $PLAYBOOK_FILE_NAME
+                  - hosts: all
+                    gather_facts: no
+                    become: yes
+                  
+                    tasks:
+                      - name: update yum
+                        yum: name=*
+                      - name: install the latest version of Apache
+                        yum: name=httpd state=latest
+                      - name: start and enable Apache
+                        service: name=httpd state=started enabled=yes
+                      - name: make index.html for awstut.net
+                        shell: ec2-metadata -i > /var/www/html/index.html
+                  EOF
+            #install:
+            #  commands:
+            #    - pip3 install yt-dlp
+            build:
+              commands:
+                #- yt-dlp -o /tmp/output.mp4 'https://www.youtube.com/watch?v=TqqaSD2qTdY'
+                #- ls -al /tmp
+                #- aws s3 cp /tmp/output.mp4 s3://$BUCKET_NAME/
+                
+                - zip -r $PLAYBOOK_PACKAGE_NAME $PLAYBOOK_FILE_NAME
+                - aws s3 cp ./$PLAYBOOK_PACKAGE_NAME s3://$BUCKET_NAME/
+      Visibility: PRIVATE
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !GetAtt LogGroup.Arn
+                  - !Sub
+                    - "${LogGroupArn}:log-stream:*"
+                    - LogGroupArn: !GetAtt LogGroup.Arn
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-LogGroup"
+      
+      
+Outputs:
+  CodeBuildProject:
+    Value: !Ref CodeBuildProject

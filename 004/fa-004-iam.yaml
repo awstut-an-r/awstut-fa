@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+    
+
+Resources:
+  InstanceProfile1:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole1
+  
+  InstanceRole1:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        
+  InstanceProfile2:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole2
+
+  InstanceRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                #- ssm.amazonaws.com
+      Policies:
+        - PolicyName: SSMStateManagerPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        
+        
+Outputs:
+  InstanceProfile1:
+    Value: !Ref InstanceProfile1
+    
+  InstanceProfile2:
+    Value: !Ref InstanceProfile2

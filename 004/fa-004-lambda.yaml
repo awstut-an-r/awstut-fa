@@ -1,0 +1,203 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  BucketName:
+    Type: String
+    
+  CodeBuildProject:
+    Type: String
+
+  EventBusName:
+    Type: String
+    
+  Handler:
+    Type: String
+    
+  PlaybookPackageName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  #SourceBundleName:
+  #  Type: String
+  
+  WaitConditionTimeout:
+    Type: Number
+    
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    DependsOn:
+      #- EventsRule
+      - EventsRulePermission
+      #- Function2
+    Properties:
+      ServiceToken: !GetAtt Function1.Arn
+      
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          CODEBUILD_PROJECT: !Ref CodeBuildProject
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          codebuild_project = os.environ['CODEBUILD_PROJECT']
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          client = boto3.client('codebuild')
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                response = client.start_build(
+                  projectName=codebuild_project
+                )
+                print(response)
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function-01"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole1.Arn
+      
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: StartCodeBuildPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                Resource:
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProject}" 
+                  
+  WaitConditionHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref WaitConditionHandle
+      Timeout: !Ref WaitConditionTimeout
+      
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - aws.s3
+        detail-type:
+          - Object Created
+        detail:
+          bucket:
+            name:
+              - !Ref BucketName
+      Name: !Sub "${Prefix}-EventsRule"
+      State: ENABLED
+      Targets: 
+        - Arn: !GetAtt Function2.Arn
+          Id: !Ref Function2
+          
+  EventsRulePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function2
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventsRule.Arn
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          SIGNAL_URL: !Ref WaitConditionHandle
+      Code:
+        ZipFile: |
+          import json
+          import os
+          import urllib3
+          import uuid
+    
+          def lambda_handler(event, context):
+            body = json.dumps({
+                "Status": "SUCCESS",
+                "Reason": "Lambda Deploy Package Setup Successed",
+                "UniqueId": str(uuid.uuid4()),
+                "Data": "Lambda Deploy Package Setup Successed"
+            })
+            http = urllib3.PoolManager()
+            http.request('PUT', os.environ['SIGNAL_URL'], body=body)
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      
+  #Function3:
+  #  Type: AWS::Lambda::Function
+  #  DependsOn:
+  #    - WaitCondition
+  #  Properties:
+  #    Architectures:
+  #      - !Ref Architecture
+  #    Code:
+  #      S3Bucket: !Ref BucketName
+  #      S3Key: !Ref SourceBundleName
+  #    FunctionName: !Sub "${Prefix}-function-03"
+  #    Handler: !Ref Handler
+  #    PackageType: Zip
+  #    Runtime: !Ref Runtime
+  #    Role: !GetAtt FunctionRole2.Arn
+      
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
