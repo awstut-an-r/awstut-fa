@@ -11,10 +11,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  SSHPort:
-    Type: Number
-    
+
   VPCCidrBlock:
     Type: String
 
@@ -41,7 +38,7 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
@@ -64,23 +61,23 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup1
-      GroupDescription: Allow HTTP and SSH.
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup1"
+      GroupDescription: Allow HTTP.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
           FromPort: !Ref HTTPPort
           ToPort: !Ref HTTPPort
           CidrIp: 0.0.0.0/0
-        - IpProtocol: tcp
-          FromPort: !Ref SSHPort
-          ToPort: !Ref SSHPort
-          CidrIp: 0.0.0.0/0
-          
+
           
 Outputs:
   PublicSubnet:
     Value: !Ref PublicSubnet
+    Export:
+      Name: !Sub ${Prefix}-PublicSubnet
       
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-InstanceSecurityGroup
