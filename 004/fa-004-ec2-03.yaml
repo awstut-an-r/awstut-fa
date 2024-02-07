@@ -1,21 +1,21 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  BucketName:
+    Type: String
+
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceProfile2:
+    Type: String
     
   InstanceSecurityGroup:
     Type: String
     
   InstanceType:
     Type: String
-    
-  KeyName:
-    Type: AWS::EC2::KeyPair::KeyName
-    
-  PlaybookBucketName:
-    Type: String
-    
+
   PlaybookFileName:
     Type: String
     
@@ -36,63 +36,25 @@ Resources:
   Instance3:
     Type: AWS::EC2::Instance
     Properties:
-      IamInstanceProfile: !Ref InstanceProfile
+      IamInstanceProfile: !Ref InstanceProfile2
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           DeviceIndex: 0
           SubnetId: !Ref PublicSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup
-            
-  InstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Path: /
-      Roles:
-        - !Ref InstanceRole
-
-  InstanceRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRole
-            Principal:
-              Service:
-                - ec2.amazonaws.com
-                - ssm.amazonaws.com
-      Policies:
-        - PolicyName: SSMStateManagerPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - s3:GetObject
-                  - s3:PutObject
-                  - s3:PutObjectAcl
-                  - s3:ListBucket
-                Resource:
-                  - !Sub "arn:aws:s3:::${PlaybookBucketName}"
-                  - !Sub "arn:aws:s3:::${PlaybookBucketName}/*"
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        
         
   ApplyAnsiblePlaybooksAssociation:
     Type: AWS::SSM::Association
     Properties:
-      AssociationName: !Sub ${Prefix}-playbook-association
+      AssociationName: !Sub "${Prefix}-playbook-association"
       Name: AWS-ApplyAnsiblePlaybooks
       OutputLocation:
         S3Location:
-          OutputS3BucketName: !Ref PlaybookBucketName
-          OutputS3KeyPrefix: !Sub "${Prefix}/playbook-association-log"
+          OutputS3BucketName: !Ref BucketName
+          OutputS3KeyPrefix: !Sub "playbook-association-log"
       Parameters:
         Check:
           - "False"
@@ -103,7 +65,7 @@ Resources:
         PlaybookFile:
           - !Ref PlaybookFileName
         SourceInfo:
-          - !Sub '{"path": "https://${PlaybookBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${PlaybookPackageName}"}'
+          - !Sub '{"path": "https://${BucketName}.s3.${AWS::Region}.amazonaws.com/${PlaybookPackageName}"}'
         SourceType:
           - S3
         Verbose:
