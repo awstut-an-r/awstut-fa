@@ -76,15 +76,8 @@ Resources:
                       - name: make index.html for awstut.net
                         shell: ec2-metadata -i > /var/www/html/index.html
                   EOF
-            #install:
-            #  commands:
-            #    - pip3 install yt-dlp
             build:
               commands:
-                #- yt-dlp -o /tmp/output.mp4 'https://www.youtube.com/watch?v=TqqaSD2qTdY'
-                #- ls -al /tmp
-                #- aws s3 cp /tmp/output.mp4 s3://$BUCKET_NAME/
-                
                 - zip -r $PLAYBOOK_PACKAGE_NAME $PLAYBOOK_FILE_NAME
                 - aws s3 cp ./$PLAYBOOK_PACKAGE_NAME s3://$BUCKET_NAME/
       Visibility: PRIVATE
