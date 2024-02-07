@@ -3,23 +3,63 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: [bucket-name]
+    Default: awstut-bucket
     
   Prefix:
     Type: String
     Default: fa-004
     
+  EventBusName:
+    Type: String
+    Default: default
+    
+  HTTPPort:
+    Type: Number
+    Default: 80
+    
   ImageId:
     Type: String
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
     
   InstanceType:
     Type: String
-    Default: t3a.small
-    
-  KeyName:
+    Default: t4g.micro
+
+  LambdaArchitecture:
     Type: String
-    Default: MyKeyPair
+    Default: arm64
+  
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+  
+  PlaybookFileName:
+    Type: String
+    Default: playbook.yml
+    
+  PlaybookPackageName:
+    Type: String
+    Default: playbook.zip
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_LAMBDA_1GB
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux-aarch64-lambda-standard:python3.12
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_LAMBDA_CONTAINER
+    
+  WaitConditionTimeout:
+    Type: Number
+    Default: 300
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
@@ -27,6 +67,45 @@ Parameters:
     
     
 Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        Prefix: !Ref Prefix
+        PlaybookFileName: !Ref PlaybookFileName
+        PlaybookPackageName: !Ref PlaybookPackageName
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CodeStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
+        EventBusName: !Ref EventBusName
+        Handler: !Ref LambdaHandler
+        PlaybookPackageName: !Ref PlaybookPackageName
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        WaitConditionTimeout: !Ref WaitConditionTimeout
+
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -34,22 +113,29 @@ Resources:
       Parameters:
         AvailabilityZone: a
         CidrIp: 10.0.1.0/24
-        HTTPPort: 80
+        HTTPPort: !Ref HTTPPort
         Prefix: !Ref Prefix
-        SSHPort: 22
         VPCCidrBlock: 10.0.0.0/16
+        
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iam.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
 
   EC2Stack1:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
+      - IAMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-01.yaml"
       Parameters:
         ImageId: !Ref ImageId
+        InstanceProfile1: !GetAtt IAMStack.Outputs.InstanceProfile1
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        KeyName: !Ref KeyName
         Prefix: !Ref Prefix
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
         
@@ -57,13 +143,14 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
+      - IAMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-02.yaml"
       Parameters:
         ImageId: !Ref ImageId
+        InstanceProfile1: !GetAtt IAMStack.Outputs.InstanceProfile1
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        KeyName: !Ref KeyName
         Prefix: !Ref Prefix
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
         
@@ -71,16 +158,18 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
+      - IAMStack
+      - LambdaStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-03.yaml"
       Parameters:
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
         ImageId: !Ref ImageId
+        InstanceProfile2: !GetAtt IAMStack.Outputs.InstanceProfile2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        KeyName: !Ref KeyName
-        PlaybookBucketName: !Ref TemplateBucketName
-        PlaybookFileName: playbook.yml
-        PlaybookPackageName: playbook.zip
+        PlaybookFileName: !Ref PlaybookFileName
+        PlaybookPackageName: !Ref PlaybookPackageName
         Prefix: !Ref Prefix
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
         WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
@@ -89,14 +178,15 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
+      - IAMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2-04.yaml"
       Parameters:
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
         ImageId: !Ref ImageId
+        InstanceProfile2: !GetAtt IAMStack.Outputs.InstanceProfile2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        KeyName: !Ref KeyName
-        LogBucketName: !Ref TemplateBucketName
         Prefix: !Ref Prefix
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
         WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
