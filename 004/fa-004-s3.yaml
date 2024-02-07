@@ -11,28 +11,11 @@ Resources:
     Properties:
       AccessControl: Private
       BucketName: !Ref Prefix
-      #WebsiteConfiguration:
-      #  IndexDocument: index.html
       NotificationConfiguration:
         EventBridgeConfiguration: 
           EventBridgeEnabled: true
 
-  #BucketPolicy:
-  #  Type: AWS::S3::BucketPolicy
-  #  Properties:
-  #    Bucket: !Ref Bucket
-  #    PolicyDocument:
-  #      Statement:
-  #        Action:
-  #          - s3:GetObject
-  #        Effect: Allow
-  #        Resource: !Sub "arn:aws:s3:::${Bucket}/*"
-  #        Principal: "*"
-          
           
 Outputs:
-  #BucketArn:
-  #  Value: !GetAtt Bucket.Arn
-    
   BucketName:
     Value: !Ref Bucket
