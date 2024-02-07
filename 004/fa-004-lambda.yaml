@@ -24,10 +24,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #SourceBundleName:
-  #  Type: String
-  
+
   WaitConditionTimeout:
     Type: Number
     
@@ -36,9 +33,7 @@ Resources:
   CustomResource:
     Type: Custom::CustomResource
     DependsOn:
-      #- EventsRule
       - EventsRulePermission
-      #- Function2
     Properties:
       ServiceToken: !GetAtt Function1.Arn
       
@@ -170,23 +165,7 @@ Resources:
       Handler: !Ref Handler
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
-      
-  #Function3:
-  #  Type: AWS::Lambda::Function
-  #  DependsOn:
-  #    - WaitCondition
-  #  Properties:
-  #    Architectures:
-  #      - !Ref Architecture
-  #    Code:
-  #      S3Bucket: !Ref BucketName
-  #      S3Key: !Ref SourceBundleName
-  #    FunctionName: !Sub "${Prefix}-function-03"
-  #    Handler: !Ref Handler
-  #    PackageType: Zip
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole2.Arn
-      
+
   FunctionRole2:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
