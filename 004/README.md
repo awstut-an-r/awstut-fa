@@ -4,7 +4,7 @@ https://awstut.com/en/2021/12/11/four-ways-to-initialize-a-linux-instance/
 
 # Architecture
 
-![fa-004-diagram](https://user-images.githubusercontent.com/84276199/188314790-3bcb00b8-1138-4ad2-a86c-5c5ddc4b5dd9.png)
+![fa-004-diagram](https://github.com/awstut-an-r/awstut-fa/assets/84276199/0ba41ff6-8805-4e25-9d41-45e092e19a71)
 
 # Requirements
 
