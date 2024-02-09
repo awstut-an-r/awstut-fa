@@ -15,7 +15,7 @@ Resources:
   HttpApi:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: !Sub ${Prefix}-HttpApi
+      Name: !Sub "${Prefix}-HttpApi"
       Description: HttpApi.
       ProtocolType: HTTP
 
@@ -35,17 +35,25 @@ Resources:
       IntegrationMethod: POST
       IntegrationType: AWS_PROXY
       IntegrationUri: !Ref FunctionArn
-      PayloadFormatVersion: '2.0'
+      PayloadFormatVersion: "2.0"
       
   Route:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref HttpApi
-      RouteKey: 'GET /'
+      RouteKey: "GET /"
       Target: !Sub "integrations/${Integration}"
+          
+  #Permission:
+  #  Type: AWS::Lambda::Permission
+  #  Properties:
+  #    FunctionName: !Ref FunctionName
+  #    Action: lambda:InvokeFunction
+  #    Principal: apigateway.amazonaws.com
   
   ApiGatewayRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -56,7 +64,7 @@ Resources:
               Service:
                 - apigateway.amazonaws.com
       Policies:
-        - PolicyName: !Sub ${Prefix}-InvokeFunctionPolicy
+        - PolicyName: !Sub "${Prefix}-InvokeFunctionPolicy"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -65,10 +73,3 @@ Resources:
                   - lambda:InvokeFunction
                 Resource:
                   - !Ref FunctionArn
-                  
-  #Permission:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    FunctionName: !Ref FunctionName
-  #    Action: lambda:InvokeFunction
-  #    Principal: apigateway.amazonaws.com
