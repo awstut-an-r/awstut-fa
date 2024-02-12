@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
+
 Parameters:
   AvailabilityZone1:
     Type: String
@@ -47,14 +48,14 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp1
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone1}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
       
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone2}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
       
       
   PublicRouteTable:
@@ -79,8 +80,8 @@ Resources:
   InstanceSecurityGroup1:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup1
-      GroupDescription: Allow RDP.
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup1"
+      GroupDescription: Allow SSH.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -91,15 +92,15 @@ Resources:
   InstanceSecurityGroup2:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup2
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
           
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
-      GroupDescription: Allow HTTPS from InstanceSecurityGroup2.
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
