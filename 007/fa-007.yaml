@@ -3,11 +3,31 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: [bucket-name]
+    Default: awstut-bucket
     
   Prefix:
     Type: String
     Default: fa-007
+    
+  HTTPSPort:
+    Type: Number
+    Default: 443
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-windows-latest/Windows_Server-2022-Japanese-Full-Base
+    
+  InstanceType:
+    Type: String
+    Default: t3a.nano
+    
+  KeyName:
+    Type: String
+    Default: MyKeyPair
+    
+  RDPPort:
+    Type: Number
+    Default: 3389
 
 
 Resources:
@@ -20,9 +40,9 @@ Resources:
         AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        HTTPSPort: 443
+        HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
-        RDPPort: 3389
+        RDPPort: !Ref RDPPort
         VPCCidrBlock: 10.0.0.0/16
         
   EndpointStack:
@@ -40,16 +60,15 @@ Resources:
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      - VPCStack
       - EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-Japanese-Full-Base
+        ImageId: !Ref ImageId
         InstanceSecurityGroup1: !GetAtt VPCStack.Outputs.InstanceSecurityGroup1
         InstanceSecurityGroup2: !GetAtt VPCStack.Outputs.InstanceSecurityGroup2
-        InstanceType: t3a.nano
-        KeyName: MyKeyPair
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
