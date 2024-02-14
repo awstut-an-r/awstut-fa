@@ -3,19 +3,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   AvailabilityZone1:
     Type: String
-  
-  AvailabilityZone2:
-    Type: String
-    
+
   CidrIp1:
     Type: String
-    
-  CidrIp2:
-    Type: String
-    
-  HTTPSPort:
-    Type: Number
-    
+
   Prefix:
     Type: String
     
@@ -49,15 +40,7 @@ Resources:
       CidrBlock: !Ref CidrIp1
       VpcId: !Ref VPC
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
-      
-  PrivateSubnet:
-    Type: AWS::EC2::Subnet
-    Properties:
-      CidrBlock: !Ref CidrIp2
-      VpcId: !Ref VPC
-      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
-      
-      
+
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -95,19 +78,7 @@ Resources:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup2"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-          
-  EndpointSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Ref HTTPSPort
-          ToPort: !Ref HTTPSPort
-          SourceSecurityGroupId: !Ref InstanceSecurityGroup2
-          
+
           
 Outputs:
   VPC:
@@ -115,15 +86,9 @@ Outputs:
       
   PublicSubnet:
     Value: !Ref PublicSubnet
-      
-  PrivateSubnet:
-    Value: !Ref PrivateSubnet
-    
+
   InstanceSecurityGroup1:
     Value: !Ref InstanceSecurityGroup1
       
   InstanceSecurityGroup2:
     Value: !Ref InstanceSecurityGroup2
-      
-  EndpointSecurityGroup:
-    Value: !Ref EndpointSecurityGroup
