@@ -8,11 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-007
-    
-  HTTPSPort:
-    Type: Number
-    Default: 443
-    
+
   ImageId:
     Type: String
     Default: /aws/service/ami-windows-latest/Windows_Server-2022-Japanese-Full-Base
@@ -37,30 +33,15 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
         AvailabilityZone1: a
-        AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
-        CidrIp2: 10.0.2.0/24
-        HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         RDPPort: !Ref RDPPort
         VPCCidrBlock: 10.0.0.0/16
-        
-  EndpointStack:
-    Type: AWS::CloudFormation::Stack
-    DependsOn:
-      - VPCStack
-    Properties:
-      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
-      Parameters:
-        EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-        Prefix: !Ref Prefix
-        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
-        VPC: !GetAtt VPCStack.Outputs.VPC
 
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      - EndpointStack
+      - VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
@@ -70,5 +51,4 @@ Resources:
         InstanceType: !Ref InstanceType
         KeyName: !Ref KeyName
         Prefix: !Ref Prefix
-        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         PublicSubnet: !GetAtt VPCStack.Outputs.PublicSubnet
