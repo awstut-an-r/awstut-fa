@@ -18,10 +18,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  PrivateSubnet:
-    Type: String
-    
+
   PublicSubnet:
     Type: String
     
@@ -46,10 +43,24 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup2
+
+  Instance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
       NetworkInterfaces:
-        - DeviceIndex: 0
-          SubnetId: !Ref PrivateSubnet
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId: !Ref PublicSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup2
             
