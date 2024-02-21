@@ -60,19 +60,9 @@ Resources:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
-      #GroupDescription: Allow HTTP from ALBSecurityGroup.
       GroupDescription: Not allow any connections.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  #- IpProtocol: tcp
-      #  #  FromPort: !Ref HTTPPort
-      #  #  ToPort: !Ref HTTPPort
-      #  #  SourceSecurityGroupId: !Ref ALBSecurityGroup
-      #  - IpProtocol: tcp
-      #    FromPort: !Ref HTTPPort
-      #    ToPort: !Ref HTTPPort
-      #    CidrIp: 0.0.0.0/0
-          
+
           
 Outputs:
   VPC:
