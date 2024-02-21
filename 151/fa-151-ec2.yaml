@@ -25,12 +25,9 @@ Parameters:
 Resources:
   Instance:
     Type: AWS::EC2::Instance
-    #DependsOn:
-    #  - WaitCondition
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
-      #ImageId: !Sub "{{resolve:ssm:${ParameterAmi}}}"
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
@@ -72,24 +69,16 @@ Resources:
           endpoint=`cat ~/endpoint.txt| jq -r .endpointAddress`
           
           python3.11 -m pip install awsiotsdk
-            
-          #mkdir ~/aws-iot-device-sdk-python-v2
-          #git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git ~/aws-iot-device-sdk-python-v2 --recursive
-          
+
           cd ~ && git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git
-          
-          #python3 -m pip install ./aws-iot-device-sdk-python-v2
-          #python3.11 -m pip install ~/aws-iot-device-sdk-python-v2
-          
+
           cd ~/aws-iot-device-sdk-python-v2/samples && python3.11 pubsub.py \
             --endpoint "$endpoint" \
             --ca_file ~/certs/Amazon-root-CA-1.pem \
             --cert ~/certs/device.pem.crt \
             --key ~/certs/private.pem.key \
-            #--client_id "basicPubSub" \
-            #--topic "sdk/test/python" \
             --topic "test/${Prefix}" \
-            --count 10 >> ~/result.txt
+            --count 10
   
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
