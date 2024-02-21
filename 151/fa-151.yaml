@@ -11,26 +11,14 @@ Parameters:
     
   InstanceImageId:
     Type: String
-    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
     
   InstanceType:
     Type: String
     Default: t4g.nano
     
-  #LambdaArchitecture:
-  #  Type: String
-  #  Default: arm64
-    
     
 Resources:
-  #SSMStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
-  #    Parameters:
-  #      Prefix: !Ref Prefix
-
   IoTStack1:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -44,165 +32,21 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
         AvailabilityZone1: a
-        #AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
-        #CidrIp2: 10.0.2.0/24
-        #CidrIp3: 10.0.3.0/24
-        #CidrIp4: 10.0.4.0/24
-        #HTTPPort: !Ref HTTPPort
-        #HTTPSPort: !Ref HTTPSPort
-        #MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- SSMStack
       - VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #Architecture: !Ref LambdaArchitecture
-        #Handler: !Ref LambdaHandler
-        #DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
-        #DBMasterUsername: !Ref DBMasterUsername
-        #DBMasterUserPassword: !Ref DBMasterUserPassword
-        #DBName: !Ref DBName
         ImageId: !Ref InstanceImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        #ParameterAmi: !GetAtt LambdaStack1.Outputs.ParameterAmi
-        #ParameterWaitConditionHandleSignalUrl: !GetAtt LambdaStack2.Outputs.ParameterWaitConditionHandleSignalUrl
         Policy: !GetAtt IoTStack1.Outputs.Policy
         Prefix: !Ref Prefix
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-        #Runtime: !Ref LambdaRuntime
         Thing: !GetAtt IoTStack1.Outputs.Thing
-        #UserData: !Base64 |
-        #  #!/bin/bash -xe
-        #  yum update -y
-        #  yum install -y httpd
-        #  systemctl start httpd
-        #  systemctl enable httpd
-        #  ec2-metadata -i > /var/www/html/index.html
-        #WaitConditionTimeout: !Ref WaitConditionTimeout
-        
-  #RDSStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-rds.yaml"
-  #    Parameters:
-  #      #AvailabilityZone: !Ref AvailabilityZone1
-  #      DBAllocatedStorage: !Ref DBAllocatedStorage
-  #      DBEngine: !Ref DBEngine
-  #      DBEngineVersion: !Ref DBEngineVersion
-  #      DBInstanceClass: !Ref DBInstanceClass
-  #      DBMasterUsername: !Ref DBMasterUsername
-  #      DBMasterUserPassword: !Ref DBMasterUserPassword
-  #      DBName: !Ref DBName
-  #      DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
-  #      PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      Prefix: !Ref Prefix
-        
-  #ALBStack1:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
-  #    Parameters:
-  #      ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
-  #      #CustomHeaderNameJsonKey: !Ref CustomHeaderNameJsonKey
-  #      #CustomHeaderName: !Ref CustomHeaderName
-  #      #CustomHeaderValueJsonKey: !Ref CustomHeaderValueJsonKey
-  #      #HTTPPort: !Ref HTTPPort
-  #      #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-  #      #Instance2: !GetAtt EC2Stack.Outputs.Instance2
-  #      Prefix: !Ref Prefix
-  #      PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-  #      PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
-  #      #Secret: !GetAtt SecretsManagerStack.Outputs.Secret
-  #      VPC: !GetAtt VPCStack.Outputs.VPC
-  #      
-  #      #HealthyThresholdCount: 5
-  #      #UnhealthyThresholdCount: 2
-  #      #HealthCheckTimeoutSeconds: 5
-  #      #HealthCheckIntervalSeconds: 30
-  #      #HttpCode: 200
-        
-  #EC2Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - ImageBuilderStack
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
-  #    Parameters:
-  #      #DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
-  #      #DBMasterUsername: !Ref DBMasterUsername
-  #      #DBMasterUserPassword: !Ref DBMasterUserPassword
-  #      #DBName: !Ref DBName
-  #      ImageId: !Ref InstanceImageId
-  #      InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-  #      InstanceType: !Ref InstanceType
-  #      Prefix: !Ref Prefix
-  #      #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-  #      #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-  #      #UserData: !Base64 |
-  #      #  #!/bin/bash -xe
-  #      #  yum update -y
-  #      #  yum install -y httpd
-  #      #  systemctl start httpd
-  #      #  systemctl enable httpd
-  #      #  ec2-metadata -i > /var/www/html/index.html
-          
-  #ALBStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - SecretsManagerStack
-  #    - EC2Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-alb.yaml"
-  #    Parameters:
-  #      ALBSecurityGroup: !GetAtt VPCStack.Outputs.ALBSecurityGroup
-  #      #CustomHeaderNameJsonKey: !Ref CustomHeaderNameJsonKey
-  #      #CustomHeaderName: !Ref CustomHeaderName
-  #      #CustomHeaderValueJsonKey: !Ref CustomHeaderValueJsonKey
-  #      HTTPPort: !Ref HTTPPort
-  #      Instance1: !GetAtt EC2Stack.Outputs.Instance1
-  #      Instance2: !GetAtt EC2Stack.Outputs.Instance2
-  #      PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-  #      PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
-  #      Prefix: !Ref Prefix
-  #      #Secret: !GetAtt SecretsManagerStack.Outputs.Secret
-  #      VPC: !GetAtt VPCStack.Outputs.VPC
-  #      
-  #      HealthyThresholdCount: 5
-  #      UnhealthyThresholdCount: 2
-  #      HealthCheckTimeoutSeconds: 5
-  #      HealthCheckIntervalSeconds: 30
-  #      HttpCode: 200
-  #      
-  #CloudFrontStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - SecretsManagerStack
-  #    - ALBStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
-  #    Parameters:
-  #      ALBDNSName: !GetAtt ALBStack.Outputs.ALBDNSName
-  #      CacheTTL: !Ref CloudFrontCacheTTL
-  #      CustomHeaderNameJsonKey: !Ref CustomHeaderNameJsonKey
-  #      CustomHeaderName: !Ref CustomHeaderName
-  #      CustomHeaderValueJsonKey: !Ref CustomHeaderValueJsonKey
-  #      #InstancePublicDnsName: !GetAtt EC2Stack.Outputs.InstancePublicDnsName
-  #      Prefix: !Ref Prefix
-  #      Secret: !GetAtt SecretsManagerStack.Outputs.Secret
