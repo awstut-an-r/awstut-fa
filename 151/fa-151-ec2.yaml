@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  Policy:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PublicSubnet1:
+    Type: String
+    
+  Thing:
+    Type: String
+    
+    
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    #DependsOn:
+    #  - WaitCondition
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      #ImageId: !Sub "{{resolve:ssm:${ParameterAmi}}}"
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+          SubnetId: !Ref PublicSubnet1
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash -xe
+          dnf update -y
+          dnf install python3.11-pip -y
+          dnf install -y git
+          
+          mkdir ~/certs
+          
+          curl -o ~/certs/Amazon-root-CA-1.pem \
+            https://www.amazontrust.com/repository/AmazonRootCA1.pem
+          
+          aws iot create-keys-and-certificate \
+            --set-as-active \
+            --certificate-pem-outfile "~/certs/device.pem.crt" \
+            --public-key-outfile "~/certs/public.pem.key" \
+            --private-key-outfile "~/certs/private.pem.key" > ~/output.txt
+          
+          certificate_arn=`cat ~/output.txt | jq -r .certificateArn`
+          
+          aws iot attach-thing-principal \
+            --thing-name "${Thing}" \
+            --principal "$certificate_arn"
+  
+          aws iot attach-policy \
+            --policy-name "${Policy}" \
+            --target "$certificate_arn"
+          
+          aws iot describe-endpoint \
+            --endpoint-type iot:Data-ATS > ~/endpoint.txt
+          
+          endpoint=`cat ~/endpoint.txt| jq -r .endpointAddress`
+          
+          python3.11 -m pip install awsiotsdk
+            
+          #mkdir ~/aws-iot-device-sdk-python-v2
+          #git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git ~/aws-iot-device-sdk-python-v2 --recursive
+          
+          cd ~ && git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git
+          
+          #python3 -m pip install ./aws-iot-device-sdk-python-v2
+          #python3.11 -m pip install ~/aws-iot-device-sdk-python-v2
+          
+          cd ~/aws-iot-device-sdk-python-v2/samples && python3.11 pubsub.py \
+            --endpoint "$endpoint" \
+            --ca_file ~/certs/Amazon-root-CA-1.pem \
+            --cert ~/certs/device.pem.crt \
+            --key ~/certs/private.pem.key \
+            #--client_id "basicPubSub" \
+            #--topic "sdk/test/python" \
+            --topic "test/${Prefix}" \
+            --count 10 >> ~/result.txt
+  
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+  
+  InstanceRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: InstancePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- ssm:PutParameter
+                  - iot:AttachPolicy
+                  - iot:AttachThingPrincipal
+                  - iot:CreateKeysAndCertificate
+                  - iot:DescribeEndpoint
+                Resource:
+                  - "*"
+                  #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterAmi}"
+                

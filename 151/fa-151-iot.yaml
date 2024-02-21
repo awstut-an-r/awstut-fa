@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Thing:
+    Type: AWS::IoT::Thing
+    Properties:
+      #AttributePayload: 
+      #  Attributes: 
+      #    Key: Value
+      ThingName: !Ref Prefix
+      
+  Policy:
+    Type: AWS::IoT::Policy
+    DeletionPolicy: Delete
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - iot:Publish
+              - iot:Subscribe
+              - iot:Receive
+              - iot:Connect
+            Resource: "*"
+      PolicyName: !Ref Prefix
+      #Tags: 
+      #  - Tag
+      
+  #PolicyPrincipalAttachment:
+  #  Type: AWS::IoT::PolicyPrincipalAttachment
+  #  Properties:
+  #    PolicyName: !Ref Policy
+  #    Principal:
+      
+
+Outputs:
+  Thing:
+    Value: !Ref Thing
+    
+  Policy:
+    Value: !Ref Policy
