@@ -9,9 +9,6 @@ Resources:
   Thing:
     Type: AWS::IoT::Thing
     Properties:
-      #AttributePayload: 
-      #  Attributes: 
-      #    Key: Value
       ThingName: !Ref Prefix
       
   Policy:
@@ -29,15 +26,7 @@ Resources:
               - iot:Connect
             Resource: "*"
       PolicyName: !Ref Prefix
-      #Tags: 
-      #  - Tag
-      
-  #PolicyPrincipalAttachment:
-  #  Type: AWS::IoT::PolicyPrincipalAttachment
-  #  Properties:
-  #    PolicyName: !Ref Policy
-  #    Principal:
-      
+
 
 Outputs:
   Thing:
