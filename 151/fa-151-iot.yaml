@@ -1,7 +1,13 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  ClientName:
+    Type: String
+
   Prefix:
+    Type: String
+    
+  TopicName:
     Type: String
     
     
@@ -13,7 +19,6 @@ Resources:
       
   Policy:
     Type: AWS::IoT::Policy
-    DeletionPolicy: Delete
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -21,10 +26,19 @@ Resources:
           - Effect: Allow
             Action:
               - iot:Publish
-              - iot:Subscribe
               - iot:Receive
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${TopicName}"
+          - Effect: Allow
+            Action:
+              - iot:Subscribe
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${TopicName}"
+          - Effect: Allow
+            Action:
               - iot:Connect
-            Resource: "*"
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${ClientName}"
       PolicyName: !Ref Prefix
 
 
