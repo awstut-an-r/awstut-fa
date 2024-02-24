@@ -8,11 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-151
-    
-  ClientName:
-    Type: String
-    Default: test-client
-    
+
   InstanceImageId:
     Type: String
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
@@ -27,12 +23,11 @@ Parameters:
     
     
 Resources:
-  IoTStack1:
+  IoTStack:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot.yaml"
       Parameters:
-        ClientName: !Ref ClientName
         Prefix: !Ref Prefix
         TopicName: !Ref TopicName
 
@@ -49,16 +44,16 @@ Resources:
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
+      - IoTStack
       - VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        ClientName: !Ref ClientName
         ImageId: !Ref InstanceImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
-        Policy: !GetAtt IoTStack1.Outputs.Policy
+        Policy: !GetAtt IoTStack.Outputs.Policy
         Prefix: !Ref Prefix
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-        Thing: !GetAtt IoTStack1.Outputs.Thing
+        Thing: !GetAtt IoTStack.Outputs.Thing
         TopicName: !Ref TopicName
