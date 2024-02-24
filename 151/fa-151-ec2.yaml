@@ -1,8 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
-  ClientName:
-    Type: String
-
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
 
@@ -75,7 +72,6 @@ Resources:
           endpoint=`cat ~/endpoint.txt| jq -r .endpointAddress`
           
           python3.11 -m pip install awsiotsdk
-            
           cd ~ && git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git
 
           cd ~/aws-iot-device-sdk-python-v2/samples && python3.11 pubsub.py \
@@ -83,9 +79,9 @@ Resources:
             --ca_file ~/certs/Amazon-root-CA-1.pem \
             --cert ~/certs/device.pem.crt \
             --key ~/certs/private.pem.key \
-            --client_id "${ClientName}" \
+            --client_id "${Thing}" \
             --topic "${TopicName}" \
-            --count 10
+            --count 5
   
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
