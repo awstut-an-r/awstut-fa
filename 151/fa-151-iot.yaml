@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  ClientName:
-    Type: String
-
   Prefix:
     Type: String
     
@@ -38,9 +35,9 @@ Resources:
             Action:
               - iot:Connect
             Resource:
-              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${ClientName}"
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${Thing}"
       PolicyName: !Ref Prefix
-
+      
 
 Outputs:
   Thing:
