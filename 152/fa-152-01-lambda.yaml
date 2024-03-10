@@ -33,20 +33,15 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #LAYER_PACKAGE: !Ref LayerPackage
           PREFIX: !Ref Prefix
           REGION: !Ref AWS::Region
           SSM_SERVICE_ROLE: !Ref SSMServiceRole
-          #URLS_PARAMETER: !Ref UrlsParameter
-          #S3_BUCKET: !Ref CodeS3Bucket
-          #S3_BUCKET_FOLDER: !Ref Prefix
       Code:
         ZipFile: |
           import boto3
           import cfnresponse
           import os
 
-          #activation_id = os.environ['ACTIVATION_ID']
           prefix = os.environ['PREFIX']
           region = os.environ['REGION']
           ssm_service_role = os.environ['SSM_SERVICE_ROLE']
@@ -68,23 +63,8 @@ Resources:
             try:
               if event['RequestType'] == CREATE:
                 ssm_response = ssm_client.create_activation(
-                  #Description='string',
                   DefaultInstanceName=prefix,
-                  IamRole=ssm_service_role,
-                  #RegistrationLimit=123,
-                  #ExpirationDate=datetime(2015, 1, 1),
-                  #Tags=[
-                  #  {
-                  #    'Key': 'string',
-                  #    'Value': 'string'
-                  #  },
-                  #],
-                  #RegistrationMetadata=[
-                  #  {
-                  #    'Key': 'string',
-                  #    'Value': 'string'
-                  #  },
-                  #]
+                  IamRole=ssm_service_role
                 )
                 
                 physical_resource_id = ssm_response[key_name_id]
@@ -98,7 +78,6 @@ Resources:
                   ActivationId=physical_resource_id
                 )
                 
-              #cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
               cfnresponse.send(
                 event=event,
                 context=context,
@@ -112,8 +91,6 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
       Timeout: !Ref Timeout
