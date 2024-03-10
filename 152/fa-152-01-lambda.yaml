@@ -57,7 +57,6 @@ Resources:
           ssm_client = boto3.client('ssm', region_name=region)
           
           def lambda_handler(event, context):
-            #print(activation_id)
             print(event)
           
             try:
