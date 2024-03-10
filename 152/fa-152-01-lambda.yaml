@@ -73,7 +73,6 @@ Resources:
               elif event['RequestType'] == DELETE:
                 physical_resource_id = event['PhysicalResourceId']
                 ssm_response = ssm_client.delete_activation(
-                  #ActivationId=event['ResourceProperties'][key_name]
                   ActivationId=physical_resource_id
                 )
                 
