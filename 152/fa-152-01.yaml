@@ -8,11 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-152
-    
-  #AvailabilityZone:
-  #  Type: String
-  #  Default: a
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -36,11 +32,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-01-iam.yaml"
       Parameters:
-        #AvailabilityZone: !Ref AvailabilityZone
-        #CidrIp: 10.0.1.0/24
-        #HTTPSPort: 443
         Prefix: !Ref Prefix
-        #VPCCidrBlock: 10.0.0.0/16
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack
