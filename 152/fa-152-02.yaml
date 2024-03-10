@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-152
+
+  NodeId:
+    Type: String
+    Default: mi-0eb22a29750efc73c
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    Default: 300
+
+Resources:
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-ssm.yaml"
+      Parameters:
+        NodeId: !Ref NodeId
+        Prefix: !Ref Prefix
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

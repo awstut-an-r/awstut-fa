@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  NodeId:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+    
+Resources:
+  RunShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-shellscript-association"
+      Name: AWS-RunShellScript
+      #OutputLocation:
+      #  S3Location:
+      #    #OutputS3BucketName: !Ref LogBucketName
+      #    OutputS3BucketName: !Ref BucketName
+      #    #OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+      #    OutputS3KeyPrefix: !Sub "shellscript-association-log"
+      #ParameterValues:
+      Parameters:
+        commands:
+          - "touch /tmp/test.txt"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref NodeId
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

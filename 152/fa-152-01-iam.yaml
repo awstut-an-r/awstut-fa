@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #ClientName:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+    
+Resources:
+  SSMServiceRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnEquals:
+                aws:SourceArn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      #Policies:
+      #  - PolicyName: InstancePolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            #- ssm:PutParameter
+      #            - iot:AttachPolicy
+      #            - iot:AttachThingPrincipal
+      #            - iot:CreateKeysAndCertificate
+      #            - iot:DescribeEndpoint
+      #          Resource:
+      #            - "*"
+      #            #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterAmi}"
+      
+      
+Outputs:
+  SSMServiceRole:
+    #Value: !GetAtt SSMServiceRole.Arn
+    Value: !Ref SSMServiceRole
