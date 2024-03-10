@@ -11,7 +11,7 @@ Parameters:
 
   NodeId:
     Type: String
-    Default: mi-0eb22a29750efc73c
+    Default: [managed-node-id]
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
