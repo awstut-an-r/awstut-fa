@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  VPCCidrBlock:
+    Type: String
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+  
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+      
+      
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToInternet:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+          
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
+      #GroupDescription: Allow HTTP from ALBSecurityGroup.
+      GroupDescription: Not allow any connections.
+      VpcId: !Ref VPC
+      #SecurityGroupIngress:
+      #  #- IpProtocol: tcp
+      #  #  FromPort: !Ref HTTPPort
+      #  #  ToPort: !Ref HTTPPort
+      #  #  SourceSecurityGroupId: !Ref ALBSecurityGroup
+      #  - IpProtocol: tcp
+      #    FromPort: !Ref HTTPPort
+      #    ToPort: !Ref HTTPPort
+      #    CidrIp: 0.0.0.0/0
+          
+          
+Outputs:
+  VPC:
+    Value: !Ref VPC
+      
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
+  
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
