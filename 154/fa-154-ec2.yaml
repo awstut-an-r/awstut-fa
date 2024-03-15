@@ -9,9 +9,6 @@ Parameters:
   CertificateName:
     Type: String
 
-  #ClientName:
-  #  Type: String
-
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
 
@@ -49,12 +46,9 @@ Parameters:
 Resources:
   Instance:
     Type: AWS::EC2::Instance
-    #DependsOn:
-    #  - WaitCondition
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId
-      #ImageId: !Sub "{{resolve:ssm:${ParameterAmi}}}"
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
@@ -69,38 +63,15 @@ Resources:
           dnf install python3.11-pip -y
           dnf install -y git
           
-          #mkdir ~/certs
           mkdir ~/${CertificateDir}
           
           root_cert="Amazon-root-CA-1.pem"
-          #curl -o ~/certs/Amazon-root-CA-1.pem \
           curl -o ~/${CertificateDir}/$root_cert \
             https://www.amazontrust.com/repository/AmazonRootCA1.pem
             
           aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/${CertificateDir}/
           aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/${CertificateDir}/
           aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/${CertificateDir}/
-          
-          #aws iot create-keys-and-certificate \
-          #  --set-as-active \
-          #  --certificate-pem-outfile "~/certs/device.pem.crt" \
-          #  --public-key-outfile "~/certs/public.pem.key" \
-          #  --private-key-outfile "~/certs/private.pem.key" > ~/output.txt
-          
-          #certificate_arn=`cat ~/output.txt | jq -r .certificateArn`
-          
-          #aws iot attach-thing-principal \
-          #  --thing-name "${Thing}" \
-          #  --principal "$certificate_arn"
-  
-          #aws iot attach-policy \
-          #  --policy-name "${Policy}" \
-          #  --target "$certificate_arn"
-          
-          #aws iot describe-endpoint \
-          #  --endpoint-type iot:Data-ATS > ~/endpoint.txt
-          
-          #endpoint=`cat ~/endpoint.txt| jq -r .endpointAddress`
           
           python3.11 -m pip install awsiotsdk
           cd ~ && git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git
@@ -140,22 +111,8 @@ Resources:
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              #- Effect: Allow
-              #  Action:
-              #    #- ssm:PutParameter
-              #    #- iot:AttachPolicy
-              #    #- iot:AttachThingPrincipal
-              #    #- iot:CreateKeysAndCertificate
-              #    #- iot:DescribeEndpoint
-              #  Resource:
-              #    - "*"
-              #    #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterAmi}"
               - Effect: Allow
                 Action:
-                  #- s3:DeleteObject
                   - s3:GetObject
-                  #- s3:ListBucket
                 Resource:
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
-                
