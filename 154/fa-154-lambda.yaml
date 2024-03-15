@@ -9,18 +9,9 @@ Parameters:
     
   CertificateName:
     Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-  #  
-  #EphemeralStorageSize:
-  #  Type: Number
-    
+
   Handler:
     Type: String
-    
-  #LayerPackage:
-  #  Type: String
 
   Prefix:
     Type: String
@@ -30,16 +21,10 @@ Parameters:
     
   PublicKeyName:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
-    
-  #Timeout:
-  #  Type: Number
-  
+
   Thing:
     Type: String
     
@@ -59,12 +44,9 @@ Resources:
         Variables:
           BUCKET_NAME: !Ref BucketName
           CERTIFICATE_NAME: !Ref CertificateName
-          #LAYER_PACKAGE: !Ref LayerPackage
           PRIVATE_KEY_NAME: !Ref PrivateKeyName
           PUBLIC_KEY_NAME: !Ref PublicKeyName
           REGION: !Ref AWS::Region
-          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
-          #S3_BUCKET_FOLDER: !Ref Prefix
           THING: !Ref Thing
       Code:
         ZipFile: |
@@ -80,10 +62,7 @@ Resources:
           thing = os.environ['THING']
           
           s3_key = '{folder}/{object}'
-          #certificate_name = 'device.pem.crt'
-          #public_key_name = 'public.pem.key'
-          #private_key_name = 'private.pem.key'
-          
+
           CREATE = 'Create'
           response_data = {}
           
@@ -96,8 +75,7 @@ Resources:
                 iot_response = iot_client.create_keys_and_certificate(
                   setAsActive=True
                 )
-                #print(iot_response)
-                
+
                 # certificate
                 s3_client.put_object(
                   Body=iot_response['certificatePem'],
@@ -173,8 +151,7 @@ Resources:
               print(e)
               
               certificate_id = event['PhysicalResourceId']
-              
-              #cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+             
               cfnresponse.send(
                 event=event,
                 context=context,
@@ -182,12 +159,8 @@ Resources:
                 responseData=response_data,
                 physicalResourceId=certificate_id
                 )
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
 
@@ -212,8 +185,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- iot:AttachPolicy
-                  #- iot:AttachThingPrincipal
                   - iot:CreateKeysAndCertificate
                   - iot:DeleteCertificate
                   - iot:DescribeEndpoint
