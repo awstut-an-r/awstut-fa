@@ -4,15 +4,9 @@ Parameters:
   BucketName:
     Type: String
 
-  #ClientName:
-  #  Type: String
-
   Prefix:
     Type: String
-    
-  #TopicName:
-  #  Type: String
-    
+
     
 Resources:
   SSMServiceRole:
@@ -41,16 +35,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- s3:DeleteObject
                   - s3:GetObject
-                  #- s3:ListBucket
                   - s3:PutObject
                 Resource:
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/*"
       
       
 Outputs:
   SSMServiceRole:
-    #Value: !GetAtt SSMServiceRole.Arn
     Value: !Ref SSMServiceRole
