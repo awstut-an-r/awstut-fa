@@ -33,20 +33,15 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #LAYER_PACKAGE: !Ref LayerPackage
           PREFIX: !Ref Prefix
           REGION: !Ref AWS::Region
           SSM_SERVICE_ROLE: !Ref SSMServiceRole
-          #URLS_PARAMETER: !Ref UrlsParameter
-          #S3_BUCKET: !Ref CodeS3Bucket
-          #S3_BUCKET_FOLDER: !Ref Prefix
       Code:
         ZipFile: |
           import boto3
           import cfnresponse
           import os
 
-          #activation_id = os.environ['ACTIVATION_ID']
           prefix = os.environ['PREFIX']
           region = os.environ['REGION']
           ssm_service_role = os.environ['SSM_SERVICE_ROLE']
@@ -58,49 +53,22 @@ Resources:
           
           key_name_id = 'ActivationId'
           key_name_code = 'ActivationCode'
-          #key_name_instanceid = 'InstanceId'
           
           ssm_client = boto3.client('ssm', region_name=region)
           
           def lambda_handler(event, context):
-            #print(activation_id)
             print(event)
           
             try:
               if event['RequestType'] == CREATE:
                 create_activation_response = ssm_client.create_activation(
-                  #Description='string',
                   DefaultInstanceName=prefix,
-                  IamRole=ssm_service_role,
-                  #RegistrationLimit=123,
-                  #ExpirationDate=datetime(2015, 1, 1),
-                  #Tags=[
-                  #  {
-                  #    'Key': 'string',
-                  #    'Value': 'string'
-                  #  },
-                  #],
-                  #RegistrationMetadata=[
-                  #  {
-                  #    'Key': 'string',
-                  #    'Value': 'string'
-                  #  },
-                  #]
+                  IamRole=ssm_service_role
                 )
                 
                 physical_resource_id = create_activation_response[key_name_id]
                 response_data[key_name_id] = create_activation_response[key_name_id]
                 response_data[key_name_code] = create_activation_response[key_name_code]
-                
-                #describe_instance_response = client.describe_instance_information(
-                #  Filters=[
-                #    'Key': 'ActivationId',
-                #    'Values': [
-                #      create_activation_response[key_name_id]
-                #    ]
-                #  ]
-                #)
-                #response_data[key_name_instanceid] = describe_instance_response['InstanceInformationList'][0]['InstanceId']
               
               elif event['RequestType'] == DELETE:
                 physical_resource_id = event['PhysicalResourceId']
@@ -109,7 +77,6 @@ Resources:
                   ActivationId=physical_resource_id
                 )
                 
-              #cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
               cfnresponse.send(
                 event=event,
                 context=context,
@@ -123,8 +90,6 @@ Resources:
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
       FunctionName: !Sub "${Prefix}-function-01"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
       Timeout: !Ref Timeout
@@ -164,10 +129,3 @@ Outputs:
     
   ActivationCode:
     Value: !GetAtt CustomResource.ActivationCode
-    #Export:
-    #  Name: !Sub "${Prefix}-ActivationCode"
-    
-  #InstanceId:
-  #  Value: !GetAtt CustomResource.InstanceId
-  #  Export:
-  #    Name: !Sub "${Prefix}-InstanceId"
