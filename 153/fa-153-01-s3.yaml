@@ -1,15 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #Handler:
-  #  Type: String
-
   Prefix:
     Type: String
-    
-  #Runtime:
-  #  Type: String
-    
+
 
 Resources:
   Bucket:
@@ -20,16 +14,6 @@ Resources:
 
 
 Outputs:
-  #BucketArn:
-  #  Value: !GetAtt Bucket.Arn
-    
-  #BucketRegionalDomainName:
-  #  #Value: !GetAtt Bucket.DomainName
-  #  Value: !GetAtt Bucket.RegionalDomainName
-  
-  #BucketWebsiteURL:
-  #  Value: !GetAtt Bucket.WebsiteURL
-    
   BucketName:
     Value: !Ref Bucket
     Export:
