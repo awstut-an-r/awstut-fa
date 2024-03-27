@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #ClientName:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  #TopicName:
+  PublishTopicName:
+    Type: String
+    
+  SubscribeTopicName:
+    Type: String
+    
+    
+Resources:
+  Thing:
+    Type: AWS::IoT::Thing
+    Properties:
+      #AttributePayload: 
+      #  Attributes: 
+      #    Key: Value
+      ThingName: !Sub "${Prefix}-thing"
+      
+  Policy:
+    Type: AWS::IoT::Policy
+    #DeletionPolicy: Delete
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - iot:Connect
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${Thing}"
+          - Effect: Allow
+            Action:
+              - iot:Publish
+              #- iot:Receive
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${PublishTopicName}"
+          - Effect: Allow
+            Action:
+              - iot:Subscribe
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${SubscribeTopicName}"
+          - Effect: Allow
+            Action:
+              - iot:Receive
+            Resource:
+              - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${SubscribeTopicName}"
+      PolicyName: !Sub "${Prefix}-policy"
+      #Tags: 
+      #  - Tag
+      
+  #PolicyPrincipalAttachment:
+  #  Type: AWS::IoT::PolicyPrincipalAttachment
+  #  Properties:
+  #    PolicyName: !Ref Policy
+  #    Principal:
+      
+
+Outputs:
+  Thing:
+    Value: !Ref Thing
+    
+  Policy:
+    Value: !Ref Policy
