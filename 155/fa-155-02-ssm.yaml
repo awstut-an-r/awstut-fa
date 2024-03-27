@@ -1,15 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #AppDir:
-  #  Type: String
-
   BucketName:
     Type: String
 
-  #CertificateDir:
-  #  Type: String
-    
   CertificateName:
     Type: String
     
@@ -52,11 +46,8 @@ Resources:
       Name: AWS-RunShellScript
       OutputLocation:
         S3Location:
-          #OutputS3BucketName: !Ref LogBucketName
           OutputS3BucketName: !Ref BucketName
-          #OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
           OutputS3KeyPrefix: shellscript-association-log
-      #ParameterValues:
       Parameters:
         commands:
           - "apt-get -y install build-essential libssl-dev cmake unzip git python3-pip"
@@ -77,20 +68,14 @@ Resources:
           - !Sub 'su - ${UserName} -c "cd ~/aws-iot-device-client/build && cmake --build . --target aws-iot-device-client"'
           
           - !Sub 'su - ${UserName} -c "mkdir ~/dc-configs"'
-          #- !Sub 'su - ${UserName} -c "mkdir ~/policies"'
           - !Sub 'su - ${UserName} -c "mkdir ~/messages"'
-          #- !Sub 'su - ${UserName} -c "mkdir ~/certs/testconn"'
           - !Sub 'su - ${UserName} -c "mkdir ~/certs/pubsub"'
           - !Sub 'su - ${UserName} -c "mkdir ~/certs/jobs"'
           - !Sub 'su - ${UserName} -c "chmod 745 ~"'
-          #- !Sub 'su - ${UserName} -c "chmod 700 ~/certs/testconn"'
           - !Sub 'su - ${UserName} -c "chmod 700 ~/certs/pubsub"'
           - !Sub 'su - ${UserName} -c "chmod 700 ~/certs/jobs"'
           - !Sub 'su - ${UserName} -c "chmod 745 ~/messages"'
-          
-          #- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/certs/testconn/"'
-          #- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/certs/testconn/"'
-          #- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/certs/testconn"'
+
           - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/certs/pubsub/"'
           - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/certs/pubsub/"'
           - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/certs/pubsub"'
@@ -180,11 +165,6 @@ Resources:
           - !Sub 'su - ${UserName} -c "sudo mkdir /var/log/aws-iot-device-client"'
           - !Sub 'su - ${UserName} -c "sudo chmod 745 /var/log/aws-iot-device-client"'
           - !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} /var/log/aws-iot-device-client"'
-          
-          ##- "cd ~/aws-iot-device-client/build"
-          #- !Sub 'su - ${UserName} -c "cd ~/aws-iot-device-client/build"'
-          ##- "./aws-iot-device-client --config-file ~/dc-configs/dc-testconn-config.json"
-          #- !Sub 'su - ${UserName} -c "./aws-iot-device-client --config-file ~/dc-configs/dc-testconn-config.json"'
       Targets:
         - Key: InstanceIds
           Values:
