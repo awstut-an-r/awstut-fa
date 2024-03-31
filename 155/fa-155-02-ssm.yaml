@@ -159,8 +159,8 @@ Resources:
               }
             }
             EOF
-          - !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/dc-configs/dc-pubsub-config.json"'
-          - !Sub 'su - ${UserName} -c "chmod 644 ~/dc-configs/dc-pubsub-config.json"'
+          - !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/dc-configs/dc-pubsub-custom-config.json"'
+          - !Sub 'su - ${UserName} -c "chmod 644 ~/dc-configs/dc-pubsub-custom-config.json"'
           
           - !Sub 'su - ${UserName} -c "sudo mkdir /var/log/aws-iot-device-client"'
           - !Sub 'su - ${UserName} -c "sudo chmod 745 /var/log/aws-iot-device-client"'
