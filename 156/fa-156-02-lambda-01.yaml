@@ -12,21 +12,12 @@ Parameters:
     
   CertificateName:
     Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-  #  
-  #EphemeralStorageSize:
-  #  Type: Number
-    
+
   Handler:
     Type: String
     
   JobDocumentName:
     Type: String
-    
-  #LayerPackage:
-  #  Type: String
 
   Prefix:
     Type: String
@@ -36,10 +27,7 @@ Parameters:
     
   PublicKeyName:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
     
@@ -67,12 +55,9 @@ Resources:
           BUCKET_NAME: !Ref BucketName
           CERTIFICATE_NAME: !Ref CertificateName
           JOB_DOCUMENT_NAME: !Ref JobDocumentName
-          #LAYER_PACKAGE: !Ref LayerPackage
           PRIVATE_KEY_NAME: !Ref PrivateKeyName
           PUBLIC_KEY_NAME: !Ref PublicKeyName
           REGION: !Ref AWS::Region
-          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
-          #S3_BUCKET_FOLDER: !Ref Prefix
           THING: !Ref Thing
       Code:
         ZipFile: |
@@ -90,10 +75,6 @@ Resources:
           thing = os.environ['THING']
           
           s3_key = '{folder}/{object}'
-          #certificate_name = 'device.pem.crt'
-          #public_key_name = 'public.pem.key'
-          #private_key_name = 'private.pem.key'
-          #key_name_instanceid = 'InstanceId'
           
           CREATE = 'Create'
           response_data = {}
@@ -139,9 +120,7 @@ Resources:
                     object=private_key_name
                   )
                 )
-                
-                print('start job document')
-                
+
                 # job document
                 s3_client.put_object(
                   Body='{"operation": "echo","args": ["Hello world!"]}',
@@ -210,23 +189,15 @@ Resources:
                 )
             except Exception as e:
               print(e)
-              
-              #certificate_id = event['PhysicalResourceId']
-              
-              #cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+
               cfnresponse.send(
                 event=event,
                 context=context,
                 responseStatus=cfnresponse.FAILED,
-                responseData=response_data,
-                #physicalResourceId=certificate_id
+                responseData=response_data
                 )
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-02"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole2.Arn
       Timeout: !Ref Timeout
@@ -252,8 +223,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- iot:AttachPolicy
-                  #- iot:AttachThingPrincipal
                   - iot:CreateKeysAndCertificate
                   - iot:DeleteCertificate
                   - iot:DescribeEndpoint
@@ -286,9 +255,6 @@ Outputs:
     
   InstanceId:
     Value: !GetAtt CustomResource1.InstanceId
-    #Export:
-    #  Name: !Sub "${Prefix}-InstanceId"
-    
+
   IoTEndpoint:
     Value: !GetAtt CustomResource1.IoTEndpoint
-    
