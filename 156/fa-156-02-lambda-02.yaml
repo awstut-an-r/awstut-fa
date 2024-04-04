@@ -36,11 +36,8 @@ Resources:
         - !Ref Architecture
       Environment:
         Variables:
-          #BUCKET_NAME: !Ref BucketName
-          #JOB_DOCUMENT_NAME: !Ref JobDocumentName
           JOB_DOCUMENT_URL: !Sub "https://${BucketName}.s3.${AWS::Region}.amazonaws.com/jobs/${JobDocumentName}"
           REGION: !Ref AWS::Region
-          #S3_DOWNLOAD_ROLE_ARN: !GetAtt S3DownloadRole.Arn
           THING_ARN: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${Thing}"
       Code:
         ZipFile: |
@@ -48,11 +45,8 @@ Resources:
           import cfnresponse
           import os
           
-          #bucket_name = os.environ['BUCKET_NAME']
-          #job_document_name = os.environ['JOB_DOCUMENT_NAME']
           job_document_url = os.environ['JOB_DOCUMENT_URL']
           region = os.environ['REGION']
-          #s3_download_role_arn = os.environ['S3_DOWNLOAD_ROLE_ARN']
           thing_arn = os.environ['THING_ARN']
           
           CREATE = 'Create'
@@ -69,10 +63,6 @@ Resources:
                     thing_arn
                   ],
                   documentSource=job_document_url,
-                  #presignedUrlConfig={
-                  #  'roleArn': s3_download_role_arn,
-                  #  #'expiresInSec': 123
-                  #},
                   targetSelection='SNAPSHOT'
                 )
                 print(response)
@@ -99,8 +89,7 @@ Resources:
               print(e)
               
               job_id = event['PhysicalResourceId']
-              
-              #cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+
               cfnresponse.send(
                 event=event,
                 context=context,
@@ -110,11 +99,8 @@ Resources:
                 )
       FunctionName: !Sub "${Prefix}-function-03"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole3.Arn
-      #Timeout: !Ref Timeout
       
   FunctionRole3:
     Type: AWS::IAM::Role
@@ -137,92 +123,12 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- iot:AttachPolicy
-                  #- iot:AttachThingPrincipal
-                  #- iot:CreateKeysAndCertificate
-                  #- iot:DeleteCertificate
-                  #- iot:DescribeEndpoint
-                  #- iot:UpdateCertificate
                   - iot:CreateJob
                   - iot:DeleteJob
                 Resource:
                   - "*"
               - Effect: Allow
                 Action:
-                  #- s3:DeleteObject
                   - s3:GetObject
-                  #- s3:ListBucket
                 Resource:
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${BucketName}/jobs/${JobDocumentName}"
-              #- Effect: Allow
-              #  Action:
-              #    #- s3:DeleteObject
-              #    - iam:PassRole
-              #    #- s3:ListBucket
-              #  Resource: "*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:PutObject
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:DeleteObject
-              #    - s3:GetObject
-              #    - s3:ListBucket
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${BucketName}"
-              #    - !Sub "arn:aws:s3:::${BucketName}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - ssm:DescribeInstanceInformation
-              #  Resource: "*"
-                
-                
-  #S3DownloadRole:
-  #  Type: AWS::IAM::Role
-  #  DeletionPolicy: Delete
-  #  Properties:
-  #    AssumeRolePolicyDocument:
-  #      Version: 2012-10-17
-  #      Statement:
-  #        - Effect: Allow
-  #          Action: sts:AssumeRole
-  #          Principal:
-  #            Service:
-  #              - lambda.amazonaws.com
-  #    #ManagedPolicyArns:
-  #    #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-  #    Policies:
-  #      - PolicyName: S3DownloadPolicy
-  #        PolicyDocument:
-  #          Version: 2012-10-17
-  #          Statement:
-  #            #- Effect: Allow
-  #            #  Action:
-  #            #    #- iot:AttachPolicy
-  #            #    #- iot:AttachThingPrincipal
-  #            #    - iot:CreateKeysAndCertificate
-  #            #    - iot:DeleteCertificate
-  #            #    - iot:DescribeEndpoint
-  #            #    - iot:UpdateCertificate
-  #            #  Resource:
-  #            #    - "*"
-  #            #- Effect: Allow
-  #            #  Action:
-  #            #    - s3:PutObject
-  #            #  Resource:
-  #            #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
-  #            - Effect: Allow
-  #              Action:
-  #                #- s3:DeleteObject
-  #                - s3:GetObject
-  #                #- s3:ListBucket
-  #              Resource:
-  #                #- !Sub "arn:aws:s3:::${BucketName}"
-  #                - !Sub "arn:aws:s3:::${BucketName}/jobs/${JobDocumentName}"
-  #            #- Effect: Allow
-  #            #  Action:
-  #            #    - ssm:DescribeInstanceInformation
-  #            #  Resource: "*"
