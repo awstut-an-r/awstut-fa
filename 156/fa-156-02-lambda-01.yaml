@@ -1,0 +1,294 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ActivationId:
+    Type: String
+
+  Architecture:
+    Type: String
+    
+  BucketName:
+    Type: String
+    
+  CertificateName:
+    Type: String
+    
+  #CodeS3Bucket:
+  #  Type: String
+  #  
+  #EphemeralStorageSize:
+  #  Type: Number
+    
+  Handler:
+    Type: String
+    
+  JobDocumentName:
+    Type: String
+    
+  #LayerPackage:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  PrivateKeyName:
+    Type: String
+    
+  PublicKeyName:
+    Type: String
+    
+  #RequirementsParameter:
+  #  Type: String
+    
+  Runtime:
+    Type: String
+    
+  Thing:
+    Type: String
+    
+  Timeout:
+    Type: Number
+  
+    
+Resources:
+  CustomResource1:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function2.Arn
+
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          ACTIVATION_ID: !Ref ActivationId
+          BUCKET_NAME: !Ref BucketName
+          CERTIFICATE_NAME: !Ref CertificateName
+          JOB_DOCUMENT_NAME: !Ref JobDocumentName
+          #LAYER_PACKAGE: !Ref LayerPackage
+          PRIVATE_KEY_NAME: !Ref PrivateKeyName
+          PUBLIC_KEY_NAME: !Ref PublicKeyName
+          REGION: !Ref AWS::Region
+          #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
+          #S3_BUCKET_FOLDER: !Ref Prefix
+          THING: !Ref Thing
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          activation_id = os.environ['ACTIVATION_ID']
+          bucket_name = os.environ['BUCKET_NAME']
+          certificate_name = os.environ['CERTIFICATE_NAME']
+          job_document_name = os.environ['JOB_DOCUMENT_NAME']
+          private_key_name = os.environ['PRIVATE_KEY_NAME']
+          public_key_name = os.environ['PUBLIC_KEY_NAME']
+          region = os.environ['REGION']
+          thing = os.environ['THING']
+          
+          s3_key = '{folder}/{object}'
+          #certificate_name = 'device.pem.crt'
+          #public_key_name = 'public.pem.key'
+          #private_key_name = 'private.pem.key'
+          #key_name_instanceid = 'InstanceId'
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          iot_client = boto3.client('iot', region_name=region)
+          s3_client = boto3.client('s3', region_name=region)
+          ssm_client = boto3.client('ssm', region_name=region)
+        
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == 'Create':
+                iot_response = iot_client.create_keys_and_certificate(
+                  setAsActive=True
+                )
+                print(iot_response)
+                
+                # certificate
+                s3_client.put_object(
+                  Body=iot_response['certificatePem'],
+                  Bucket=bucket_name,
+                  Key=s3_key.format(
+                    folder=thing,
+                    object=certificate_name
+                  )
+                )
+                
+                # public key
+                s3_client.put_object(
+                  Body=iot_response['keyPair']['PublicKey'],
+                  Bucket=bucket_name,
+                  Key=s3_key.format(
+                    folder=thing,
+                    object=public_key_name
+                  )
+                )
+                
+                # private key
+                s3_client.put_object(
+                  Body=iot_response['keyPair']['PrivateKey'],
+                  Bucket=bucket_name,
+                  Key=s3_key.format(
+                    folder=thing,
+                    object=private_key_name
+                  )
+                )
+                
+                print('start job document')
+                
+                # job document
+                s3_client.put_object(
+                  Body='{"operation": "echo","args": ["Hello world!"]}',
+                  Bucket=bucket_name,
+                  Key=s3_key.format(
+                    folder='jobs',
+                    object=job_document_name
+                  )
+                )
+                response_data['CertificateArn'] = iot_response['certificateArn']
+                certificate_id = iot_response['certificateId']
+                
+                iot_endpoint_response = iot_client.describe_endpoint(
+                  endpointType='iot:Data-ATS'
+                )
+                print(iot_endpoint_response)
+                
+                response_data['IoTEndpoint'] = iot_endpoint_response['endpointAddress']
+                
+                describe_instance_response = ssm_client.describe_instance_information(
+                  Filters=[
+                    {
+                      'Key': 'ActivationIds',
+                      'Values': [
+                        activation_id
+                      ]
+                    }
+                  ]
+                )
+                print(describe_instance_response)
+                
+                response_data['InstanceId'] = describe_instance_response['InstanceInformationList'][0]['InstanceId']
+                
+              elif event['RequestType'] == 'Delete':
+                certificate_id = event['PhysicalResourceId']
+              
+                # delete objects in s3 bucket
+                list_response = s3_client.list_objects_v2(
+                  Bucket=bucket_name
+                )
+                
+                if 'Contents' in list_response and len(list_response['Contents']):
+                  for obj in list_response['Contents']:
+                    delete_response = s3_client.delete_object(
+                      Bucket=bucket_name,
+                      Key=obj['Key']
+                    )
+                    print(delete_response)
+                  
+                # inactive and delete iot cert
+                iot_client.update_certificate(
+                  certificateId=certificate_id,
+                  newStatus='INACTIVE'
+                )
+                iot_client.delete_certificate(
+                  certificateId=certificate_id,
+                  forceDelete=True
+                )
+                
+              cfnresponse.send(
+                event=event,
+                context=context,
+                responseStatus=cfnresponse.SUCCESS,
+                responseData=response_data,
+                physicalResourceId=certificate_id
+                )
+            except Exception as e:
+              print(e)
+              
+              #certificate_id = event['PhysicalResourceId']
+              
+              #cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+              cfnresponse.send(
+                event=event,
+                context=context,
+                responseStatus=cfnresponse.FAILED,
+                responseData=response_data,
+                #physicalResourceId=certificate_id
+                )
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      Timeout: !Ref Timeout
+
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionPolicy2
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- iot:AttachPolicy
+                  #- iot:AttachThingPrincipal
+                  - iot:CreateKeysAndCertificate
+                  - iot:DeleteCertificate
+                  - iot:DescribeEndpoint
+                  - iot:UpdateCertificate
+                Resource:
+                  - "*"
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
+                  - !Sub "arn:aws:s3:::${BucketName}/jobs/*"
+              - Effect: Allow
+                Action:
+                  - s3:DeleteObject
+                  - s3:GetObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              - Effect: Allow
+                Action:
+                  - ssm:DescribeInstanceInformation
+                Resource: "*"
+                  
+                  
+Outputs:
+  CertificateArn:
+    Value: !GetAtt CustomResource1.CertificateArn
+    
+  InstanceId:
+    Value: !GetAtt CustomResource1.InstanceId
+    #Export:
+    #  Name: !Sub "${Prefix}-InstanceId"
+    
+  IoTEndpoint:
+    Value: !GetAtt CustomResource1.IoTEndpoint
+    
