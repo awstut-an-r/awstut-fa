@@ -8,36 +8,11 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-157
-    
-  #ClientName:
-  #  Type: String
-  #  Default: test-client
-    
-  #InstanceImageId:
-  #  Type: String
-  #  #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-  #  Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
-  #  
-  #InstanceType:
-  #  Type: String
-  #  Default: t4g.nano
-    
-  #IoTAppDir:
-  #  Type: String
-  #  Default: testconn
-  #  
-  #IoTCertificateDir:
-  #  Type: String
-  #  Default: certs
-    
+
   IoTCertificateName:
     Type: String
     Default: device.pem.crt
-    
-  #IoTJobDocumentName:
-  #  Type: String
-  #  Default: hello-world-job.json
-    
+
   IoTPrivateKeyName:
     Type: String
     Default: private.pem.key
@@ -45,15 +20,7 @@ Parameters:
   IoTPublicKeyName:
     Type: String
     Default: public.pem.key
-    
-  #IoTRootCertificateName:
-  #  Type: String
-  #  Default: AmazonRootCA1.pem
-    
-  #LambdaArchitecture:
-  #  Type: String
-  #  Default: arm64
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -69,25 +36,7 @@ Parameters:
   LambdaTimeout:
     Type: Number
     Default: 30
-    
-  #NodeId:
-  #  Type: String
-  #  Default: [node-id]
-  
-  #PublishTopicName:
-  #  Type: String
-  #  #Default: test/topic
-  #  Default: test/pubtopic
-  #  
-  #SubscribeTopicName:
-  #  Type: String
-  #  Default: test/subtopic
-    
-  #TopicName:
-  #  Type: String
-  #  Default: "*"
-    #Default: device/+/details
-    
+
   UserName:
     Type: String
     Default: awstut
@@ -98,30 +47,16 @@ Parameters:
     
     
 Resources:
-  #S3Stack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-s3.yaml"
-  #    Parameters:
-  #      #Handler: !Ref LambdaHandler
-  #      Prefix: !Ref Prefix
-  #      #Runtime: !Ref LambdaRuntime
-
   IoTStack1:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-iot-01.yaml"
       Parameters:
-        #ClientName: !Ref ClientName
         Prefix: !Ref Prefix
-        #TopicName: !Ref TopicName
-        #PublishTopicName: !Ref PublishTopicName
-        #SubscribeTopicName: !Ref SubscribeTopicName
         
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- S3Stack
       - IoTStack1
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-lambda.yaml"
@@ -130,13 +65,11 @@ Resources:
           Fn::ImportValue:
             !Sub "${Prefix}-ActivationId"
         Architecture: !Ref LambdaArchitecture
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         BucketName:
           Fn::ImportValue:
             !Sub "${Prefix}-BucketName"
         CertificateName: !Ref IoTCertificateName
         Handler: !Ref LambdaHandler
-        #JobDocumentName: !Ref IoTJobDocumentName
         Prefix: !Ref Prefix
         PrivateKeyName: !Ref IoTPrivateKeyName
         PublicKeyName: !Ref IoTPublicKeyName
@@ -152,11 +85,9 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-iot-02.yaml"
       Parameters:
         CertificateArn: !GetAtt LambdaStack.Outputs.CertificateArn
-        #ClientName: !Ref ClientName
         Policy: !GetAtt IoTStack1.Outputs.Policy
         Prefix: !Ref Prefix
         Thing: !GetAtt IoTStack1.Outputs.Thing
-        #TopicName: !Ref TopicName
         
   SSMStack:
     Type: AWS::CloudFormation::Stack
@@ -165,41 +96,15 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-ssm.yaml"
       Parameters:
-        #AppDir: !Ref IoTAppDir
         BucketName:
           Fn::ImportValue:
             !Sub "${Prefix}-BucketName"
-        #CertificateDir: !Ref CertificateDir
         CertificateName: !Ref IoTCertificateName
         Endpoint: !GetAtt LambdaStack.Outputs.IoTEndpoint
-        #NodeId: !Ref NodeId
-        #InstanceId:
-        #  Fn::ImportValue:
-        #    !Sub "${Prefix}-InstanceId"
         InstanceId: !GetAtt LambdaStack.Outputs.InstanceId
         Prefix: !Ref Prefix
         PrivateKeyName: !Ref IoTPrivateKeyName
         PublicKeyName: !Ref IoTPublicKeyName
-        #PublishTopicName: !Ref PublishTopicName
-        #SubscribeTopicName: !Ref SubscribeTopicName
         Thing: !GetAtt IoTStack1.Outputs.Thing
-        #TopicName: !Ref TopicName
         UserName: !Ref UserName
         WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-
-  #LambdaStack2:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - SSMStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-02-lambda-02.yaml"
-  #    Parameters:
-  #      Architecture: !Ref LambdaArchitecture
-  #      BucketName:
-  #        Fn::ImportValue:
-  #          !Sub "${Prefix}-BucketName"
-  #      Handler: !Ref LambdaHandler
-  #      JobDocumentName: !Ref IoTJobDocumentName
-  #      Prefix: !Ref Prefix
-  #      Runtime: !Ref LambdaRuntime
-  #      Thing: !GetAtt IoTStack1.Outputs.Thing
