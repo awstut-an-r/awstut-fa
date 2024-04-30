@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #AppDir:
+  #  Type: String
+
+  BucketName:
+    Type: String
+
+  #CertificateDir:
+  #  Type: String
+    
+  CertificateName:
+    Type: String
+    
+  Endpoint:
+    Type: String
+    
+  InstanceId:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PrivateKeyName:
+    Type: String
+    
+  PublicKeyName:
+    Type: String
+    
+  #PublishTopicName:
+  #  Type: String
+  #  
+  #SubscribeTopicName:
+  #  Type: String
+    
+  Thing:
+    Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+  UserName:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+    
+Resources:
+  RunShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-shellscript-association"
+      Name: AWS-RunShellScript
+      OutputLocation:
+        S3Location:
+          #OutputS3BucketName: !Ref LogBucketName
+          OutputS3BucketName: !Ref BucketName
+          #OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+          OutputS3KeyPrefix: shellscript-association-log
+      #ParameterValues:
+      Parameters:
+        commands:
+          - "sudo apt-get -y install cmake libssl-dev"
+          
+          - !Sub 'su - ${UserName} -c "git clone https://github.com/aws/aws-cli.git"'
+          - !Sub 'su - ${UserName} -c "cd aws-cli && git checkout v2 && sudo pip3 install --break-system-packages -r requirements.txt"'
+          - !Sub 'su - ${UserName} -c "cd aws-cli && git checkout v2 && sudo pip3 install --break-system-packages ."'
+          
+          - !Sub 'su - ${UserName} -c "cd ~ && python3 -m pip install awsiotsdk --break-system-packages"'
+          - !Sub 'su - ${UserName} -c "git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git"'
+          
+          - !Sub 'su - ${UserName} -c "mkdir ~/certs"'
+          - !Sub 'su - ${UserName} -c "curl -o ~/certs/AmazonRootCA1.pem https://www.amazontrust.com/repository/AmazonRootCA1.pem"'
+          - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/certs/"'
+          - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/certs/"'
+          - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/certs/"'
+          
+          - !Sub "row=`sed -n '/print(\"Received message/=' /home/${UserName}/aws-iot-device-sdk-python-v2/samples/pubsub.py`"
+          - !Sub |
+            cat << EOF | sed ''$row'r /dev/stdin' /home/${UserName}/aws-iot-device-sdk-python-v2/samples/pubsub.py > /home/${UserName}/aws-iot-device-sdk-python-v2/samples/pubsub2.py
+                # insert start
+                topic_parsed = False
+                if "/" in topic:
+                    parsed_topic = topic.split("/")
+                    if len(parsed_topic) == 3:
+                        # this topic has the correct format
+                        if (parsed_topic[0] == 'device') and (parsed_topic[2] == 'details'):
+                            # this is a topic we care about, so check the 2nd element
+                            if (parsed_topic[1] == 'temp'):
+                                print("Received temperature request: {}".format(payload))
+                                topic_parsed = True
+                            if (parsed_topic[1] == 'light'):
+                                print("Received light request: {}".format(payload))
+                                topic_parsed = True
+                if not topic_parsed:
+                    print("Unrecognized message topic.")
+                # insert end
+            EOF
+          - !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/aws-iot-device-sdk-python-v2/samples/pubsub2.py"'
+          
+          - !Sub 'su - ${UserName} -c "cp ~/aws-iot-device-sdk-python-v2/samples/pubsub.py ~/aws-iot-device-sdk-python-v2/samples/pubsub3.py"'
+          - !Sub |
+            su - ${UserName} -c "sed -i 's/message = \"{} \[{}\]\".format(message_string, publish_count)/message = \"{}\".format(message_string)/' ~/aws-iot-device-sdk-python-v2/samples/pubsub3.py"
+          - !Sub |
+            su - ${UserName} -c "sed -i 's/message_json = json.dumps(message)/message_json = json.dumps(json.loads(message))/' ~/aws-iot-device-sdk-python-v2/samples/pubsub3.py"
+          
+          #- "apt-get -y install build-essential libssl-dev cmake unzip git python3-pip"
+          #- !Sub 'su - ${UserName} -c "export PATH=$PATH:~/.local/bin"'
+          #- !Sub 'su - ${UserName} -c "git clone https://github.com/aws/aws-cli.git"'
+          #- !Sub 'su - ${UserName} -c "cd aws-cli && git checkout v2 && sudo pip3 install --break-system-packages -r requirements.txt"'
+          #- !Sub 'su - ${UserName} -c "cd aws-cli && git checkout v2 && sudo pip3 install --break-system-packages ."'
+          
+          #- !Sub 'su - ${UserName} -c "mkdir ~/certs"'
+          #- !Sub 'su - ${UserName} -c "curl -o ~/certs/AmazonRootCA1.pem https://www.amazontrust.com/repository/AmazonRootCA1.pem"'
+          #- !Sub 'su - ${UserName} -c "chmod 745 ~"'
+          #- !Sub 'su - ${UserName} -c "chmod 700 ~/certs"'
+          #- !Sub 'su - ${UserName} -c "chmod 644 ~/certs/AmazonRootCA1.pem"'
+          #
+          #- !Sub 'su - ${UserName} -c "git clone https://github.com/awslabs/aws-iot-device-client aws-iot-device-client"'
+          #- !Sub 'su - ${UserName} -c "mkdir ~/aws-iot-device-client/build"'
+          #- !Sub 'su - ${UserName} -c "cd ~/aws-iot-device-client/build && cmake ../"'
+          #- !Sub 'su - ${UserName} -c "cd ~/aws-iot-device-client/build && cmake --build . --target aws-iot-device-client"'
+          #
+          #- !Sub 'su - ${UserName} -c "mkdir ~/dc-configs"'
+          ##- !Sub 'su - ${UserName} -c "mkdir ~/policies"'
+          ##- !Sub 'su - ${UserName} -c "mkdir ~/messages"'
+          ##- !Sub 'su - ${UserName} -c "mkdir ~/certs/testconn"'
+          ##- !Sub 'su - ${UserName} -c "mkdir ~/certs/pubsub"'
+          #- !Sub 'su - ${UserName} -c "mkdir ~/certs/jobs"'
+          #- !Sub 'su - ${UserName} -c "chmod 745 ~"'
+          ##- !Sub 'su - ${UserName} -c "chmod 700 ~/certs/testconn"'
+          ##- !Sub 'su - ${UserName} -c "chmod 700 ~/certs/pubsub"'
+          #- !Sub 'su - ${UserName} -c "chmod 700 ~/certs/jobs"'
+          ##- !Sub 'su - ${UserName} -c "chmod 745 ~/messages"'
+          #
+          ##- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/certs/pubsub/"'
+          ##- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/certs/pubsub/"'
+          ##- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/certs/pubsub/"'
+          #- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/certs/jobs/"'
+          #- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/certs/jobs/"'
+          #- !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/certs/jobs/"'
+          #- !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/certs/jobs/*"'
+          #- !Sub 'su - ${UserName} -c "sudo chmod 644 ~/certs/jobs/*"'
+          #- !Sub 'su - ${UserName} -c "sudo chmod 600 ~/certs/jobs/${PrivateKeyName}"'
+          #
+          ##- !Sub 'su - ${UserName} -c "mkdir ~/.aws-iot-device-client"'
+          ##- !Sub 'su - ${UserName} -c "mkdir ~/.aws-iot-device-client/log"'
+          ##- !Sub 'su - ${UserName} -c "chmod 745 ~/.aws-iot-device-client/log"'
+          ##- !Sub 'su - ${UserName} -c "echo " " > ~/.aws-iot-device-client/log/aws-iot-device-client.log"'
+          ##- !Sub 'su - ${UserName} -c "echo " " > ~/.aws-iot-device-client/log/pubsub_rx_msgs.log"'
+          ##- !Sub 'su - ${UserName} -c "chmod 600 ~/.aws-iot-device-client/log/*"'
+          #
+          ##- !Sub |
+          ##  cat << EOF > /home/${UserName}/messages/sample-ws-message.json
+          ##  {
+          ##    "temperature": 28,
+          ##    "humidity": 80,
+          ##    "barometer": 1013,
+          ##    "wind": {
+          ##      "velocity": 22,
+          ##      "bearing": 255
+          ##    }
+          ##  }
+          ##  EOF
+          ##- !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/messages/sample-ws-message.json"'
+          ##- !Sub 'su - ${UserName} -c "chmod 600 ~/messages/*"'
+          #
+          #- !Sub 'su - ${UserName} -c "chmod 745 ~/dc-configs"'
+          #- !Sub |
+          #  cat << EOF > /home/${UserName}/dc-configs/dc-jobs-config.json
+          #  {
+          #    "endpoint": "${Endpoint}",
+          #    "cert": "~/certs/jobs/${CertificateName}",
+          #    "key": "~/certs/jobs/${PrivateKeyName}",
+          #    "root-ca": "~/certs/AmazonRootCA1.pem",
+          #    "thing-name": "${Thing}",
+          #    "logging": {
+          #      "enable-sdk-logging": true,
+          #      "level": "DEBUG",
+          #      "type": "STDOUT",
+          #      "file": ""
+          #    },
+          #    "jobs": {
+          #      "enabled": true,
+          #      "handler-directory": ""
+          #    },
+          #    "tunneling": {
+          #      "enabled": false
+          #    },
+          #    "device-defender": {
+          #      "enabled": false,
+          #      "interval": 300
+          #    },
+          #    "fleet-provisioning": {
+          #      "enabled": false,
+          #      "template-name": "",
+          #      "template-parameters": "",
+          #      "csr-file": "",
+          #      "device-key": ""
+          #    },
+          #    "samples": {
+          #      "pub-sub": {
+          #        "enabled": false,
+          #        "publish-topic": "",
+          #        "publish-file": "",
+          #        "subscribe-topic": "",
+          #        "subscribe-file": ""
+          #      }
+          #    },
+          #    "config-shadow": {
+          #      "enabled": false
+          #    },
+          #    "sample-shadow": {
+          #      "enabled": false,
+          #      "shadow-name": "",
+          #      "shadow-input-file": "",
+          #      "shadow-output-file": ""
+          #    }
+          #  }
+          #  EOF
+          #- !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/dc-configs/dc-jobs-config.json"'
+          #- !Sub 'su - ${UserName} -c "chmod 644 ~/dc-configs/dc-jobs-config.json"'
+          #
+          #- !Sub 'su - ${UserName} -c "sudo mkdir /var/log/aws-iot-device-client"'
+          #- !Sub 'su - ${UserName} -c "sudo chmod 745 /var/log/aws-iot-device-client"'
+          #- !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} /var/log/aws-iot-device-client"'
+          #
+          ###- "cd ~/aws-iot-device-client/build"
+          ##- !Sub 'su - ${UserName} -c "cd ~/aws-iot-device-client/build"'
+          ###- "./aws-iot-device-client --config-file ~/dc-configs/dc-testconn-config.json"
+          ##- !Sub 'su - ${UserName} -c "./aws-iot-device-client --config-file ~/dc-configs/dc-testconn-config.json"'
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref InstanceId
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
