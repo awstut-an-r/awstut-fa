@@ -23,7 +23,7 @@ Parameters:
     
   PhoneNumber:
     Type: String
-    Default: +818030105525
+    Default: [phone-number]
     
     
 Resources:
