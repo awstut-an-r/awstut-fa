@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-160
+    
+  PhoneNumber:
+    Type: String
+    Default: [phone-number]
+    
+  TopicName:
+    Type: String
+    Default: device/+/data
+    
+
+Resources:
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        PhoneNumber: !Ref PhoneNumber
+        Prefix: !Ref Prefix
+        
+  IoTStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SNSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        SnsTopicArn: !GetAtt SNSStack.Outputs.SnsTopicArn
+        TopicName: !Ref TopicName
