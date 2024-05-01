@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-158
+    
+  DestTopicName:
+    Type: String
+    Default: device/data/temp
+    
+  SourceTopicName:
+    Type: String
+    Default: device/+/data
+
+
+Resources:
+  IoTStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot.yaml"
+      Parameters:
+        DestTopicName: !Ref DestTopicName
+        Prefix: !Ref Prefix
+        SourceTopicName: !Ref SourceTopicName
