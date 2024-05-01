@@ -12,22 +12,11 @@ Resources:
   Topic:
     Type: AWS::SNS::Topic
     Properties:
-      #ArchivePolicy: Json
-      #ContentBasedDeduplication: Boolean
-      #DataProtectionPolicy: Json
-      #DeliveryStatusLogging: 
-      #  - LoggingConfig
-      #DisplayName: String
       FifoTopic: false
-      #KmsMasterKeyId: String
-      #SignatureVersion: String
       Subscription: 
         - Endpoint: !Ref PhoneNumber
           Protocol: sms
-      #Tags: 
-      #  - Tag
       TopicName: !Sub "${Prefix}-sns-topic"
-      #TracingConfig: String
       
       
 Outputs:
