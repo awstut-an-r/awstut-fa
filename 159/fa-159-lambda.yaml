@@ -1,80 +1,49 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  Architecture:
+  TemplateBucketName:
     Type: String
-
-  Handler:
-    Type: String
+    Default: awstut-bucket
     
   Prefix:
     Type: String
+    Default: fa-159
     
-  Runtime:
+  LambdaArchitecture:
     Type: String
+    Default: arm64
     
-  TopicArn:
+  LambdaHandler:
     Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+    
+  PhoneNumber:
+    Type: String
+    Default: +818030105525
     
     
 Resources:
-  Function:
-    Type: AWS::Lambda::Function
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      Architectures:
-        - !Ref Architecture
-      Environment:
-        Variables:
-          REGION: !Ref AWS::Region
-          TOPIC: !Ref TopicArn
-      Code:
-        ZipFile: |
-          import boto3
-          import json
-          import os
-          
-          topic = os.environ['TOPIC']
-          region = os.environ['REGION']
-          
-          client = boto3.client('sns', region_name=region)
-          
-          def lambda_handler(event, context):
-            response = client.publish(
-              TopicArn=topic,
-              Subject='hogehoge',
-              Message='fugafuga'
-              )
-            print(response)
-            
-            return {
-              'statusCode': 200,
-              'body': json.dumps(response, indent=2)
-            }
-      FunctionName: !Sub "${Prefix}-function"
-      Handler: !Ref Handler
-      Runtime: !Ref Runtime
-      Role: !GetAtt FunctionRole.Arn
-
-  FunctionRole:
-    Type: AWS::IAM::Role
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        PhoneNumber: !Ref PhoneNumber
+        Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SNSStack
     Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRole
-            Principal:
-              Service:
-                - lambda.amazonaws.com
-      ManagedPolicyArns:
-        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
-      Policies:
-        - PolicyName: SNSPublishPolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - sns:Publish
-                Resource:
-                  - !Ref TopicArn
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        TopicArn: !GetAtt SNSStack.Outputs.TopicArn
