@@ -1,0 +1,46 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-161
+    
+  DynamodbPartitionKey:
+    Type: String
+    Default: sample_time
+    
+  DynamodbSortKey:
+    Type: String
+    Default: device_id
+    
+  TopicName:
+    Type: String
+    Default: device/+/data
+    
+
+Resources:
+  DynamodbStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-dynamodb.yaml"
+      Parameters:
+        PartitionKey: !Ref DynamodbPartitionKey
+        Prefix: !Ref Prefix
+        SortKey: !Ref DynamodbSortKey
+        
+  IoTStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - DynamodbStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot.yaml"
+      Parameters:
+        PartitionKey: !Ref DynamodbPartitionKey
+        Prefix: !Ref Prefix
+        SortKey: !Ref DynamodbSortKey
+        Table: !GetAtt DynamodbStack.Outputs.Table
+        TopicName: !Ref TopicName
