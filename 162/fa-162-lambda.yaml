@@ -12,10 +12,7 @@ Parameters:
     
   Runtime:
     Type: String
-    
-  #TopicArn:
-  #  Type: String
-    
+
     
 Resources:
   Function:
@@ -23,10 +20,6 @@ Resources:
     Properties:
       Architectures:
         - !Ref Architecture
-      #Environment:
-      #  Variables:
-      #    REGION: !Ref AWS::Region
-      #    #TOPIC: !Ref TopicArn
       Code:
         ZipFile: |
           import boto3
@@ -46,34 +39,10 @@ Resources:
             )
 
             return response
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
-      #Timeout: !Ref Timeout
-      #VpcConfig:
-      #  SecurityGroupIds:
-      #    - !Ref FunctionSecurityGroup
-      #  SubnetIds:
-      #    - !Ref FunctionSubnet
-      
-  #FunctionUrl:
-  #  Type: AWS::Lambda::Url
-  #  Properties:
-  #    AuthType: NONE
-  #    TargetFunctionArn: !GetAtt Function.Arn
-  #
-  #FunctionUrlPermission:
-  #  Type: AWS::Lambda::Permission
-  #  Properties:
-  #    Action: lambda:InvokeFunctionUrl
-  #    FunctionName: !GetAtt Function.Arn
-  #    FunctionUrlAuthType: NONE
-  #    Principal: "*"
   
   FunctionRole:
     Type: AWS::IAM::Role
@@ -97,7 +66,6 @@ Resources:
                 Action:
                   - sns:Publish
                 Resource:
-                  #- !Ref TopicArn
                   - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
                   
                   
