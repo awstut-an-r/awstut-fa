@@ -19,76 +19,12 @@ Resources:
     Type: AWS::IoT::TopicRule
     Properties:
       RuleName: wx_friendly_text
-      #Tags: 
-      #  - Tag
       TopicRulePayload: 
         Actions: 
-          -
-            #CloudwatchAlarm: 
-            #  CloudwatchAlarmAction
-            #CloudwatchLogs: 
-            #  CloudwatchLogsAction
-            #CloudwatchMetric: 
-            #  CloudwatchMetricAction
-            #DynamoDB: 
-            #  HashKeyField: !Ref PartitionKey
-            #  HashKeyType: NUMBER
-            #  #HashKeyValue: ${timestamp()}
-            #  HashKeyValue: ${temperature}
-            #  #PayloadField: String
-            #  RangeKeyField: !Ref SortKey
-            #  RangeKeyType: NUMBER
-            #  RangeKeyValue: ${cast(topic(2) AS DECIMAL)}
-            #  RoleArn: !GetAtt TopicRuleRole.Arn
-            #  TableName: !Ref Table
-            #DynamoDBv2: 
-            #  DynamoDBv2Action
-            #Elasticsearch: 
-            #  ElasticsearchAction
-            #Firehose: 
-            #  FirehoseAction
-            #Http: 
-            #  HttpAction
-            #IotAnalytics: 
-            #  IotAnalyticsAction
-            #IotEvents: 
-            #  IotEventsAction
-            #IotSiteWise: 
-            #  IotSiteWiseAction
-            #Kafka: 
-            #  KafkaAction
-            #Kinesis: 
-            #  KinesisAction
-            Lambda: 
+          - Lambda: 
               FunctionArn: !Ref FunctionArn
-            #Location: 
-            #  LocationAction
-            #OpenSearch: 
-            #  OpenSearchAction
-            #Republish: 
-            #  #Headers: 
-            #  #  RepublishActionHeaders
-            #  Qos: 0
-            #  RoleArn: !GetAtt TopicRuleRole.Arn
-            #  Topic: !Ref DestTopicName
-            #S3: 
-            #  S3Action
-            #Sns: 
-            #  MessageFormat: RAW
-            #  RoleArn: !GetAtt TopicRuleRole.Arn
-            #  TargetArn: !Ref SnsTopicArn
-            #Sqs: 
-            #  SqsAction
-            #StepFunctions: 
-            #  StepFunctionsAction
-            #Timestream: 
-            #  TimestreamAction
         AwsIotSqlVersion: 2016-03-23
-        #Description: String
-        #ErrorAction: 
-        #  Action
         RuleDisabled: false
-        #Sql: !Sub "SELECT topic(2) as device_id, temperature FROM '${SourceTopicName}'"
         Sql: !Sub |
           SELECT 
             cast(topic(2) AS DECIMAL) as device_id, 
@@ -109,8 +45,6 @@ Resources:
             Principal:
               Service:
                 - iot.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: TopicRulePolicy
           PolicyDocument:
@@ -118,16 +52,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- iot:AttachPolicy
-                  #- iot:AttachThingPrincipal
-                  #- iot:CreateKeysAndCertificate
-                  #- iot:DeleteCertificate
-                  #- iot:DescribeEndpoint
-                  #- iot:UpdateCertificate
-                  #- dynamodb:PutItem
                   - lambda:InvokeFunction
                 Resource:
                   - !Ref FunctionArn
-                  #- !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
-                  #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${DestTopicName}"
-                  #- "*"
