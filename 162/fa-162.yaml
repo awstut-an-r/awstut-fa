@@ -8,15 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-162
-    
-  #DynamodbPartitionKey:
-  #  Type: String
-  #  Default: sample_time
-  #  
-  #DynamodbSortKey:
-  #  Type: String
-  #  Default: device_id
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -49,8 +41,6 @@ Resources:
         
   LambdaStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - SNSStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
@@ -58,8 +48,7 @@ Resources:
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
-        #TopicArn: !GetAtt SNSStack.Outputs.TopicArn
-        
+
   IoTStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
