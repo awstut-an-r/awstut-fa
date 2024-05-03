@@ -33,25 +33,11 @@ Resources:
             '${SnsTopicArn}' as notify_topic_arn
           FROM '${TopicName}' WHERE temperature > 30
         
-  TopicRuleRole:
-    Type: AWS::IAM::Role
-    DeletionPolicy: Delete
+  Permission:
+    Type: AWS::Lambda::Permission
     Properties:
-      AssumeRolePolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRole
-            Principal:
-              Service:
-                - iot.amazonaws.com
-      Policies:
-        - PolicyName: TopicRulePolicy
-          PolicyDocument:
-            Version: 2012-10-17
-            Statement:
-              - Effect: Allow
-                Action:
-                  - lambda:InvokeFunction
-                Resource:
-                  - !Ref FunctionArn
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref FunctionArn
+      Principal: iot.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !GetAtt TopicRule.Arn
