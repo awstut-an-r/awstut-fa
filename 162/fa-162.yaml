@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-162
+    
+  #DynamodbPartitionKey:
+  #  Type: String
+  #  Default: sample_time
+  #  
+  #DynamodbSortKey:
+  #  Type: String
+  #  Default: device_id
+  
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+    
+  PhoneNumber:
+    Type: String
+    Default: [phone-number]
+    
+  TopicName:
+    Type: String
+    Default: device/+/data
+    
+
+Resources:
+  SNSStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-sns.yaml"
+      Parameters:
+        PhoneNumber: !Ref PhoneNumber
+        Prefix: !Ref Prefix
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - SNSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        #TopicArn: !GetAtt SNSStack.Outputs.TopicArn
+        
+  IoTStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SNSStack
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        Prefix: !Ref Prefix
+        SnsTopicArn: !GetAtt SNSStack.Outputs.TopicArn
+        TopicName: !Ref TopicName
