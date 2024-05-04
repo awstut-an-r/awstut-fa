@@ -1,34 +1,18 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #ClientName:
-  #  Type: String
-
   Prefix:
     Type: String
-    
-  #PublishTopicName:
-  #  Type: String
-  #  
-  #SubscribeTopicName:
-  #  Type: String
-    
-  #TopicName:
-  #  Type: String
-    
+
     
 Resources:
   Thing:
     Type: AWS::IoT::Thing
     Properties:
-      #AttributePayload: 
-      #  Attributes: 
-      #    Key: Value
       ThingName: !Sub "${Prefix}-thing"
       
   Policy:
     Type: AWS::IoT::Policy
-    #DeletionPolicy: Delete
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -37,14 +21,12 @@ Resources:
             Action:
               - iot:Publish
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${PublishTopicName}"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/get"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/update"
           - Effect: Allow
             Action:
               - iot:Receive
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${PublishTopicName}"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/get/accepted"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/get/rejected"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/update/accepted"
@@ -54,8 +36,6 @@ Resources:
             Action:
               - iot:Subscribe
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${SubscribeTopicName}"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${TopicName}"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/get/accepted"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/get/rejected"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/update/accepted"
@@ -67,14 +47,6 @@ Resources:
             Resource:
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/test-*"
       PolicyName: !Sub "${Prefix}-policy"
-      #Tags: 
-      #  - Tag
-      
-  #PolicyPrincipalAttachment:
-  #  Type: AWS::IoT::PolicyPrincipalAttachment
-  #  Properties:
-  #    PolicyName: !Ref Policy
-  #    Principal:
       
 
 Outputs:
