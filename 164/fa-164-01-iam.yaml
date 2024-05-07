@@ -1,0 +1,56 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+
+  #ClientName:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+    
+Resources:
+  SSMServiceRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+            Condition:
+              StringEquals:
+                aws:SourceAccount: !Ref AWS::AccountId
+              ArnEquals:
+                aws:SourceArn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: SSMServiceRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- s3:DeleteObject
+                  - s3:GetObject
+                  #- s3:ListBucket
+                  - s3:PutObject
+                Resource:
+                  #- !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+      
+      
+Outputs:
+  SSMServiceRole:
+    #Value: !GetAtt SSMServiceRole.Arn
+    Value: !Ref SSMServiceRole

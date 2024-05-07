@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-164
+    
+  #AvailabilityZone:
+  #  Type: String
+  #  Default: a
+  
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+    
+  LambdaTimeout:
+    Type: Number
+    Default: 300
+    
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-01-s3.yaml"
+      Parameters:
+        #Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        #Runtime: !Ref LambdaRuntime
+        
+  IAMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-01-iam.yaml"
+      Parameters:
+        #AvailabilityZone: !Ref AvailabilityZone
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        #CidrIp: 10.0.1.0/24
+        #HTTPSPort: 443
+        Prefix: !Ref Prefix
+        #VPCCidrBlock: 10.0.0.0/16
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - IAMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-01-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        SSMServiceRole: !GetAtt IAMStack.Outputs.SSMServiceRole
+        Timeout: !Ref LambdaTimeout

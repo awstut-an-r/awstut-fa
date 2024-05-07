@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  MailAddress:
+    Type: String
+    
+  #PhoneNumber:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+    
+Resources:
+  Topic:
+    Type: AWS::SNS::Topic
+    Properties:
+      #ArchivePolicy: Json
+      #ContentBasedDeduplication: Boolean
+      #DataProtectionPolicy: Json
+      #DeliveryStatusLogging: 
+      #  - LoggingConfig
+      #DisplayName: String
+      FifoTopic: false
+      #KmsMasterKeyId: String
+      #SignatureVersion: String
+      Subscription: 
+        #- Endpoint: !Ref PhoneNumber
+        - Endpoint: !Ref MailAddress
+          Protocol: email
+      #Tags: 
+      #  - Tag
+      TopicName: !Sub "${Prefix}-sns-topic"
+      #TracingConfig: String
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      #Environment:
+      #  Variables:
+      #    REGION: !Ref AWS::Region
+      #    #TOPIC: !Ref TopicArn
+      Code:
+        ZipFile: |
+          import boto3
+          
+          def lambda_handler(event, context):
+            sns = boto3.client('sns')
+            message_text = "Caution! Score is {0}.".format(str(event['score']))
+            
+            response = sns.publish(
+              TopicArn = event['notify_topic_arn'],
+              Message = message_text
+            )
+
+            return response
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-03"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole3.Arn
+      
+  FunctionRole3:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: SNSPublishPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource:
+                  #- !Ref TopicArn
+                  - !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
+      
+      
+Outputs:
+  TopicArn:
+    Value: !Ref Topic
+  
+  Function3Arn:
+    Value: !GetAtt Function3.Arn

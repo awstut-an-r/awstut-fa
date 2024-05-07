@@ -1,0 +1,207 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #AppDir:
+  #  Type: String
+
+  BucketName:
+    Type: String
+
+  #CertificateDir:
+  #  Type: String
+    
+  CertificateName:
+    Type: String
+    
+  ClientId:
+    Type: String
+    
+  Endpoint:
+    Type: String
+    
+  InstanceId:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PrivateKeyName:
+    Type: String
+    
+  PublicKeyName:
+    Type: String
+    
+  #PublishTopicName:
+  #  Type: String
+  #  
+  #SubscribeTopicName:
+  #  Type: String
+    
+  Thing:
+    Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+  UserName:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+    
+Resources:
+  RunShellScriptAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-shellscript-association"
+      Name: AWS-RunShellScript
+      OutputLocation:
+        S3Location:
+          #OutputS3BucketName: !Ref LogBucketName
+          OutputS3BucketName: !Ref BucketName
+          #OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
+          OutputS3KeyPrefix: shellscript-association-log
+      #ParameterValues:
+      Parameters:
+        commands:
+          - "sudo apt-get -y install cmake libssl-dev"
+          
+          - !Sub 'su - ${UserName} -c "python3 -m pip install awsiotsdk --break-system-packages"'
+          - !Sub 'su - ${UserName} -c "git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git"'
+          
+          - !Sub 'su - ${UserName} -c "git clone https://github.com/aws/aws-cli.git"'
+          - !Sub 'su - ${UserName} -c "cd aws-cli && git checkout v2 && sudo pip3 install --break-system-packages -r requirements.txt"'
+          - !Sub 'su - ${UserName} -c "cd aws-cli && git checkout v2 && sudo pip3 install --break-system-packages ."'
+          
+          - !Sub 'su - ${UserName} -c "mkdir ~/certs"'
+          - !Sub 'su - ${UserName} -c "curl -o ~/certs/AmazonRootCA1.pem https://www.amazontrust.com/repository/AmazonRootCA1.pem"'
+          - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${CertificateName} ~/certs/"'
+          - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PrivateKeyName} ~/certs/"'
+          - !Sub 'su - ${UserName} -c "sudo aws s3 cp s3://${BucketName}/${Thing}/${PublicKeyName} ~/certs/"'
+          
+          - !Sub |
+            cat << EOF > /home/${UserName}/sample.py
+            from awscrt import mqtt
+            from awsiot import iotshadow, mqtt_connection_builder
+            import random
+            import time
+            from uuid import uuid4
+            
+            endpoint = '${Endpoint}'
+            port = 8883
+            cert_filepath = '/home/${UserName}/certs/${CertificateName}'
+            pri_key_filepath = '/home/${UserName}/certs/${PrivateKeyName}'
+            ca_filepath = '/home/${UserName}/certs/AmazonRootCA1.pem'
+            client_id = '${ClientId}'
+            thing_name = '${Thing}'
+            
+            default_sleep_time = 60
+            
+            sleep_time = default_sleep_time
+            score = -1
+            
+            
+            def on_shadow_delta_updated(delta):
+              global sleep_time
+              
+              if 'sleep_time' in delta.state:
+                value = delta.state['sleep_time']
+                sleep_time = value
+                print('sleep time changed: {0}'.format(sleep_time))
+              
+            
+            if __name__ == '__main__':
+              mqtt_connection = mqtt_connection_builder.mtls_from_path(
+                endpoint=endpoint,
+                port=port,
+                cert_filepath=cert_filepath,
+                pri_key_filepath=pri_key_filepath,
+                ca_filepath=ca_filepath,
+                client_id=client_id,
+                clean_session=False,
+                keep_alive_secs=30
+                )
+              connected_future = mqtt_connection.connect()
+              
+              shadow_client = iotshadow.IotShadowClient(mqtt_connection)
+              connected_future.result()
+              
+              try:
+                token = str(uuid4())
+                
+                delta_subscribed_future, _ = shadow_client.subscribe_to_shadow_delta_updated_events(
+                  request=iotshadow.ShadowDeltaUpdatedSubscriptionRequest(thing_name=thing_name),
+                  qos=mqtt.QoS.AT_LEAST_ONCE,
+                  callback=on_shadow_delta_updated)
+                delta_subscribed_future.result()
+                
+                while True:
+                  score = random.randrange(10)
+                  update_shadow_future = shadow_client.publish_update_shadow(
+                    request=iotshadow.UpdateShadowRequest(
+                      thing_name=thing_name,
+                      state=iotshadow.ShadowState(
+                        reported={
+                          'score': score,
+                          'sleep_time': sleep_time
+                          },
+                        desired={
+                          'score': score,
+                          'sleep_time': sleep_time
+                          }
+                        ),
+                      client_token=token
+                      ),
+                    qos=mqtt.QoS.AT_LEAST_ONCE
+                    )
+                  update_shadow_future.result()
+                  
+                  print(score, sleep_time)
+                  
+                  time.sleep(sleep_time)
+              
+              except Exception as e:
+                exit(e)
+            
+            
+            
+            
+            
+            
+            
+            
+          
+          #- !Sub "row=`sed -n '/print(\"Received message/=' /home/${UserName}/aws-iot-device-sdk-python-v2/samples/pubsub.py`"
+          #- !Sub |
+          #  cat << EOF | sed ''$row'r /dev/stdin' /home/${UserName}/aws-iot-device-sdk-python-v2/samples/pubsub.py > /home/${UserName}/aws-iot-device-sdk-python-v2/samples/pubsub2.py
+          #      # insert start
+          #      topic_parsed = False
+          #      if "/" in topic:
+          #          parsed_topic = topic.split("/")
+          #          if len(parsed_topic) == 3:
+          #              # this topic has the correct format
+          #              if (parsed_topic[0] == 'device') and (parsed_topic[2] == 'details'):
+          #                  # this is a topic we care about, so check the 2nd element
+          #                  if (parsed_topic[1] == 'temp'):
+          #                      print("Received temperature request: {}".format(payload))
+          #                      topic_parsed = True
+          #                  if (parsed_topic[1] == 'light'):
+          #                      print("Received light request: {}".format(payload))
+          #                      topic_parsed = True
+          #      if not topic_parsed:
+          #          print("Unrecognized message topic.")
+          #      # insert end
+          #  EOF
+          #- !Sub 'su - ${UserName} -c "sudo chown ${UserName}:${UserName} ~/aws-iot-device-sdk-python-v2/samples/pubsub2.py"'
+          
+          #- !Sub 'su - ${UserName} -c "cp ~/aws-iot-device-sdk-python-v2/samples/pubsub.py ~/aws-iot-device-sdk-python-v2/samples/pubsub3.py"'
+          #- !Sub |
+          #  su - ${UserName} -c "sed -i 's/message = \"{} \[{}\]\".format(message_string, publish_count)/message = \"{}\".format(message_string)/' ~/aws-iot-device-sdk-python-v2/samples/pubsub3.py"
+          #- !Sub |
+          #  su - ${UserName} -c "sed -i 's/message_json = json.dumps(message)/message_json = json.dumps(json.loads(message))/' ~/aws-iot-device-sdk-python-v2/samples/pubsub3.py"
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref InstanceId
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

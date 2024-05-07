@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Function3Arn:
+    Type: String
+
+  PartitionKey:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  SnsTopicArn:
+    Type: String
+    
+  SortKey:
+    Type: String
+  
+  Table:
+    Type: String
+    
+  TopicName:
+    Type: String
+    
+    
+Resources:
+  TopicRule1:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      RuleName: rule1
+      TopicRulePayload: 
+        Actions: 
+          #- DynamoDB: 
+          #    HashKeyField: !Ref PartitionKey
+          #    HashKeyType: STRING
+          #    #HashKeyValue: ${timestamp()}
+          #    HashKeyValue: ${topic(3)}
+          #    #PayloadField: String
+          #    RangeKeyField: !Ref SortKey
+          #    RangeKeyType: NUMBER
+          #    RangeKeyValue: ${timestamp()}
+          #    RoleArn: !GetAtt TopicRuleRole1.Arn
+          #    TableName: !Ref Table
+          - DynamoDBv2:
+              PutItem: 
+                TableName: !Ref Table
+              RoleArn: !GetAtt TopicRuleRole1.Arn
+        AwsIotSqlVersion: 2016-03-23
+        RuleDisabled: false
+        #Sql: !Sub |
+        #  SELECT
+        #    score,
+        #  FROM '${TopicName}'
+        Sql: !Sub |
+          SELECT
+            topic(3) as ${PartitionKey},
+            timestamp() as ${SortKey},
+            state.desired.score as score,
+          FROM '${TopicName}'
+          WHERE state.desired.sleep_time = state.reported.sleep_time
+        
+  TopicRuleRole1:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - iot.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: TopicRulePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- iot:AttachPolicy
+                  #- iot:AttachThingPrincipal
+                  #- iot:CreateKeysAndCertificate
+                  #- iot:DeleteCertificate
+                  #- iot:DescribeEndpoint
+                  #- iot:UpdateCertificate
+                  - dynamodb:PutItem
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
+                  #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${DestTopicName}"
+                  #- "*"
+                  
+  TopicRule2:
+    Type: AWS::IoT::TopicRule
+    Properties:
+      RuleName: rule2
+      #Tags: 
+      #  - Tag
+      TopicRulePayload: 
+        Actions: 
+          - Lambda: 
+              FunctionArn: !Ref Function3Arn
+        AwsIotSqlVersion: 2016-03-23
+        RuleDisabled: false
+        Sql: !Sub |
+          SELECT 
+            state.desired.score as score,
+            '${SnsTopicArn}' as notify_topic_arn
+          FROM '${TopicName}'
+          WHERE state.desired.score > 6
+            AND state.desired.sleep_time = state.reported.sleep_time
+          
+  Permission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      #EventSourceToken: String
+      FunctionName: !Ref Function3Arn
+      #FunctionUrlAuthType: String
+      Principal: iot.amazonaws.com
+      #PrincipalOrgID: String
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !GetAtt TopicRule2.Arn
