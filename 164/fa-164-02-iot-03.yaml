@@ -30,27 +30,12 @@ Resources:
       RuleName: rule1
       TopicRulePayload: 
         Actions: 
-          #- DynamoDB: 
-          #    HashKeyField: !Ref PartitionKey
-          #    HashKeyType: STRING
-          #    #HashKeyValue: ${timestamp()}
-          #    HashKeyValue: ${topic(3)}
-          #    #PayloadField: String
-          #    RangeKeyField: !Ref SortKey
-          #    RangeKeyType: NUMBER
-          #    RangeKeyValue: ${timestamp()}
-          #    RoleArn: !GetAtt TopicRuleRole1.Arn
-          #    TableName: !Ref Table
           - DynamoDBv2:
               PutItem: 
                 TableName: !Ref Table
               RoleArn: !GetAtt TopicRuleRole1.Arn
         AwsIotSqlVersion: 2016-03-23
         RuleDisabled: false
-        #Sql: !Sub |
-        #  SELECT
-        #    score,
-        #  FROM '${TopicName}'
         Sql: !Sub |
           SELECT
             topic(3) as ${PartitionKey},
@@ -71,8 +56,6 @@ Resources:
             Principal:
               Service:
                 - iot.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: TopicRulePolicy
           PolicyDocument:
@@ -80,24 +63,14 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- iot:AttachPolicy
-                  #- iot:AttachThingPrincipal
-                  #- iot:CreateKeysAndCertificate
-                  #- iot:DeleteCertificate
-                  #- iot:DescribeEndpoint
-                  #- iot:UpdateCertificate
                   - dynamodb:PutItem
                 Resource:
                   - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${Table}"
-                  #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${DestTopicName}"
-                  #- "*"
                   
   TopicRule2:
     Type: AWS::IoT::TopicRule
     Properties:
       RuleName: rule2
-      #Tags: 
-      #  - Tag
       TopicRulePayload: 
         Actions: 
           - Lambda: 
@@ -116,10 +89,7 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
-      #EventSourceToken: String
       FunctionName: !Ref Function3Arn
-      #FunctionUrlAuthType: String
       Principal: iot.amazonaws.com
-      #PrincipalOrgID: String
       SourceAccount: !Ref AWS::AccountId
       SourceArn: !GetAtt TopicRule2.Arn
