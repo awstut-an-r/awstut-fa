@@ -9,12 +9,6 @@ Parameters:
     
   SortKey:
     Type: String
-    
-  #ReadCapacityUnits:
-  #  Type: Number
-  #  
-  #WriteCapacityUnits:
-  #  Type: Number
 
 
 Resources:
@@ -27,40 +21,12 @@ Resources:
         - AttributeName: !Ref SortKey
           AttributeType: N
       BillingMode: PAY_PER_REQUEST
-      #GlobalSecondaryIndexes:
-      #  - IndexName: gsi-service-rating
-      #    KeySchema:
-      #      - AttributeName: service
-      #        KeyType: HASH
-      #      - AttributeName: rating
-      #        KeyType: RANGE
-      #    Projection:
-      #      NonKeyAttributes:
-      #        - user
-      #        - comment
-      #      ProjectionType: INCLUDE
       KeySchema:
         - AttributeName: !Ref PartitionKey
           KeyType: HASH
         - AttributeName: !Ref SortKey
           KeyType: RANGE
-      #LocalSecondaryIndexes:
-      #  - IndexName: lsi-user-datetime
-      #    KeySchema:
-      #      - AttributeName: user
-      #        KeyType: HASH
-      #      - AttributeName: datetime
-      #        KeyType: RANGE
-      #    Projection:
-      #      NonKeyAttributes:
-      #        - service
-      #        - comment
-      #      ProjectionType: INCLUDE
-      #ProvisionedThroughput:
-      #  ReadCapacityUnits: !Ref ReadCapacityUnits
-      #  WriteCapacityUnits: !Ref WriteCapacityUnits
       TableClass: STANDARD
-      #TableName: !Sub "${Prefix}-Music"
       TableName: !Sub "${Prefix}-table"
 
 
