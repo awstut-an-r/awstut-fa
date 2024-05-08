@@ -6,29 +6,16 @@ Parameters:
 
   Prefix:
     Type: String
-    
-  #PublishTopicName:
-  #  Type: String
-  #  
-  #SubscribeTopicName:
-  #  Type: String
-    
-  #TopicName:
-  #  Type: String
-    
+
     
 Resources:
   Thing:
     Type: AWS::IoT::Thing
     Properties:
-      #AttributePayload: 
-      #  Attributes: 
-      #    Key: Value
       ThingName: !Sub "${Prefix}-thing"
       
   Policy:
     Type: AWS::IoT::Policy
-    #DeletionPolicy: Delete
     Properties:
       PolicyDocument:
         Version: 2012-10-17
@@ -37,55 +24,24 @@ Resources:
             Action:
               - iot:Connect
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/test-*"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${ClientId}"
           - Effect: Allow
             Action:
               - iot:Publish
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/get"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/update"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/*"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/delete"
           - Effect: Allow
             Action:
               - iot:Receive
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/update/accepted"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/delete/accepted"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/get/accepted"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/update/rejected"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/delete/rejected"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/update/delta"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/$aws/things/${Thing}/shadow/*"
           - Effect: Allow
             Action:
               - iot:Subscribe
             Resource:
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/update/accepted"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/delete/accepted"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/get/accepted"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/update/rejected"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/delete/rejected"
               - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/update/delta"
-              #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/$aws/things/${Thing}/shadow/*"
-          #- Effect: Allow
-          #  Action:
-          #    - iot:GetThingShadow
-          #    - iot:UpdateThingShadow
-          #    - iot:DeleteThingShadow
-          #  Resource:
-          #    - !GetAtt Thing.Arn
       PolicyName: !Sub "${Prefix}-policy"
-      #Tags: 
-      #  - Tag
-      
-  #PolicyPrincipalAttachment:
-  #  Type: AWS::IoT::PolicyPrincipalAttachment
-  #  Properties:
-  #    PolicyName: !Ref Policy
-  #    Principal:
-      
+
 
 Outputs:
   Thing:
