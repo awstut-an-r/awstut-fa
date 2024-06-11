@@ -8,20 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-165
-    
-  #ClientName:
-  #  Type: String
-  #  Default: test-client
-    
-  #InstanceImageId:
-  #  Type: String
-  #  #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-  #  Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
-  #  
-  #InstanceType:
-  #  Type: String
-  #  Default: t4g.nano
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -53,11 +40,7 @@ Parameters:
   ThingAttributeName4:
     Type: String
     Default: attr4
-    
-  #ThingAttributeName5:
-  #  Type: String
-  #  Default: attr5
-    
+
   ThingAttributeValue1:
     Type: String
     Default: ATTR1
@@ -73,15 +56,7 @@ Parameters:
   ThingAttributeValue4:
     Type: String
     Default: ATTR4
-    
-  #ThingAttributeValue5:
-  #  Type: String
-  #  Default: ATTR5
-    
-  #TopicName:
-  #  Type: String
-  #  Default: test/topic
-    
+
     
 Resources:
   IoTStack:
@@ -92,15 +67,11 @@ Resources:
         AttributeName1: !Ref ThingAttributeName1
         AttributeName2: !Ref ThingAttributeName2
         AttributeName3: !Ref ThingAttributeName3
-        #AttributeName4: !Ref ThingAttributeName4
-        #ClientName: !Ref ClientName
         Prefix: !Ref Prefix
-        #TopicName: !Ref TopicName
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- S3Stack
       - IoTStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
