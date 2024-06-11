@@ -1,0 +1,106 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AttributeName1:
+    Type: String
+    
+  AttributeName2:
+    Type: String
+    
+  AttributeName3:
+    Type: String
+    
+  #AttributeName4:
+  #  Type: String
+
+  #ClientName:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+    
+Resources:
+  Thing:
+    Type: AWS::IoT::Thing
+    Properties:
+      AttributePayload: 
+        Attributes: 
+          id: 001
+          #hoge: HOGE
+      ThingName: !Sub "${Prefix}-thing"
+      
+  #Thing2:
+  #  Type: AWS::IoT::Thing
+  #  Properties:
+  #    AttributePayload: 
+  #      Attributes: 
+  #        #Key: Value
+  #        id: 002
+  #        hoge: HOGE
+  #    ThingName: !Sub "${Prefix}-thing-02"
+      
+  ThingType:
+    Type: AWS::IoT::ThingType
+    Properties:
+      DeprecateThingType: false
+      #Tags: 
+      #  - Tag
+      ThingTypeName: !Sub "${Prefix}-type"
+      ThingTypeProperties: 
+        SearchableAttributes: 
+          #- id
+          - !Ref AttributeName1
+          - !Ref AttributeName2
+          - !Ref AttributeName3
+          #- !Ref AttributeName4
+        ThingTypeDescription: test type
+      
+      
+  #Policy:
+  #  Type: AWS::IoT::Policy
+  #  #DeletionPolicy: Delete
+  #  Properties:
+  #    PolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action:
+  #            - iot:Publish
+  #            - iot:Receive
+  #          Resource:
+  #            - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topic/${TopicName}"
+  #        - Effect: Allow
+  #          Action:
+  #            - iot:Subscribe
+  #          Resource:
+  #            - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:topicfilter/${TopicName}"
+  #        - Effect: Allow
+  #          Action:
+  #            - iot:Connect
+  #          Resource:
+  #            #- !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${ClientName}"
+  #            - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:client/${Thing}"
+  #    PolicyName: !Ref Prefix
+  #    #Tags: 
+  #    #  - Tag
+      
+  #PolicyPrincipalAttachment:
+  #  Type: AWS::IoT::PolicyPrincipalAttachment
+  #  Properties:
+  #    PolicyName: !Ref Policy
+  #    Principal:
+      
+
+Outputs:
+  Thing:
+    Value: !Ref Thing
+    
+  ThingType:
+    Value: !Ref ThingType
+    
+  #Policy:
+  #  Value: !Ref Policy

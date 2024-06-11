@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-165
+    
+  #ClientName:
+  #  Type: String
+  #  Default: test-client
+    
+  #InstanceImageId:
+  #  Type: String
+  #  #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+  #  Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+  #  
+  #InstanceType:
+  #  Type: String
+  #  Default: t4g.nano
+  
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+    
+  LambdaTimeout:
+    Type: Number
+    Default: 30
+    
+  ThingAttributeName1:
+    Type: String
+    Default: attr1
+    
+  ThingAttributeName2:
+    Type: String
+    Default: attr2
+    
+  ThingAttributeName3:
+    Type: String
+    Default: attr3
+  
+  ThingAttributeName4:
+    Type: String
+    Default: attr4
+    
+  #ThingAttributeName5:
+  #  Type: String
+  #  Default: attr5
+    
+  ThingAttributeValue1:
+    Type: String
+    Default: ATTR1
+    
+  ThingAttributeValue2:
+    Type: String
+    Default: ATTR2
+    
+  ThingAttributeValue3:
+    Type: String
+    Default: ATTR3
+  
+  ThingAttributeValue4:
+    Type: String
+    Default: ATTR4
+    
+  #ThingAttributeValue5:
+  #  Type: String
+  #  Default: ATTR5
+    
+  #TopicName:
+  #  Type: String
+  #  Default: test/topic
+    
+    
+Resources:
+  IoTStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot.yaml"
+      Parameters:
+        AttributeName1: !Ref ThingAttributeName1
+        AttributeName2: !Ref ThingAttributeName2
+        AttributeName3: !Ref ThingAttributeName3
+        #AttributeName4: !Ref ThingAttributeName4
+        #ClientName: !Ref ClientName
+        Prefix: !Ref Prefix
+        #TopicName: !Ref TopicName
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      #- S3Stack
+      - IoTStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        AttributeName1: !Ref ThingAttributeName1
+        AttributeName2: !Ref ThingAttributeName2
+        AttributeName3: !Ref ThingAttributeName3
+        AttributeName4: !Ref ThingAttributeName4
+        AttributeValue1: !Ref ThingAttributeValue1
+        AttributeValue2: !Ref ThingAttributeValue2
+        AttributeValue3: !Ref ThingAttributeValue3
+        AttributeValue4: !Ref ThingAttributeValue4
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        Timeout: !Ref LambdaTimeout
+        Thing: !GetAtt IoTStack.Outputs.Thing
+        ThingType: !GetAtt IoTStack.Outputs.ThingType

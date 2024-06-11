@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  AttributeName1:
+    Type: String
+    
+  AttributeName2:
+    Type: String
+    
+  AttributeName3:
+    Type: String
+    
+  AttributeName4:
+    Type: String
+    
+  AttributeValue1:
+    Type: String
+    
+  AttributeValue2:
+    Type: String
+    
+  AttributeValue3:
+    Type: String
+    
+  AttributeValue4:
+    Type: String
+  
+  Handler:
+    Type: String
+    
+  #JobDocumentName:
+  #  Type: String
+    
+  #LayerPackage:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+  
+  Thing:
+    Type: String
+    
+  ThingType:
+    Type: String
+    
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function.Arn
+
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          ATTR_NAME1: !Ref AttributeName1
+          ATTR_NAME2: !Ref AttributeName2
+          ATTR_NAME3: !Ref AttributeName3
+          ATTR_NAME4: !Ref AttributeName4
+          ATTR_VALUE1: !Ref AttributeValue1
+          ATTR_VALUE2: !Ref AttributeValue2
+          ATTR_VALUE3: !Ref AttributeValue3
+          ATTR_VALUE4: !Ref AttributeValue4
+          REGION: !Ref AWS::Region
+          THING: !Ref Thing
+          THING_TYPE: !Ref ThingType
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          attr_name1 = os.environ['ATTR_NAME1']
+          attr_name2 = os.environ['ATTR_NAME2']
+          attr_name3 = os.environ['ATTR_NAME3']
+          attr_name4 = os.environ['ATTR_NAME4']
+          attr_value1 = os.environ['ATTR_VALUE1']
+          attr_value2 = os.environ['ATTR_VALUE2']
+          attr_value3 = os.environ['ATTR_VALUE3']
+          attr_value4 = os.environ['ATTR_VALUE4']
+          region = os.environ['REGION']
+          thing = os.environ['THING']
+          thing_type = os.environ['THING_TYPE']
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          iot_client = boto3.client('iot', region_name=region)
+        
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == 'Create':
+                response = iot_client.update_thing(
+                  thingName=thing,
+                  thingTypeName=thing_type,
+                  attributePayload={
+                    'attributes': {
+                      attr_name1: attr_value1,
+                      attr_name2: attr_value2,
+                      attr_name3: attr_value3,
+                      attr_name4: attr_value4
+                    },
+                    'merge': True
+                  }
+                  )
+                  
+              elif event['RequestType'] == 'Delete':
+                pass
+                
+              cfnresponse.send(
+                event=event,
+                context=context,
+                responseStatus=cfnresponse.SUCCESS,
+                responseData=response_data,
+                #physicalResourceId=certificate_id
+                )
+            except Exception as e:
+              print(e)
+              
+              cfnresponse.send(
+                event=event,
+                context=context,
+                responseStatus=cfnresponse.FAILED,
+                responseData=response_data,
+                #physicalResourceId=certificate_id
+                )
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              #- Effect: Allow
+              #  Action:
+              #    #- iot:AttachPolicy
+              #    #- iot:AttachThingPrincipal
+              #    - iot:CreateKeysAndCertificate
+              #    - iot:DeleteCertificate
+              #    - iot:DescribeEndpoint
+              #    - iot:UpdateCertificate
+              #  Resource:
+              #    - "*"
+              #- Effect: Allow
+              #  Action:
+              #    - s3:PutObject
+              #  Resource:
+              #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
+              #    #- !Sub "arn:aws:s3:::${BucketName}/jobs/*"
+              #- Effect: Allow
+              #  Action:
+              #    - s3:DeleteObject
+              #    - s3:GetObject
+              #    - s3:ListBucket
+              #  Resource:
+              #    - !Sub "arn:aws:s3:::${BucketName}"
+              #    - !Sub "arn:aws:s3:::${BucketName}/*"
+              #- Effect: Allow
+              #  Action:
+              #    - ssm:DescribeInstanceInformation
+              #  Resource: "*"
+              - Effect: Allow
+                Action:
+                  - iot:UpdateThing
+                Resource:
+                  - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${Thing}"
+                  
+                  
+#Outputs:
+#  CertificateArn:
+#    Value: !GetAtt CustomResource1.CertificateArn
+#    
+#  InstanceId:
+#    Value: !GetAtt CustomResource1.InstanceId
+#    #Export:
+#    #  Name: !Sub "${Prefix}-InstanceId"
+#    
+#  IoTEndpoint:
+#    Value: !GetAtt CustomResource1.IoTEndpoint
+    
