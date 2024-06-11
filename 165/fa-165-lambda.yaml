@@ -30,12 +30,6 @@ Parameters:
   
   Handler:
     Type: String
-    
-  #JobDocumentName:
-  #  Type: String
-    
-  #LayerPackage:
-  #  Type: String
 
   Prefix:
     Type: String
@@ -124,8 +118,7 @@ Resources:
                 event=event,
                 context=context,
                 responseStatus=cfnresponse.SUCCESS,
-                responseData=response_data,
-                #physicalResourceId=certificate_id
+                responseData=response_data
                 )
             except Exception as e:
               print(e)
@@ -134,15 +127,10 @@ Resources:
                 event=event,
                 context=context,
                 responseStatus=cfnresponse.FAILED,
-                responseData=response_data,
-                #physicalResourceId=certificate_id
+                responseData=response_data
                 )
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
       Timeout: !Ref Timeout
@@ -166,50 +154,8 @@ Resources:
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              #- Effect: Allow
-              #  Action:
-              #    #- iot:AttachPolicy
-              #    #- iot:AttachThingPrincipal
-              #    - iot:CreateKeysAndCertificate
-              #    - iot:DeleteCertificate
-              #    - iot:DescribeEndpoint
-              #    - iot:UpdateCertificate
-              #  Resource:
-              #    - "*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:PutObject
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
-              #    #- !Sub "arn:aws:s3:::${BucketName}/jobs/*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:DeleteObject
-              #    - s3:GetObject
-              #    - s3:ListBucket
-              #  Resource:
-              #    - !Sub "arn:aws:s3:::${BucketName}"
-              #    - !Sub "arn:aws:s3:::${BucketName}/*"
-              #- Effect: Allow
-              #  Action:
-              #    - ssm:DescribeInstanceInformation
-              #  Resource: "*"
               - Effect: Allow
                 Action:
                   - iot:UpdateThing
                 Resource:
                   - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${Thing}"
-                  
-                  
-#Outputs:
-#  CertificateArn:
-#    Value: !GetAtt CustomResource1.CertificateArn
-#    
-#  InstanceId:
-#    Value: !GetAtt CustomResource1.InstanceId
-#    #Export:
-#    #  Name: !Sub "${Prefix}-InstanceId"
-#    
-#  IoTEndpoint:
-#    Value: !GetAtt CustomResource1.IoTEndpoint
-    
