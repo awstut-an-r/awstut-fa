@@ -24,11 +24,7 @@ Parameters:
   LambdaRuntime:
     Type: String
     Default: python3.12
-    
-  #WaitForSuccessTimeoutSeconds:
-  #  Type: Number
-  #  Default: 600
-    
+
 
 Resources:
   LambdaStack:
@@ -37,8 +33,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         EventBusName: !Ref EventBusName
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
@@ -46,23 +40,11 @@ Resources:
         
   SSMStack:
     Type: AWS::CloudFormation::Stack
-    #DependsOn:
-    #  - EndpointStack
-    #  - EC2Stack
-    #  #- SSMIAMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CreateImageRoleArn: !GetAtt SSMIAMStack.Outputs.CreateImageRoleArn
-        #Instance: !GetAtt EC2Stack.Outputs.Instance
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
-        #TagKey: !Ref TagKey
-        #TagValue: !Ref TagValue
-        #WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-        
+
   EventBridgeStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -71,9 +53,6 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
       Parameters:
         Document: !GetAtt SSMStack.Outputs.Document
-        #DocumentArn: !GetAtt SSMStack.Outputs.DocumentArn
         DocumentRoleArn: !GetAtt SSMStack.Outputs.DocumentRoleArn
         EventBusName: !Ref EventBusName
-        #Function2: !GetAtt LambdaStack.Outputs.Function2
-        #FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
         Prefix: !Ref Prefix
