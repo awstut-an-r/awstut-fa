@@ -3,22 +3,13 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Document:
     Type: String
-    
-  #DocumentArn:
-  #  Type: String
-    
+
   DocumentRoleArn:
     Type: String
 
   EventBusName:
     Type: String
-    
-  #Function2:
-  #  Type: String
-  
-  #FunctionArn2:
-  #  Type: String
-    
+
   Prefix:
     Type: String
     
@@ -27,30 +18,18 @@ Resources:
   EventsRule:
     Type: AWS::Events::Rule
     Properties: 
-      #Description: String
       EventBusName: !Ref EventBusName
       EventPattern:
         source:
           - !Ref Prefix
       Name: !Sub "${Prefix}-EventsRule"
-      #RoleArn: String
-      #ScheduleExpression: String
       State: ENABLED
       Targets: 
-        #- Arn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}:*"
         - Arn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}"
           Id: !Ref Document
           RoleArn: !GetAtt EventBridgeRole.Arn
           Input: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"]}'
-          
-  #EventsRulePermission: 
-  #  Type: AWS::Lambda::Permission
-  #  Properties: 
-  #    FunctionName: !Ref Function2
-  #    Action: lambda:InvokeFunction
-  #    Principal: events.amazonaws.com
-  #    SourceArn: !GetAtt EventsRule.Arn
-  
+
   EventBridgeRole:
     Type: AWS::IAM::Role
     DeletionPolicy: Delete
@@ -63,8 +42,6 @@ Resources:
             Principal:
               Service:
                 - events.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
       Policies:
         - PolicyName: EventBridgeRolePolicy
           PolicyDocument:
@@ -77,9 +54,6 @@ Resources:
                   - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}:*"
               - Effect: Allow
                 Action:
-                  #- "*"
-                  #- ec2:CreateImage
-                  #- ec2:DescribeInstances
                   - iam:PassRole
                 Resource:
                   - !Ref DocumentRoleArn
