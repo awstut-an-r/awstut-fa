@@ -26,34 +26,21 @@ Resources:
           import boto3
           import datetime
           import json
-          #import time
           import os
           
           event_bus_name = os.environ['EVENT_BUS_NAME']
-          #detail_type = os.environ['DETAIL_TYPE']
           source = os.environ['SOURCE']
           
           client = boto3.client('events')
           
           def lambda_handler(event, context):
-            #now = datetime.datetime.now()
-            #unix_time = int(time.mktime(now.timetuple()))
-            
-            #detail = json.dumps(
-            #  {
-            #    'now': now.strftime('%Y-%m-%d %H:%M:%S.%f'),
-            #    'unix_time': unix_time
-            #  }
-            #)
-          
             entry = {
               'Time': datetime.datetime.now(),
               'Source': source,
               'Resources': [],
               'DetailType': 'sample-event',
               'Detail': json.dumps({}),
-              'EventBusName': event_bus_name,
-              #'TraceHeader': ''
+              'EventBusName': event_bus_name
             }
           
             response = client.put_events(
@@ -63,31 +50,11 @@ Resources:
       Environment:
         Variables:
           EVENT_BUS_NAME: !Ref EventBusName
-          #DETAIL_TYPE: unix-time-event
           SOURCE: !Ref Prefix
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
-      
-  #Function2:
-  #  Type: AWS::Lambda::Function
-  #  Properties:
-  #    Code:
-  #      ZipFile: |
-  #        def lambda_handler(event, context):
-  #          print(event)
-  #          
-  #          unix_time = event['detail']['unix_time']
-  #          
-  #          if (unix_time % 2) == 0:
-  #            print('{int} is even !'.format(int=unix_time))
-  #          else:
-  #            print('{int} is odd !'.format(int=unix_time))
-  #    FunctionName: !Sub "${Prefix}-function-02"
-  #    Handler: !Ref Handler
-  #    Runtime: !Ref Runtime
-  #    Role: !GetAtt FunctionRole.Arn
 
   FunctionRole:
     Type: AWS::IAM::Role
@@ -112,17 +79,3 @@ Resources:
                 Action:
                   - events:PutEvents
                 Resource: !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/${EventBusName}"
-        
-        
-#Outputs:
-#  #NLBPrivateAddress1:
-#  #  Value: !Select [0, !GetAtt CustomResource.PrivateAddresses]
-#  #  
-#  #NLBPrivateAddress2:
-#  #  Value: !Select [1, !GetAtt CustomResource.PrivateAddresses]
-#  
-#  Function2:
-#    Value: !Ref Function2
-#
-#  FunctionArn2:
-#    Value: !GetAtt Function2.Arn
