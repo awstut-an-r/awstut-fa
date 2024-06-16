@@ -1,0 +1,79 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-166
+    
+  EventBusName:
+    Type: String
+    Default: default
+    
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+    
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+  
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+    
+  #WaitForSuccessTimeoutSeconds:
+  #  Type: Number
+  #  Default: 600
+    
+
+Resources:
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        EventBusName: !Ref EventBusName
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    #DependsOn:
+    #  - EndpointStack
+    #  - EC2Stack
+    #  #- SSMIAMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        #CreateImageRoleArn: !GetAtt SSMIAMStack.Outputs.CreateImageRoleArn
+        #Instance: !GetAtt EC2Stack.Outputs.Instance
+        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
+        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
+        Prefix: !Ref Prefix
+        #TagKey: !Ref TagKey
+        #TagValue: !Ref TagValue
+        #WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        Document: !GetAtt SSMStack.Outputs.Document
+        #DocumentArn: !GetAtt SSMStack.Outputs.DocumentArn
+        DocumentRoleArn: !GetAtt SSMStack.Outputs.DocumentRoleArn
+        EventBusName: !Ref EventBusName
+        #Function2: !GetAtt LambdaStack.Outputs.Function2
+        #FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
+        Prefix: !Ref Prefix

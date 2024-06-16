@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketName:
+  #  Type: String
+  
+  #CreateImageRoleArn:
+  #  Type: String
+    
+  #Instance:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  #TagKey:
+  #  Type: String
+  #  
+  #TagValue:
+  #  Type: String
+    
+  #WaitForSuccessTimeoutSeconds:
+  #  Type: Number
+    
+
+Resources:
+  Document:
+    Type: AWS::SSM::Document
+    Properties: 
+      #Attachments: 
+      #  - AttachmentsSource
+      Content:
+        assumeRole: "{{AutomationAssumeRole}}"
+        description: Run a script on Linux instances.
+        schemaVersion: "0.3"
+        parameters:
+          AutomationAssumeRole:
+            type: String
+            description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
+            default: ""
+          #Commands:
+          #  type: String
+          #  description: (Required) The commands to run or the path to an existing script on the instance.
+          #  default: echo Hello World
+          #InstanceId:
+          #  type: String
+          #  description: (Required) The instance ID you want to run commands on.
+          #  default: ""
+        mainSteps:
+          #- name: sayHello
+          #  action: aws:runCommand
+          #  inputs:
+          #    DocumentName: AWS-RunShellScript
+          #    InstanceIds:
+          #      - "{{InstanceId}}"
+          #    Parameters:
+          #      #InstanceIds:
+          #      #  - "{{InstanceId}}"
+          #      commands:
+          #        - "{{Commands}}"
+          - name: sleep
+            action: aws:sleep
+            inputs:
+              Duration: PT10S
+      DocumentFormat: YAML
+      DocumentType: Automation
+      Name: !Sub "${Prefix}-document"
+      #Requires: 
+      #  - DocumentRequires
+      #Tags: 
+      #  - Tag
+      #TargetType: /AWS::EC2::Instance
+      TargetType: /
+      #UpdateMethod: String
+      #VersionName: String
+
+  #MyRunbookAssociation:
+  #  Type: AWS::SSM::Association
+  #  Properties:
+  #    AssociationName: !Sub "${Prefix}-MyRunbookAssociation"
+  #    AutomationTargetParameterName: InstanceId
+  #    #Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${MyRunbook}"
+  #    Name: !Ref MyRunbook
+  #    #OutputLocation:
+  #    #  S3Location:
+  #    #    OutputS3BucketName: !Ref BucketName
+  #    #    OutputS3KeyPrefix: MyRunbookAssociation/
+  #    Parameters:
+  #      AutomationAssumeRole:
+  #        - !GetAtt MyRunbookRole.Arn
+  #        #- !Ref CreateImageRoleArn
+  #      Commands:
+  #        - "echo Hello World"
+  #      InstanceId:
+  #        - "{{RESOURCE_ID}}"
+  #        #- !Ref Instance
+  #      #NoReboot:
+  #      #  - "false"
+  #    Targets:
+  #      #- Key: InstanceIds
+  #      #  Values:
+  #      #    - !Ref Instance1
+  #      - Key: !Sub "tag:${TagKey}"
+  #        Values:
+  #          #- !Ref Instance1
+  #          - !Ref TagValue
+  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+  
+  #MyRunbookAssociation2:
+  #  Type: AWS::SSM::Association
+  #  Properties:
+  #    AssociationName: !Sub "${Prefix}-MyRunbookAssociation2"
+  #    #AutomationTargetParameterName: InstanceId
+  #    #Name: !Ref MyRunbook
+  #    Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${MyRunbook}"
+  #    #OutputLocation:
+  #    #  S3Location:
+  #    #    OutputS3BucketName: !Ref BucketName
+  #    #    OutputS3KeyPrefix: MyRunbookAssociation/
+  #    Parameters:
+  #      #AutomationAssumeRole:
+  #      #  - !GetAtt MyRunbookRole.Arn
+  #      #  #- !Ref CreateImageRoleArn
+  #      Commands:
+  #        - "echo Hello World"
+  #      InstanceId:
+  #        - "{{RESOURCE_ID}}"
+  #        #- !Ref Instance
+  #      #NoReboot:
+  #      #  - "false"
+  #    Targets:
+  #      #- Key: InstanceIds
+  #      #  Values:
+  #      #    - !Ref Instance
+  #      - Key: !Sub "tag:${TagKey}"
+  #        Values:
+  #          #- !Ref Instance1
+  #          - !Ref TagValue
+  #    WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+      
+  DocumentRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+      Policies:
+        - PolicyName: DocumentRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- "*"
+                  #- ec2:CreateImage
+                  #- ec2:DescribeInstances
+                  - iam:PassRole
+                Resource:
+                  - "*"
+                  
+                  
+Outputs:
+  Document:
+    Value: !Ref Document
+    
+  #DocumentArn:
+  #  Value: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}:*"
+
+  DocumentRoleArn:
+    Value: !GetAtt DocumentRole.Arn
