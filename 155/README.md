@@ -1,6 +1,6 @@
 # Demonstrate AWS IoT Device Client MQTT message communication using a Raspberry Pi registered with Systems Manager
 
-https://awstut.com/en/2024/07/06/demonstrate-aws-iot-device-client-mqtt-message-communication-using-a-raspberry-pi-registered-with-systems-manager-en-2/
+https://awstut.com/en/2024/07/06/demonstrate-aws-iot-device-client-mqtt-message-communication-using-a-raspberry-pi-registered-with-systems-manager-en/
 
 # Architecture
 
