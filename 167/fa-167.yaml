@@ -8,14 +8,9 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-167
-    
-  #ClientName:
-  #  Type: String
-  #  Default: test-client
-    
+
   InstanceImageId:
     Type: String
-    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
     
   InstanceType:
@@ -37,11 +32,7 @@ Parameters:
   IoTPublicKeyName:
     Type: String
     Default: public.pem.key
-    
-  #LambdaArchitecture:
-  #  Type: String
-  #  Default: arm64
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -65,16 +56,13 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
       Parameters:
-        #Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
-        #Runtime: !Ref LambdaRuntime
 
   IoTStack1:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot-01.yaml"
       Parameters:
-        #ClientName: !Ref ClientName
         Prefix: !Ref Prefix
         TopicName: !Ref TopicName
         
@@ -99,19 +87,14 @@ Resources:
   LambdaStack2:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- S3Stack
       - IoTStack1
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda-02.yaml"
       Parameters:
         Architecture: !Ref LambdaArchitecture
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CertificateName: !Ref IoTCertificateName
         Handler: !Ref LambdaHandler
         Policy: !GetAtt IoTStack1.Outputs.Policy
         Prefix: !Ref Prefix
-        #PrivateKeyName: !Ref IoTPrivateKeyName
-        #PublicKeyName: !Ref IoTPublicKeyName
         Runtime: !Ref LambdaRuntime
         Thing: !GetAtt IoTStack1.Outputs.Thing
         ThingGroup: !GetAtt IoTStack1.Outputs.ThingGroup
@@ -124,11 +107,9 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-iot-02.yaml"
       Parameters:
         CertificateArn: !GetAtt LambdaStack1.Outputs.CertificateArn
-        #ClientName: !Ref ClientName
         Policy: !GetAtt IoTStack1.Outputs.Policy
         Prefix: !Ref Prefix
         Thing: !GetAtt IoTStack1.Outputs.Thing
-        #TopicName: !Ref TopicName
         
   VPCStack:
     Type: AWS::CloudFormation::Stack
@@ -136,14 +117,7 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
       Parameters:
         AvailabilityZone1: a
-        #AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
-        #CidrIp2: 10.0.2.0/24
-        #CidrIp3: 10.0.3.0/24
-        #CidrIp4: 10.0.4.0/24
-        #HTTPPort: !Ref HTTPPort
-        #HTTPSPort: !Ref HTTPSPort
-        #MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         
@@ -151,42 +125,21 @@ Resources:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - IoTStack2
-      #- SSMStack
       - VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #Architecture: !Ref LambdaArchitecture
         BucketName: !GetAtt S3Stack.Outputs.BucketName
         CertificateDir: !Ref IoTCertificateDir
         CertificateName: !Ref IoTCertificateName
-        #ClientName: !Ref ClientName
-        #DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
-        #DBMasterUsername: !Ref DBMasterUsername
-        #DBMasterUserPassword: !Ref DBMasterUserPassword
-        #DBName: !Ref DBName
-        #Handler: !Ref LambdaHandler
         ImageId: !Ref InstanceImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: !Ref InstanceType
         IoTEndpoint: !GetAtt LambdaStack1.Outputs.IoTEndpoint
-        #ParameterAmi: !GetAtt LambdaStack1.Outputs.ParameterAmi
-        #ParameterWaitConditionHandleSignalUrl: !GetAtt LambdaStack2.Outputs.ParameterWaitConditionHandleSignalUrl
         Policy: !GetAtt IoTStack1.Outputs.Policy
         Prefix: !Ref Prefix
         PrivateKeyName: !Ref IoTPrivateKeyName
         PublicKeyName: !Ref IoTPublicKeyName
-        #PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1
-        #Runtime: !Ref LambdaRuntime
         Thing: !GetAtt IoTStack1.Outputs.Thing
         TopicName: !Ref TopicName
-        #UserData: !Base64 |
-        #  #!/bin/bash -xe
-        #  yum update -y
-        #  yum install -y httpd
-        #  systemctl start httpd
-        #  systemctl enable httpd
-        #  ec2-metadata -i > /var/www/html/index.html
-        #WaitConditionTimeout: !Ref WaitConditionTimeout
