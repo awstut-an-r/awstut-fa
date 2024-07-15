@@ -4,9 +4,6 @@ Parameters:
   CertificateArn:
     Type: String
 
-  #ClientName:
-  #  Type: String
-  
   Policy:
     Type: String
 
@@ -15,18 +12,9 @@ Parameters:
     
   Thing:
     Type: String
-    
-  #TopicName:
-  #  Type: String
-    
+
     
 Resources:
-  #PolicyPrincipalAttachment:
-  #  Type: AWS::IoT::PolicyPrincipalAttachment
-  #  Properties:
-  #    PolicyName: !Ref Policy
-  #    Principal: !Ref CertificateArn
-      
   ThingPrincipalAttachment:
     Type: AWS::IoT::ThingPrincipalAttachment
     Properties:
