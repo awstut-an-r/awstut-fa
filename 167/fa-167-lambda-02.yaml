@@ -1,0 +1,308 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  #BucketName:
+  #  Type: String
+  #  
+  #CertificateName:
+  #  Type: String
+    
+  #CodeS3Bucket:
+  #  Type: String
+  #  
+  #EphemeralStorageSize:
+  #  Type: Number
+    
+  Handler:
+    Type: String
+    
+  #LayerPackage:
+  #  Type: String
+  
+  Policy:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  #PrivateKeyName:
+  #  Type: String
+  #  
+  #PublicKeyName:
+  #  Type: String
+    
+  #RequirementsParameter:
+  #  Type: String
+    
+  Runtime:
+    Type: String
+    
+  #Timeout:
+  #  Type: Number
+  
+  Thing:
+    Type: String
+    
+  ThingGroup:
+    Type: String
+    
+    
+Resources:
+  CustomResource2:
+    Type: Custom::CustomResource
+    Properties:
+      #Region: !Ref AWS::Region
+      ServiceToken: !GetAtt Function2.Arn
+      Thing: !Ref Thing
+      ThingGroup: !Ref ThingGroup
+
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      #Environment:
+      #  Variables:
+      #    #BUCKET_NAME: !Ref BucketName
+      #    #CERTIFICATE_NAME: !Ref CertificateName
+      #    #LAYER_PACKAGE: !Ref LayerPackage
+      #    #PRIVATE_KEY_NAME: !Ref PrivateKeyName
+      #    #PUBLIC_KEY_NAME: !Ref PublicKeyName
+      #    #REGION: !Ref AWS::Region
+      #    #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
+      #    #S3_BUCKET_FOLDER: !Ref Prefix
+      #    #THING: !Ref Thing
+      #    #THING_GROUP: !Ref ThingGroup
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          #import os
+          
+          #region = os.environ['REGION']
+          #thing = os.environ['THING']
+          #thing_group = os.environ['THING_GROUP']
+          
+          #s3_key = '{folder}/{object}'
+          #certificate_name = 'device.pem.crt'
+          #public_key_name = 'public.pem.key'
+          #private_key_name = 'private.pem.key'
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          #iot_client = boto3.client('iot', region_name=region)
+          iot_client = boto3.client('iot')
+        
+          def lambda_handler(event, context):
+            try:
+              thing = event['ResourceProperties']['Thing']
+              thing_group = event['ResourceProperties']['ThingGroup']
+            
+              if event['RequestType'] == CREATE:
+                response = iot_client.add_thing_to_thing_group(
+                  thingGroupName=thing_group,
+                  thingName=thing
+                )
+                
+              #elif event['RequestType'] == 'Delete':
+              #  certificate_id = event['PhysicalResourceId']
+              #
+              #  # delete objects in s3 bucket
+              #  list_response = s3_client.list_objects_v2(
+              #    Bucket=bucket_name
+              #  )
+              #  
+              #  if 'Contents' in list_response and len(list_response['Contents']):
+              #    for obj in list_response['Contents']:
+              #      delete_response = s3_client.delete_object(
+              #        Bucket=bucket_name,
+              #        Key=obj['Key']
+              #      )
+              #      print(delete_response)
+              #    
+              #  # inactive and delete iot cert
+              #  iot_client.update_certificate(
+              #    certificateId=certificate_id,
+              #    newStatus='INACTIVE'
+              #  )
+              #  iot_client.delete_certificate(
+              #    certificateId=certificate_id,
+              #    forceDelete=True
+              #  )
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              #cfnresponse.send(
+              #  event=event,
+              #  context=context,
+              #  responseStatus=cfnresponse.SUCCESS,
+              #  responseData=response_data,
+              #  physicalResourceId=certificate_id
+              #  )
+            except Exception as e:
+              print(e)
+              
+              #certificate_id = event['PhysicalResourceId']
+              
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+              #cfnresponse.send(
+              #  event=event,
+              #  context=context,
+              #  responseStatus=cfnresponse.FAILED,
+              #  responseData=response_data,
+              #  physicalResourceId=certificate_id
+              #  )
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionPolicy2
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- iot:AttachPolicy
+                  #- iot:AttachThingPrincipal
+                  #- iot:CreateKeysAndCertificate
+                  #- iot:DeleteCertificate
+                  #- iot:DescribeEndpoint
+                  #- iot:UpdateCertificate
+                  - iot:AddThingToThingGroup
+                Resource:
+                  #- "*"
+                  - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thing/${Thing}"
+                  - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thinggroup/${ThingGroup}"
+              #- Effect: Allow
+              #  Action:
+              #    - s3:PutObject
+              #  Resource:
+              #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
+              #- Effect: Allow
+              #  Action:
+              #    - s3:DeleteObject
+              #    - s3:GetObject
+              #    - s3:ListBucket
+              #  Resource:
+              #    - !Sub "arn:aws:s3:::${BucketName}"
+              #    - !Sub "arn:aws:s3:::${BucketName}/*"
+              
+  CustomResource3:
+    Type: Custom::CustomResource
+    Properties:
+      #Region: !Ref AWS::Region
+      ServiceToken: !GetAtt Function3.Arn
+      Policy: !Ref Policy
+      #Thing: !Ref Thing
+      #ThingGroup: !Ref ThingGroup
+      ThingGroupArn: !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thinggroup/${ThingGroup}"
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      #Environment:
+      #  Variables:
+      #    #BUCKET_NAME: !Ref BucketName
+      #    #CERTIFICATE_NAME: !Ref CertificateName
+      #    #LAYER_PACKAGE: !Ref LayerPackage
+      #    #PRIVATE_KEY_NAME: !Ref PrivateKeyName
+      #    #PUBLIC_KEY_NAME: !Ref PublicKeyName
+      #    #REGION: !Ref AWS::Region
+      #    #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
+      #    #S3_BUCKET_FOLDER: !Ref Prefix
+      #    #THING: !Ref Thing
+      #    #THING_GROUP: !Ref ThingGroup
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          
+          CREATE = 'Create'
+          response_data = {}
+          
+          iot_client = boto3.client('iot')
+        
+          def lambda_handler(event, context):
+            try:
+              policy = event['ResourceProperties']['Policy']
+              thing_group_arn = event['ResourceProperties']['ThingGroupArn']
+            
+              if event['RequestType'] == CREATE:
+                response = iot_client.attach_policy(
+                  policyName=policy,
+                  #target=thing_group
+                  target=thing_group_arn
+                )
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+            except Exception as e:
+              print(e)
+              
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function-03"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole3.Arn
+
+  FunctionRole3:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionPolicy3
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - iot:AttachPolicy
+                Resource:
+                  #- "*"
+                  - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:thinggroup/${ThingGroup}"
+                  
+                  
+#Outputs:
+#  CertificateArn:
+#    Value: !GetAtt CustomResource1.CertificateArn
+#    
+#  IoTEndpoint:
+#    Value: !GetAtt CustomResource1.IoTEndpoint

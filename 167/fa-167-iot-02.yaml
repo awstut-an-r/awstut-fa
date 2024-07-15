@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  CertificateArn:
+    Type: String
+
+  #ClientName:
+  #  Type: String
+  
+  Policy:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  Thing:
+    Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+    
+Resources:
+  #PolicyPrincipalAttachment:
+  #  Type: AWS::IoT::PolicyPrincipalAttachment
+  #  Properties:
+  #    PolicyName: !Ref Policy
+  #    Principal: !Ref CertificateArn
+      
+  ThingPrincipalAttachment:
+    Type: AWS::IoT::ThingPrincipalAttachment
+    Properties:
+      Principal: !Ref CertificateArn
+      ThingName: !Ref Thing
