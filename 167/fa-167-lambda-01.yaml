@@ -9,18 +9,9 @@ Parameters:
     
   CertificateName:
     Type: String
-    
-  #CodeS3Bucket:
-  #  Type: String
-  #  
-  #EphemeralStorageSize:
-  #  Type: Number
-    
+
   Handler:
     Type: String
-    
-  #LayerPackage:
-  #  Type: String
 
   Prefix:
     Type: String
@@ -30,16 +21,10 @@ Parameters:
     
   PublicKeyName:
     Type: String
-    
-  #RequirementsParameter:
-  #  Type: String
-    
+
   Runtime:
     Type: String
-    
-  #Timeout:
-  #  Type: Number
-  
+
   Thing:
     Type: String
     
@@ -60,44 +45,20 @@ Resources:
     Properties:
       Architectures:
         - !Ref Architecture
-      #Environment:
-      #  Variables:
-      #    BUCKET_NAME: !Ref BucketName
-      #    CERTIFICATE_NAME: !Ref CertificateName
-      #    #LAYER_PACKAGE: !Ref LayerPackage
-      #    PRIVATE_KEY_NAME: !Ref PrivateKeyName
-      #    PUBLIC_KEY_NAME: !Ref PublicKeyName
-      #    REGION: !Ref AWS::Region
-      #    #REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
-      #    #S3_BUCKET_FOLDER: !Ref Prefix
-      #    THING: !Ref Thing
       Code:
         ZipFile: |
           import boto3
           import cfnresponse
-          #import os
-          
-          #bucket_name = os.environ['BUCKET_NAME']
-          #certificate_name = os.environ['CERTIFICATE_NAME']
-          #private_key_name = os.environ['PRIVATE_KEY_NAME']
-          #public_key_name = os.environ['PUBLIC_KEY_NAME']
-          #region = os.environ['REGION']
-          #thing = os.environ['THING']
-          
+
           s3_key = '{folder}/{object}'
-          #certificate_name = 'device.pem.crt'
-          #public_key_name = 'public.pem.key'
-          #private_key_name = 'private.pem.key'
-          
+
           CREATE = 'Create'
           DELETE = 'Delete'
           response_data = {}
           
           iot_client = boto3.client('iot')
-          #iot_client = boto3.client('iot', region_name=region)
           s3_client = boto3.client('s3')
-          #s3_client = boto3.client('s3', region_name=region)
-        
+
           def lambda_handler(event, context):
             try:
               bucket_name = event['ResourceProperties']['BucketName']
@@ -196,12 +157,8 @@ Resources:
                 responseData=response_data,
                 physicalResourceId=certificate_id
                 )
-      #EphemeralStorage:
-      #  Size: !Ref EphemeralStorageSize
       FunctionName: !Sub "${Prefix}-function-01"
       Handler: !Ref Handler
-      #Layers:
-      #  - !Ref LambdaLayer
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole1.Arn
 
@@ -226,8 +183,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- iot:AttachPolicy
-                  #- iot:AttachThingPrincipal
                   - iot:CreateKeysAndCertificate
                   - iot:DeleteCertificate
                   - iot:DescribeEndpoint
