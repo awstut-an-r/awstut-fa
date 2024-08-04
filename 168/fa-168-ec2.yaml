@@ -1,0 +1,129 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  Authorizer:
+    Type: String
+
+  #BucketName:
+  #  Type: String
+  #  
+  #CertificateDir:
+  #  Type: String
+  #  
+  #CertificateName:
+  #  Type: String
+
+  #ClientName:
+  #  Type: String
+
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+
+  InstanceSecurityGroup:
+    Type: String
+    
+  InstanceType:
+    Type: String
+    
+  #IoTEndpoint:
+  #  Type: String
+  #  
+  #Policy:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  #PrivateKeyName:
+  #  Type: String
+  #  
+  #PublicKeyName:
+  #  Type: String
+    
+  PublicSubnet1:
+    Type: String
+    
+  #Thing:
+  #  Type: String
+    
+  #TopicName:
+  #  Type: String
+    
+    
+Resources:
+  Instance:
+    Type: AWS::EC2::Instance
+    #DependsOn:
+    #  - WaitCondition
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      #ImageId: !Sub "{{resolve:ssm:${ParameterAmi}}}"
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+          SubnetId: !Ref PublicSubnet1
+      UserData: !Base64
+        Fn::Sub: |
+          #!/bin/bash -xe
+          dnf update -y
+          dnf install python3.11-pip -y
+          dnf install -y git
+          
+          python3.11 -m pip install awsiotsdk
+          cd ~ && git clone https://github.com/aws/aws-iot-device-sdk-python-v2.git
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+  
+  InstanceRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      #Policies:
+      #  - PolicyName: InstancePolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        #- Effect: Allow
+      #        #  Action:
+      #        #    #- ssm:PutParameter
+      #        #    #- iot:AttachPolicy
+      #        #    #- iot:AttachThingPrincipal
+      #        #    #- iot:CreateKeysAndCertificate
+      #        #    #- iot:DescribeEndpoint
+      #        #  Resource:
+      #        #    - "*"
+      #        #    #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterAmi}"
+      #        - Effect: Allow
+      #          Action:
+      #            #- s3:DeleteObject
+      #            - iot:TestInvokeAuthorizer
+      #            #- s3:ListBucket
+      #          Resource:
+      #            #- !Sub "arn:aws:s3:::${BucketName}"
+      #            #- !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
+      #            - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:authorizer/${Authorizer}"
+      #        #- Effect: Allow
+      #        #  Action:
+      #        #    #- s3:DeleteObject
+      #        #    - s3:GetObject
+      #        #    #- s3:ListBucket
+      #        #  Resource:
+      #        #    #- !Sub "arn:aws:s3:::${BucketName}"
+      #        #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"

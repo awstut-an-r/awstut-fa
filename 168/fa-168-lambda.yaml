@@ -1,0 +1,242 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+    
+  #BucketName:
+  #  Type: String
+  #  
+  #CertificateName:
+  #  Type: String
+    
+  #CodeS3Bucket:
+  #  Type: String
+  #  
+  #EphemeralStorageSize:
+  #  Type: Number
+    
+  Handler:
+    Type: String
+    
+  #LayerPackage:
+  #  Type: String
+  
+  Password:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  #PrivateKeyName:
+  #  Type: String
+  #  
+  #PublicKeyName:
+  #  Type: String
+    
+  #RequirementsParameter:
+  #  Type: String
+    
+  Runtime:
+    Type: String
+    
+  #Timeout:
+  #  Type: Number
+  
+  #Thing:
+  #  Type: String
+  
+  TopicName:
+    Type: String
+    
+    
+Resources:
+  #CustomResource:
+  #  Type: Custom::CustomResource
+  #  Properties:
+  #    ServiceToken: !GetAtt Function.Arn
+
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          ACCOUNT_ID: !Ref AWS::AccountId
+          #BUCKET_NAME: !Ref BucketName
+          #CERTIFICATE_NAME: !Ref CertificateName
+          ##LAYER_PACKAGE: !Ref LayerPackage
+          #PRIVATE_KEY_NAME: !Ref PrivateKeyName
+          #PUBLIC_KEY_NAME: !Ref PublicKeyName
+          PASSWORD: !Ref Password
+          REGION: !Ref AWS::Region
+          ##REQUIREMENTS_PARAMETER: !Ref RequirementsParameter
+          ##S3_BUCKET_FOLDER: !Ref Prefix
+          #THING: !Ref Thing
+          TOPIC_NAME: !Ref TopicName
+      Code:
+        ZipFile: |
+          import base64
+          import json
+          import os
+          
+          ACCOUNT_ID = os.environ['ACCOUNT_ID']
+          PASSWORD = os.environ['PASSWORD']
+          REGION = os.environ['REGION']
+          TOPIC_NAME = os.environ['TOPIC_NAME']
+          
+          ALLOW = 'Allow'
+          DENY = 'Deny'
+          #RESOURCE = 'arn:aws:iot:{region}:{account}:topic/{topic}'.format(
+          #  region=REGION,
+          #  account=ACCOUNT_ID,
+          #  topic=TOPIC_NAME
+          #  )
+        
+          def lambda_handler(event, context):
+            uname = event['protocolData']['mqtt']['username']
+            print(uname)
+            pwd = event['protocolData']['mqtt']['password']
+            print(pwd)
+            passwd = base64.b64decode(pwd).decode('utf-8')
+            print(passwd)
+            
+            if passwd == PASSWORD:
+              return generate_auth_response(passwd, ALLOW, True)
+            else:
+              return generate_auth_response(passwd, DENY, False)
+            
+            #test_dict = {
+            #  "isAuthenticated": True,
+            #  "principalId": "TEST123",
+            #  "disconnectAfterInSeconds": 3600,
+            #  "refreshAfterInSeconds": 300,
+            #  "policyDocuments": [
+            #    "{ \"Version\": \"2012-10-17\", \"Statement\": [ { \"Action\": \"iot:Connect\", \"Effect\": \"Allow\", \"Resource\": \"*\" } ] }"
+            #  ]
+            #}
+            #print(test_dict)
+            #print(json.dumps(test_dict))
+            #return test_dict
+              
+          def generate_auth_response(token, effect, boolean):
+            #print(token, effect, boolean)
+            auth_response = {
+              #'password': token,
+              'isAuthenticated': boolean,
+              'principalId': 'TEST123',
+              'disconnectAfterInSeconds': 3600,
+              'refreshAfterInSeconds': 300,
+              'policyDocuments': [
+                json.dumps(
+                  {
+                    'Version': '2012-10-17',
+                    'Statement': [
+                      {
+                        'Action': 'iot:Connect',
+                        'Effect': effect,
+                        'Resource': '*'
+                      },
+                      #{
+                      #  'Action': 'iot:Publish',
+                      #  'Effect': effect,
+                      #  'Resource': 'arn:aws:iot:{region}:{account}:topic/{topic}'.format(
+                      #    region=REGION,
+                      #    account=ACCOUNT_ID,
+                      #    topic=TOPIC_NAME
+                      #    )
+                      #},
+                      #{
+                      #  'Action': 'iot:Subscribe',
+                      #  'Effect': effect,
+                      #  'Resource': 'arn:aws:iot:{region}:{account}:topicfilter/{topic}'.format(
+                      #    region=REGION,
+                      #    account=ACCOUNT_ID,
+                      #    topic=TOPIC_NAME
+                      #    )
+                      #},
+                      #{
+                      #  'Action': 'iot:Receive',
+                      #  'Effect': effect,
+                      #  'Resource': 'arn:aws:iot:{region}:{account}:topic/{topic}'.format(
+                      #    region=REGION,
+                      #    account=ACCOUNT_ID,
+                      #    topic=TOPIC_NAME
+                      #    )
+                      #}
+                    ]
+                  }
+                )
+              ]
+            }
+            #print(auth_response)
+            print(json.dumps(auth_response))
+            #return json.dumps(auth_response)
+            return auth_response
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      #Policies:
+      #  - PolicyName: FunctionPolicy
+      #    PolicyDocument:
+      #      Version: 2012-10-17
+      #      Statement:
+      #        - Effect: Allow
+      #          Action:
+      #            #- iot:AttachPolicy
+      #            #- iot:AttachThingPrincipal
+      #            - iot:CreateKeysAndCertificate
+      #            - iot:DeleteCertificate
+      #            - iot:DescribeEndpoint
+      #            - iot:UpdateCertificate
+      #          Resource:
+      #            - "*"
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:PutObject
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
+      #        - Effect: Allow
+      #          Action:
+      #            - s3:DeleteObject
+      #            - s3:GetObject
+      #            - s3:ListBucket
+      #          Resource:
+      #            - !Sub "arn:aws:s3:::${BucketName}"
+      #            - !Sub "arn:aws:s3:::${BucketName}/*"
+                  
+                  
+Outputs:
+  #CertificateArn:
+  #  Value: !GetAtt CustomResource.CertificateArn
+  #  
+  #IoTEndpoint:
+  #  Value: !GetAtt CustomResource.IoTEndpoint
+  
+  FunctionArn:
+    Value: !GetAtt Function.Arn
+    
+  FunctionName:
+    Value: !Ref Function
+  
