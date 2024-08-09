@@ -12,11 +12,6 @@ Parameters:
 
     
 Resources:
-  Thing:
-    Type: AWS::IoT::Thing
-    Properties:
-      ThingName: !Sub "${Prefix}-thing"
-      
   Authorizer:
     Type: AWS::IoT::Authorizer
     Properties:
@@ -35,8 +30,5 @@ Resources:
 
 
 Outputs:
-  Thing:
-    Value: !Ref Thing
-
   Authorizer:
     Value: !Ref Authorizer
