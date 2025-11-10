@@ -87,7 +87,6 @@ Resources:
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2
         Prefix: !Ref Prefix
         VPC: !GetAtt VPCStack.Outputs.VPC
-        
         HealthyThresholdCount: 5
         UnhealthyThresholdCount: 2
         HealthCheckTimeoutSeconds: 5
