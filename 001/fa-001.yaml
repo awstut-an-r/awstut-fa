@@ -13,10 +13,6 @@ Parameters:
     Type: Number
     Default: 80
     
-  HTTPSPort:
-    Type: Number
-    Default: 443
-    
   ImageId:
     Type: String
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
@@ -39,7 +35,6 @@ Resources:
         CidrIp3: 10.0.3.0/24
         CidrIp4: 10.0.4.0/24
         HTTPPort: !Ref HTTPPort
-        HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         
