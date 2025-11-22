@@ -21,9 +21,6 @@ Parameters:
   HTTPPort:
     Type: Number
     
-  HTTPSPort:
-    Type: Number
-    
   Prefix:
     Type: String
     
