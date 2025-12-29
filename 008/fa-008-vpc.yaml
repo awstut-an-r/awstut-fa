@@ -65,4 +65,3 @@ Outputs:
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-      
