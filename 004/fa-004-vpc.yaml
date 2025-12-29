@@ -21,8 +21,6 @@ Resources:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VPCCidrBlock
-      #EnableDnsHostnames: true
-      #EnableDnsSupport: true
 
   IGW:
     Type: AWS::EC2::InternetGateway
@@ -74,10 +72,6 @@ Resources:
 Outputs:
   PublicSubnet:
     Value: !Ref PublicSubnet
-    #Export:
-    #  Name: !Sub ${Prefix}-PublicSubnet
       
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-InstanceSecurityGroup
