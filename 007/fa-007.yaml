@@ -11,7 +11,7 @@ Parameters:
 
   ImageId:
     Type: String
-    Default: /aws/service/ami-windows-latest/Windows_Server-2022-Japanese-Full-Base
+    Default: /aws/service/ami-windows-latest/Windows_Server-2025-Japanese-Full-Base
     
   InstanceType:
     Type: String
