@@ -1,0 +1,165 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  BucketName:
+    Type: String
+
+  IndexHtml:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    
+  ProjectEnvironmentImage:
+    Type: String
+    
+  ProjectEnvironmentType:
+    Type: String
+
+  SigninHtml:
+    Type: String
+
+  SignoutHtml:
+    Type: String
+
+  UserPoolClientId:
+    Type: String
+
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Cache: 
+        Type: NO_CACHE
+      Environment: 
+        ComputeType: !Ref ProjectEnvironmentComputeType
+        EnvironmentVariables:
+          - Name: BUCKET_NAME
+            Type: PLAINTEXT
+            Value: !Ref BucketName
+          - Name: INDEX_HTML
+            Type: PLAINTEXT
+            Value: !Ref IndexHtml
+          - Name: PREFIX
+            Type: PLAINTEXT
+            Value: !Ref Prefix
+          - Name: REGION
+            Type: PLAINTEXT
+            Value: !Ref AWS::Region
+          - Name: SIGNIN_HTML
+            Type: PLAINTEXT
+            Value: !Ref SigninHtml
+          - Name: SIGNOUT_HTML
+            Type: PLAINTEXT
+            Value: !Ref SignoutHtml
+          - Name: USERPOOL_CLIENT_ID
+            Type: PLAINTEXT
+            Value: !Ref UserPoolClientId
+        Image: !Ref ProjectEnvironmentImage
+        ImagePullCredentialsType: CODEBUILD
+        Type: !Ref ProjectEnvironmentType
+      LogsConfig: 
+        CloudWatchLogs:
+          GroupName: !Ref LogGroup
+          Status: ENABLED
+      Name: !Sub "${Prefix}-project"
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          
+          phases:
+            pre_build:
+              commands:
+                - |
+                  cat << EOF > $INDEX_HTML
+                  <html>
+                    <head></head>
+                    <body>
+                      <h1>${INDEX_HTML}</h1>
+                      <ul>
+                        <li>
+                          <p><a href="https://${PREFIX}.auth.${REGION}.amazoncognito.com/login?response_type=code&client_id=${USERPOOL_CLIENT_ID}&redirect_uri=https://s3-${REGION}.amazonaws.com/${BUCKET_NAME}/${SIGNIN_HTML}">Sign In</a></p>
+                        </li>
+                        <li>
+                          <p><a href="https://${PREFIX}.auth.${REGION}.amazoncognito.com/logout?response_type=code&client_id=${USERPOOL_CLIENT_ID}&logout_uri=https://s3-${REGION}.amazonaws.com/${BUCKET_NAME}/${SIGNOUT_HTML}">Sign Out</a></p>
+                        </li>
+                      </ul>
+                    </body>
+                  </html>
+                  EOF
+                - |
+                  cat << EOF > $SIGNIN_HTML
+                  <html>
+                    <head></head>
+                    <body>
+                      <h1>${SIGNIN_HTML}</h1>
+                    </body>
+                  </html>
+                  EOF
+                - |
+                  cat << EOF > $SIGNOUT_HTML
+                  <html>
+                    <head></head>
+                    <body>
+                      <h1>${SIGNOUT_HTML}</h1>
+                    </body>
+                  </html>
+                  EOF
+            build:
+              commands:
+                - aws s3 cp ./$INDEX_HTML s3://$BUCKET_NAME/
+                - aws s3 cp ./$SIGNIN_HTML s3://$BUCKET_NAME/
+                - aws s3 cp ./$SIGNOUT_HTML s3://$BUCKET_NAME/
+      Visibility: PRIVATE
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !GetAtt LogGroup.Arn
+                  - !Sub
+                    - "${LogGroupArn}:log-stream:*"
+                    - LogGroupArn: !GetAtt LogGroup.Arn
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-LogGroup"
+      
+      
+Outputs:
+  CodeBuildProject:
+    Value: !Ref CodeBuildProject

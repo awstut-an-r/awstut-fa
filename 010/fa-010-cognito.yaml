@@ -22,7 +22,7 @@ Resources:
         - email
       UsernameAttributes:
         - email
-      UserPoolName: !Sub ${Prefix}-UserPool
+      UserPoolName: !Sub "${Prefix}-UserPool"
       Schema:
         - AttributeDataType: String
           Mutable: true
@@ -45,7 +45,7 @@ Resources:
         - profile
       CallbackURLs:
         - !Sub "${BucketWesSiteEndpointUrl}/${SigninHtml}"
-      ClientName: !Sub ${Prefix}-UserPoolClient
+      ClientName: !Sub "${Prefix}-UserPoolClient"
       EnableTokenRevocation: true # default value.
       ExplicitAuthFlows:
         - ALLOW_CUSTOM_AUTH
@@ -69,3 +69,8 @@ Resources:
     Properties:
       Domain: !Ref Prefix
       UserPoolId: !Ref UserPool
+
+
+Outputs:
+  UserPoolClientId:
+    Value: !Ref UserPoolClient

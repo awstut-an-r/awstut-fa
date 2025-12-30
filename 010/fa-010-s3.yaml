@@ -1,6 +1,9 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  IndexHtml:
+    Type: String
+
   Prefix:
     Type: String
     
@@ -9,19 +12,25 @@ Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Ref Prefix
+      BucketName: !Sub
+        - "${Prefix}-${StackUUId}"
+        - StackUUId: !Select
+            - 2
+            - !Split
+                - "/"
+                - !Ref AWS::StackId
       PublicAccessBlockConfiguration:
         BlockPublicAcls: false
         BlockPublicPolicy: false
         IgnorePublicAcls: false
         RestrictPublicBuckets: false
       WebsiteConfiguration:
-        IndexDocument: index.html
+        IndexDocument: !Ref IndexHtml
       
   BucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref Prefix
+      Bucket: !Ref S3Bucket
       PolicyDocument:
         Statement:
           Action:
@@ -32,5 +41,8 @@ Resources:
           
           
 Outputs:
+  BucketName:
+    Value: !Ref S3Bucket
+
   BucketWesSiteEndpointUrl:
-    Value: !Sub "https://s3-ap-northeast-1.amazonaws.com/${S3Bucket}" 
+    Value: !Sub "https://s3-${AWS::Region}.amazonaws.com/${S3Bucket}" 

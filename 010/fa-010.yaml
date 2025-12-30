@@ -8,7 +8,42 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-010
+
+  IndexHtml:
+    Type: String
+    Default: index.html
+
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+  
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
     
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+  
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_LAMBDA_1GB
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux-aarch64-lambda-standard:python3.12
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_LAMBDA_CONTAINER
+    
+  SigninHtml:
+    Type: String
+    Default: signin.html
+
+  SignoutHtml:
+    Type: String
+    Default: signout.html
 
 Resources:
   S3Stack:
@@ -16,14 +51,48 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
       Parameters:
+        IndexHtml: !Ref IndexHtml
         Prefix: !Ref Prefix
-        
+
   CognitoStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cognito.yaml"
       Parameters:
         BucketWesSiteEndpointUrl: !GetAtt S3Stack.Outputs.BucketWesSiteEndpointUrl
         Prefix: !Ref Prefix
-        SigninHtml: signin.html
-        SignoutHtml: signout.html
+        SigninHtml: !Ref SigninHtml
+        SignoutHtml: !Ref SignoutHtml
+
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CognitoStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        IndexHtml: !Ref IndexHtml
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        SigninHtml: !Ref SigninHtml
+        SignoutHtml: !Ref SignoutHtml
+        UserPoolClientId: !GetAtt CognitoStack.Outputs.UserPoolClientId
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CodeStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
