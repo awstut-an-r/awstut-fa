@@ -36,7 +36,7 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
           
@@ -65,4 +65,3 @@ Outputs:
       
   EndpointSecurityGroup:
     Value: !Ref EndpointSecurityGroup
-      
