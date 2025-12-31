@@ -1,0 +1,132 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    #Default: [bucket-name]
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: fa-012
+
+  BrowserJs:
+    Type: String
+    Default: browser.js
+
+  ConfigJs:
+    Type: String
+    Default: config.js
+    
+  IndexHtml:
+    Type: String
+    Default: index.html
+
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+  
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+
+  MainJs:
+    Type: String
+    Default: main.js
+
+  ProjectEnvironmentComputeType:
+    Type: String
+    Default: BUILD_LAMBDA_1GB
+    
+  ProjectEnvironmentImage:
+    Type: String
+    Default: aws/codebuild/amazonlinux-aarch64-lambda-standard:nodejs22
+    
+  ProjectEnvironmentType:
+    Type: String
+    Default: ARM_LAMBDA_CONTAINER
+    
+  SigninHtml:
+    Type: String
+    Default: signin.html
+    
+  SignoutHtml:
+    Type: String
+    Default: signout.html
+
+  WebpackJs:
+    Type: String
+    Default: webpack.config.js
+    
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        IndexHtml: !Ref IndexHtml
+        
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CognitoStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack
+      - SSMStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cognito.yaml"
+      Parameters:
+        BucketWesSiteEndpointUrl: !GetAtt S3Stack.Outputs.BucketWesSiteEndpointUrl
+        Prefix: !Ref Prefix
+        SigninHtml: !Ref SigninHtml
+        SignoutHtml: !Ref SignoutHtml
+        AuthenticatedParameter: !GetAtt SSMStack.Outputs.AuthenticatedParameter
+
+  CodeStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CognitoStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-code.yaml"
+      Parameters:
+        AuthenticatedParameter: !GetAtt SSMStack.Outputs.AuthenticatedParameter
+        BrowserJs: !Ref BrowserJs
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        ConfigJs: !Ref ConfigJs
+        IdentityPoolId: !GetAtt CognitoStack.Outputs.IdentityPoolId
+        IndexHtml: !Ref IndexHtml
+        MainJs: !Ref MainJs
+        Prefix: !Ref Prefix
+        ProjectEnvironmentComputeType: !Ref ProjectEnvironmentComputeType
+        ProjectEnvironmentImage: !Ref ProjectEnvironmentImage
+        ProjectEnvironmentType: !Ref ProjectEnvironmentType
+        SigninHtml: !Ref SigninHtml
+        SignoutHtml: !Ref SignoutHtml
+        UserPoolId: !GetAtt CognitoStack.Outputs.UserPoolId
+        UserPoolClientId: !GetAtt CognitoStack.Outputs.UserPoolClientId
+        WebpackJs: !Ref WebpackJs
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CodeStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        BucketName: !GetAtt S3Stack.Outputs.BucketName
+        CodeBuildProject: !GetAtt CodeStack.Outputs.CodeBuildProject
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime

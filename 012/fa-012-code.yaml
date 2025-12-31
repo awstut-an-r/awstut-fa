@@ -1,0 +1,318 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AuthenticatedParameter:
+    Type: String
+
+  BrowserJs:
+    Type: String
+
+  BucketName:
+    Type: String
+
+  ConfigJs:
+    Type: String
+
+  IdentityPoolId:
+    Type: String
+
+  IndexHtml:
+    Type: String
+
+  MainJs:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  ProjectEnvironmentComputeType:
+    Type: String
+    
+  ProjectEnvironmentImage:
+    Type: String
+    
+  ProjectEnvironmentType:
+    Type: String
+
+  SigninHtml:
+    Type: String
+
+  SignoutHtml:
+    Type: String
+
+  UserPoolId:
+    Type: String
+
+  UserPoolClientId:
+    Type: String
+
+  WebpackJs:
+    Type: String
+
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Cache: 
+        Type: NO_CACHE
+      Environment: 
+        ComputeType: !Ref ProjectEnvironmentComputeType
+        EnvironmentVariables:
+          - Name: AUTHENTICATED_PARAMETER
+            Type: PLAINTEXT
+            Value: !Ref AuthenticatedParameter
+          - Name: BROWSER_JS
+            Type: PLAINTEXT
+            Value: !Ref BrowserJs
+          - Name: BUCKET_NAME
+            Type: PLAINTEXT
+            Value: !Ref BucketName
+          - Name: CONFIG_JS
+            Type: PLAINTEXT
+            Value: !Ref ConfigJs
+          - Name: IDENTITY_POOL_ID
+            Type: PLAINTEXT
+            Value: !Ref IdentityPoolId
+          - Name: INDEX_HTML
+            Type: PLAINTEXT
+            Value: !Ref IndexHtml
+          - Name: MAIN_JS
+            Type: PLAINTEXT
+            Value: !Ref MainJs
+          - Name: PREFIX
+            Type: PLAINTEXT
+            Value: !Ref Prefix
+          - Name: REGION
+            Type: PLAINTEXT
+            Value: !Ref AWS::Region
+          - Name: SIGNIN_HTML
+            Type: PLAINTEXT
+            Value: !Ref SigninHtml
+          - Name: SIGNOUT_HTML
+            Type: PLAINTEXT
+            Value: !Ref SignoutHtml
+          - Name: USER_POOL_ID
+            Type: PLAINTEXT
+            Value: !Ref UserPoolId
+          - Name: USER_POOL_CLIENT_ID
+            Type: PLAINTEXT
+            Value: !Ref UserPoolClientId
+          - Name: WEBPACK_JS
+            Type: PLAINTEXT
+            Value: !Ref WebpackJs
+        Image: !Ref ProjectEnvironmentImage
+        ImagePullCredentialsType: CODEBUILD
+        Type: !Ref ProjectEnvironmentType
+      LogsConfig: 
+        CloudWatchLogs:
+          GroupName: !Ref LogGroup
+          Status: ENABLED
+      Name: !Sub "${Prefix}-project"
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Source: 
+        Type: NO_SOURCE
+        BuildSpec: |
+          version: 0.2
+          
+          phases:
+            install:
+              commands:
+                - npm install --save-dev webpack
+                - npm install --save-dev path-browserify
+                - npm install -D webpack-cli
+
+                - npm install @aws-sdk/client-cognito-identity
+                - npm install @aws-sdk/credential-provider-cognito-identity
+                - npm install @aws-sdk/client-ssm
+            pre_build:
+              commands:
+                - |
+                  cat << EOF > $INDEX_HTML
+                  <html>
+                    <head></head>
+                    <body>
+                      <h1>${INDEX_HTML}</h1>
+                      <ul>
+                        <li>
+                          <p><a href="https://${PREFIX}.auth.${REGION}.amazoncognito.com/login?response_type=token&client_id=${USER_POOL_CLIENT_ID}&redirect_uri=https://s3-${REGION}.amazonaws.com/${BUCKET_NAME}/${SIGNIN_HTML}">Sign In</a></p>
+                        </li>
+                        <li>
+                          <p><a href="https://${PREFIX}.auth.${REGION}.amazoncognito.com/logout?response_type=token&client_id=${USER_POOL_CLIENT_ID}&logout_uri=https://s3-${REGION}.amazonaws.com/${BUCKET_NAME}/${SIGNOUT_HTML}">Sign Out</a></p>
+                        </li>
+                      </ul>
+                    </body>
+                  </html>
+                  EOF
+                - |
+                  cat << EOF > $SIGNIN_HTML
+                  <html>
+                    <head>
+                    </head>
+                    <body>
+                      <h1>${SIGNIN_HTML}</h1>
+                      <p id="name"></p>
+                      <p id="parameter"></p>
+                      <script type="text/javascript" src="./${CONFIG_JS}"></script>
+                      <script type="text/javascript" src="./${MAIN_JS}"></script>
+                      <script>
+                        getName();
+                        getParameter();
+                      </script>
+                    </body>
+                  </html>
+                  EOF
+                - |
+                  cat << EOF > $SIGNOUT_HTML
+                  <html>
+                    <head></head>
+                    <body>
+                      <h1>${SIGNOUT_HTML}</h1>
+                    </body>
+                  </html>
+                  EOF
+                - |
+                  cat << EOF > $CONFIG_JS
+                  window.APP_CONFIG = {
+                    REGION: "${REGION}",
+                    USER_POOL_ID: "${USER_POOL_ID}",
+                    IDENTITY_POOL_ID: "${IDENTITY_POOL_ID}",
+                    PARAMETER_NAME: "${AUTHENTICATED_PARAMETER}"
+                  };
+                  EOF
+                - |
+                  cat << 'EOF' > "$BROWSER_JS"
+                  import {
+                    CognitoIdentityClient
+                  } from "@aws-sdk/client-cognito-identity";
+
+                  import {
+                    fromCognitoIdentityPool
+                  } from "@aws-sdk/credential-provider-cognito-identity";
+
+                  import {
+                    SSMClient,
+                    GetParameterCommand
+                  } from "@aws-sdk/client-ssm";
+
+                  // Read config injected at build time
+                  const {
+                    REGION,
+                    USER_POOL_ID,
+                    IDENTITY_POOL_ID,
+                    PARAMETER_NAME
+                  } = window.APP_CONFIG;
+
+                  const params = new URLSearchParams(location.hash.slice(1));
+                  const idToken = params.get("id_token");
+
+                  const PROVIDER = "cognito-idp." + REGION + ".amazonaws.com/" + USER_POOL_ID;
+
+                  const ssmClient = new SSMClient({
+                    region: REGION,
+                    credentials: fromCognitoIdentityPool({
+                      client: new CognitoIdentityClient({ region: REGION }),
+                      identityPoolId: IDENTITY_POOL_ID,
+                      logins: {
+                        [PROVIDER]: idToken
+                      }
+                    })
+                  });
+
+                  const getParameter = async () => {
+                    try {
+                      const response = await ssmClient.send(
+                        new GetParameterCommand({ Name: PARAMETER_NAME })
+                      );
+                      document.getElementById('parameter').innerText = `SSM Parameter Store: ${response.Parameter.Value}`;
+                    } catch (err) {
+                      console.log(err);
+                      document.getElementById('parameter').innerText = 'Deny access to SSM Parameter Store.';
+                    }
+                  };
+
+                  const getName = async () => {
+                    try {
+                      const tokens = idToken.split('.');
+                      const tokenDecoded = JSON.parse(atob(tokens[1]));
+                      document.getElementById('name').innerText = `Name: ${tokenDecoded.name}`;
+                    } catch (err) {
+                      console.log(err);
+                      document.getElementById('name').innerText = 'Name: Guest';
+                    }
+                  };
+
+                  window.getParameter = getParameter;
+                  window.getName = getName;
+                  EOF
+                - |
+                  cat << EOF > $WEBPACK_JS
+                  var path = require("path");
+                  module.exports = {
+                    entry: [path.join(__dirname, "${BROWSER_JS}")],
+                    output: {
+                      path: __dirname,
+                      filename: "${MAIN_JS}"
+                    },
+                     resolve:{
+                    fallback: { path: require.resolve("path-browserify")}
+                    }
+                  };
+                  EOF
+
+                - "jq '.scripts = (.scripts // {}) + {build: \"webpack\"}' package.json > package.tmp.json"
+                - mv package.tmp.json package.json
+            build:
+              commands:
+                - npm run build
+            post_build:
+              commands:
+                - aws s3 cp . s3://$BUCKET_NAME/ --recursive --exclude "*" --include "*.js"
+                - aws s3 cp . s3://$BUCKET_NAME/ --recursive --exclude "*" --include "*.html"
+      Visibility: PRIVATE
+
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - codebuild.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies:
+        - PolicyName: PipelineExecutionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - !GetAtt LogGroup.Arn
+                  - !Sub
+                    - "${LogGroupArn}:log-stream:*"
+                    - LogGroupArn: !GetAtt LogGroup.Arn
+
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-LogGroup"
+      
+      
+Outputs:
+  CodeBuildProject:
+    Value: !Ref CodeBuildProject

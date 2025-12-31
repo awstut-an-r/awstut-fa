@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  BucketArn:
-    Type: String
-    
   BucketWesSiteEndpointUrl:
     Type: String
 
@@ -85,7 +82,7 @@ Resources:
         - ClientId: !Ref UserPoolClient
           ProviderName: !Sub "cognito-idp.${AWS::Region}.amazonaws.com/${UserPool}"
           #ServerSideTokenCheck: false # default value.
-      IdentityPoolName: !Sub ${Prefix}-IdentityPool
+      IdentityPoolName: !Sub "${Prefix}-IdentityPool"
       
   IdentityPoolRoleAttachment:
     Type: AWS::Cognito::IdentityPoolRoleAttachment
@@ -119,3 +116,14 @@ Resources:
                   - ssm:GetParameter
                 Resource:
                   - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AuthenticatedParameter}"
+
+
+Outputs:
+  IdentityPoolId:
+    Value: !Ref IdentityPool
+
+  UserPoolId:
+    Value: !Ref UserPool
+
+  UserPoolClientId:
+    Value: !Ref UserPoolClient

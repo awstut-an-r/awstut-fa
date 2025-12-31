@@ -1,0 +1,113 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  BucketName:
+    Type: String
+    
+  CodeBuildProject:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function.Arn
+      
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BucketName
+          CODEBUILD_PROJECT: !Ref CodeBuildProject
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          bucket_name = os.environ['BUCKET_NAME']
+          codebuild_project = os.environ['CODEBUILD_PROJECT']
+          
+          CREATE = 'Create'
+          DELETE = 'Delete'
+          response_data = {}
+          
+          codebuild_client = boto3.client('codebuild')
+          s3_client = boto3.client('s3')
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == CREATE:
+                build_response = codebuild_client.start_build(
+                  projectName=codebuild_project
+                )
+                print(build_response)
+
+              elif event['RequestType'] == DELETE:
+                list_response = s3_client.list_objects_v2(
+                  Bucket=bucket_name)
+                for obj in list_response['Contents']:
+                  delete_response = s3_client.delete_object(
+                    Bucket=bucket_name,
+                    Key=obj['Key'])
+                  print(delete_response)
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - codebuild:StartBuild
+                Resource:
+                  - !Sub "arn:aws:codebuild:${AWS::Region}:${AWS::AccountId}:project/${CodeBuildProject}" 
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
