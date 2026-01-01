@@ -19,6 +19,9 @@ Parameters:
   Runtime:
     Type: String
 
+  Timeout:
+    Type: Number
+
     
 Resources:
   CustomResource:
@@ -77,6 +80,7 @@ Resources:
       Handler: !Ref Handler
       Runtime: !Ref Runtime
       Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
       
   FunctionRole:
     Type: AWS::IAM::Role

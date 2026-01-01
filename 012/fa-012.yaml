@@ -3,7 +3,8 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: [bucket-name]
+    #Default: [bucket-name]
+    Default: awstut-bucket
     
   Prefix:
     Type: String
@@ -32,6 +33,10 @@ Parameters:
   LambdaRuntime:
     Type: String
     Default: python3.12
+
+  LambdaTimeout:
+    Type: Number
+    Default: 600
 
   MainJs:
     Type: String
@@ -129,3 +134,4 @@ Resources:
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
+        Timeout: !Ref LambdaTimeout

@@ -269,8 +269,7 @@ Resources:
                 - npm run build
             post_build:
               commands:
-                - aws s3 cp . s3://$BUCKET_NAME/ --recursive --exclude "*" --include "*.js"
-                - aws s3 cp . s3://$BUCKET_NAME/ --recursive --exclude "*" --include "*.html"
+                - aws s3 cp . s3://$BUCKET_NAME/ --recursive --exclude "node_modules/*"
       Visibility: PRIVATE
 
   CodeBuildRole:
