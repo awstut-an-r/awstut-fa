@@ -13,7 +13,13 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       AccessControl: Private
-      BucketName: !Ref Prefix
+      BucketName: !Sub
+        - "${Prefix}-${StackUUId}"
+        - StackUUId: !Select
+            - 2
+            - !Split
+                - "/"
+                - !Ref AWS::StackId
       
   FlowLogToS3:
     Type: AWS::EC2::FlowLog
@@ -30,7 +36,14 @@ Resources:
   FlowLogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      #LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      LogGroupName: !Sub
+        - "${Prefix}-${StackUUId}"
+        - StackUUId: !Select
+            - 2
+            - !Split
+                - "/"
+                - !Ref AWS::StackId
       
   FlowLogToCloudWatchLogs:
     Type: AWS::EC2::FlowLog
@@ -39,13 +52,14 @@ Resources:
     Properties:
       DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn
       LogDestinationType: cloud-watch-logs
-      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      LogGroupName: !Ref FlowLogGroup
       ResourceId: !Ref PrivateSubnet
       ResourceType: Subnet
       TrafficType: ALL
       
   DeliverLogRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -68,3 +82,11 @@ Resources:
                   - logs:DescribeLogGroups
                   - logs:DescribeLogStreams
                 Resource: "*"
+
+
+Outputs:
+  FlowLogBucketName:
+    Value: !Ref FlowLogBucket
+
+  LogGroupName:
+    Value: !Ref FlowLogGroup

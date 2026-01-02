@@ -29,12 +29,12 @@ Resources:
     Properties:
       CidrBlock: !Ref CidrIp
       VpcId: !Ref VPC
-      AvailabilityZone: !Sub ${AWS::Region}${AvailabilityZone}
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Allow ICMP.
       SecurityGroupIngress:
         - IpProtocol: icmp
@@ -46,7 +46,7 @@ Resources:
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
       GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:

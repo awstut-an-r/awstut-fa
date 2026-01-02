@@ -21,7 +21,7 @@ Resources:
       PrivateDnsEnabled: true
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssm
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssm"
       SubnetIds:
         - !Ref PrivateSubnet
       VpcEndpointType: Interface
@@ -33,7 +33,7 @@ Resources:
       PrivateDnsEnabled: true
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.ec2messages
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ec2messages"
       SubnetIds:
         - !Ref PrivateSubnet
       VpcEndpointType: Interface
@@ -45,7 +45,7 @@ Resources:
       PrivateDnsEnabled: true
       SecurityGroupIds:
         - !Ref EndpointSecurityGroup
-      ServiceName: !Sub com.amazonaws.${AWS::Region}.ssmmessages
+      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
       SubnetIds:
         - !Ref PrivateSubnet
       VpcEndpointType: Interface

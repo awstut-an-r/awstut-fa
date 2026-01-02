@@ -51,6 +51,7 @@ Resources:
   
   InstanceRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -62,3 +63,11 @@ Resources:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+
+
+Outputs:
+  InstanceId1:
+    Value: !Ref Instance1
+
+  InstanceId2:
+    Value: !Ref Instance2
