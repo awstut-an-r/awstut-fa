@@ -41,14 +41,14 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
       
   EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
       GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:

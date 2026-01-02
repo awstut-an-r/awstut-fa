@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  Instance:
+  InstanceId:
     Type: String
     
   Prefix:
@@ -15,6 +15,17 @@ Parameters:
     
 
 Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub
+        - "${Prefix}-${StackUUId}"
+        - StackUUId: !Select
+            - 2
+            - !Split
+                - "/"
+                - !Ref AWS::StackId
+
   CloudWatchConfigParemeter:
     Type: AWS::SSM::Parameter
     Properties:
@@ -31,9 +42,9 @@ Resources:
               "files": {
                 "collect_list": [
                   {
-                    "file_path": "/var/log/messages",
-                    "log_group_name": "${Prefix}",
-                    "log_stream_name": "${Instance}"
+                    "file_path": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+                    "log_group_name": "${LogGroup}",
+                    "log_stream_name": "${InstanceId}"
                   }
                 ]
               }
@@ -100,7 +111,7 @@ Resources:
       Targets:
         - Key: InstanceIds
           Values:
-            - !Ref Instance
+            - !Ref InstanceId
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
 
   AmazonCloudWatchManageAgentAssociation:
@@ -129,5 +140,10 @@ Resources:
       Targets:
         - Key: InstanceIds
           Values:
-            - !Ref Instance
+            - !Ref InstanceId
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+
+Outputs:
+  LogGroupName:
+    Value: !Ref LogGroup

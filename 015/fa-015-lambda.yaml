@@ -1,0 +1,122 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  BucketName:
+    Type: String
+    
+  Handler:
+    Type: String
+
+  InstanceId:
+    Type: String
+
+  LogGroupName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+
+  Timeout:
+    Type: Number
+
+    
+Resources:
+  CustomResource:
+    Type: Custom::CustomResource
+    Properties:
+      ServiceToken: !GetAtt Function.Arn
+      
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          BUCKET_NAME: !Ref BucketName
+          INSTANCE_ID: !Ref InstanceId
+          LOG_GROUP_NAME: !Ref LogGroupName
+      Code:
+        ZipFile: |
+          import boto3
+          import cfnresponse
+          import os
+          
+          bucket_name = os.environ['BUCKET_NAME']
+          instance_id = os.environ['INSTANCE_ID'] 
+          log_group_name = os.environ['LOG_GROUP_NAME']
+          
+          DELETE = 'Delete'
+          response_data = {}
+          
+          ec2_client = boto3.client("ec2")
+          logs_client = boto3.client("logs")
+          s3_client = boto3.client('s3')
+          
+          def lambda_handler(event, context):
+            try:
+              if event['RequestType'] == DELETE:
+                ec2_client.stop_instances(InstanceIds=[instance_id])
+
+                logs_client.delete_log_group(logGroupName=log_group_name)
+
+                list_response = s3_client.list_objects_v2(
+                  Bucket=bucket_name)
+                for obj in list_response['Contents']:
+                  s3_client.delete_object(Bucket=bucket_name, Key=obj['Key'])
+                
+              cfnresponse.send(event, context, cfnresponse.SUCCESS, response_data)
+              
+            except Exception as e:
+              print(e)
+              cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
+      FunctionName: !Sub "${Prefix}-function"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      
+  FunctionRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: FunctionPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:StopInstances
+                Resource:
+                  - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${InstanceId}"
+              - Effect: Allow
+                Action:
+                  - logs:DeleteLogGroup
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}"
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${LogGroupName}:*"
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${BucketName}/*"
