@@ -9,8 +9,14 @@ Resources:
   SSMLogBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Ref Prefix
       AccessControl: Private
+      BucketName: !Sub
+        - "${Prefix}-${StackUUId}"
+        - StackUUId: !Select
+            - 2
+            - !Split
+                - "/"
+                - !Ref AWS::StackId
 
 
 Outputs:

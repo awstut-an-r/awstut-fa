@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  Instance:
+  InstanceId:
     Type: String
     
   Prefix:
@@ -15,10 +15,21 @@ Parameters:
     
 
 Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub
+        - "${Prefix}-${StackUUId}"
+        - StackUUId: !Select
+            - 2
+            - !Split
+                - "/"
+                - !Ref AWS::StackId
+
   CloudWatchConfigParemeter:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: AmazonCloudWatch-windows
+      Name: AmazonCloudWatch-linux
       Type: String
       Value: !Sub |
         {
@@ -36,7 +47,8 @@ Resources:
                       "CRITICAL"
                     ],
                     "event_name": "System",
-                    "log_group_name": "${Prefix}"
+                    "log_group_name": "${LogGroup}",
+                    "log_stream_name": "${InstanceId}"
                   }
                 ]
               }
@@ -68,35 +80,10 @@ Resources:
           }
         }
         
-  AWSConfigureAWSPackageAssociation:
-    Type: AWS::SSM::Association
-    Properties:
-      AssociationName: !Sub "${Prefix}-aws-configure-aws-package-association"
-      Name: AWS-ConfigureAWSPackage
-      OutputLocation:
-        S3Location:
-          OutputS3BucketName: !Ref SSMLogBucket
-          OutputS3KeyPrefix: !Sub "${Prefix}/aws-configure-aws-package-association"
-      Parameters:
-        action:
-          - Install
-        installationType:
-          - Uninstall and reinstall
-        name:
-          - AmazonCloudWatchAgent
-        version:
-          - latest
-      Targets:
-        - Key: InstanceIds
-          Values:
-            - !Ref Instance
-      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-
   AmazonCloudWatchManageAgentAssociation:
     Type: AWS::SSM::Association
     DependsOn:
       - CloudWatchConfigParemeter
-      - AWSConfigureAWSPackageAssociation
     Properties:
       AssociationName: !Sub "${Prefix}-amazon-cloudwatch-manage-agent"
       Name: AmazonCloudWatch-ManageAgent
@@ -118,5 +105,10 @@ Resources:
       Targets:
         - Key: InstanceIds
           Values:
-            - !Ref Instance
+            - !Ref InstanceId
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+
+Outputs:
+  LogGroupName:
+    Value: !Ref LogGroup

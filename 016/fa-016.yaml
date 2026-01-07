@@ -8,6 +8,34 @@ Parameters:
   Prefix:
     Type: String
     Default: fa-016
+
+  EventBusName:
+    Type: String
+    Default: default
+
+  LambdaArchitecture:
+    Type: String
+    Default: arm64
+  
+  LambdaHandler:
+    Type: String
+    Default: index.lambda_handler
+    
+  LambdaRuntime:
+    Type: String
+    Default: python3.12
+
+  LambdaTimeout:
+    Type: Number
+    Default: 600
+
+  WaitConditionTimeout:
+    Type: Number
+    Default: 300
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    Default: 300
     
 
 Resources:
@@ -36,21 +64,57 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
+        #ImageId: /aws/service/ami-windows-latest/Windows_Server-2019-English-Full-Base
+        #ImageId: /aws/service/ami-windows-latest/Windows_Server-2022-English-Full-Base
+        ImageId: /aws/service/ami-windows-latest/Windows_Server-2025-English-Full-Base
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
         InstanceType: t3a.medium
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
-        
-  SSMStack:
+
+  SSMStack1:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - EC2Stack
     Properties:
-      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm-01.yaml"
       Parameters:
-        Instance: !GetAtt EC2Stack.Outputs.Instance
+        Architecture: !Ref LambdaArchitecture
+        InstanceId: !GetAtt EC2Stack.Outputs.InstanceId
+        EventBusName: !Ref EventBusName
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
+        Timeout: !Ref LambdaTimeout
+        WaitConditionTimeout: !Ref WaitConditionTimeout
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+  SSMStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SSMStack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm-02.yaml"
+      Parameters:
+        InstanceId: !GetAtt EC2Stack.Outputs.InstanceId
         Prefix: !Ref Prefix
         SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
-        WaitForSuccessTimeoutSeconds: 3000
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SSMStack2
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        BucketName: !GetAtt S3Stack.Outputs.SSMLogBucket
+        Handler: !Ref LambdaHandler
+        InstanceId: !GetAtt EC2Stack.Outputs.InstanceId
+        LogGroupName: !GetAtt SSMStack2.Outputs.LogGroupName
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        Timeout: !Ref LambdaTimeout

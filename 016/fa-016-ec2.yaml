@@ -71,5 +71,5 @@ Resources:
         
         
 Outputs:
-  Instance:
+  InstanceId:
     Value: !Ref Instance
