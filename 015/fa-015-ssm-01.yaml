@@ -1,0 +1,144 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Architecture:
+    Type: String
+
+  InstanceId:
+    Type: String
+
+  EventBusName:
+    Type: String
+
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+
+  Runtime:
+    Type: String
+    
+  SSMLogBucket:
+    Type: String
+
+  Timeout:
+    Type: Number
+    
+  WaitConditionTimeout:
+    Type: Number
+
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    
+
+Resources:
+  AWSConfigureAWSPackageAssociation:
+    Type: AWS::SSM::Association
+    DependsOn:
+      - EventsRule
+    Properties:
+      AssociationName: !Sub "${Prefix}-aws-configure-aws-package-association"
+      Name: AWS-ConfigureAWSPackage
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref SSMLogBucket
+          OutputS3KeyPrefix: !Sub "${Prefix}/aws-configure-aws-package-association"
+      Parameters:
+        action:
+          - Install
+        installationType:
+          - Uninstall and reinstall
+        name:
+          - AmazonCloudWatchAgent
+        version:
+          - latest
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref InstanceId
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+  WaitConditionHandle:
+    Type: AWS::CloudFormation::WaitConditionHandle
+
+  WaitCondition:
+    Type: AWS::CloudFormation::WaitCondition
+    Properties:
+      Handle: !Ref WaitConditionHandle
+      Timeout: !Ref WaitConditionTimeout
+
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          - aws.ssm
+        detail-type:
+          - EC2 Command Status-change Notification
+        detail:
+          document-name:
+            - AWS-ConfigureAWSPackage
+          status:
+            - Success
+        resources:
+          - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${InstanceId}"
+      Name: !Sub "${Prefix}-EventsRule"
+      State: ENABLED
+      Targets: 
+        - Arn: !GetAtt Function2.Arn
+          Id: !Ref Function2
+          
+  EventsRulePermission: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Function2
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt EventsRule.Arn
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Architectures:
+        - !Ref Architecture
+      Environment:
+        Variables:
+          SIGNAL_URL: !Ref WaitConditionHandle
+      Code:
+        ZipFile: |
+          import json
+          import os
+          import urllib3
+          import uuid
+    
+          def lambda_handler(event, context):
+            body = json.dumps({
+                "Status": "SUCCESS",
+                "Reason": "Lambda Deploy Package Setup Successed",
+                "UniqueId": str(uuid.uuid4()),
+                "Data": "Lambda Deploy Package Setup Successed"
+            })
+            http = urllib3.PoolManager()
+            http.request('PUT', os.environ['SIGNAL_URL'], body=body)
+            print("called")
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole

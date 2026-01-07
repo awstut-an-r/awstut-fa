@@ -90,35 +90,10 @@ Resources:
           }
         }
         
-  AWSConfigureAWSPackageAssociation:
-    Type: AWS::SSM::Association
-    Properties:
-      AssociationName: !Sub "${Prefix}-aws-configure-aws-package-association"
-      Name: AWS-ConfigureAWSPackage
-      OutputLocation:
-        S3Location:
-          OutputS3BucketName: !Ref SSMLogBucket
-          OutputS3KeyPrefix: !Sub "${Prefix}/aws-configure-aws-package-association"
-      Parameters:
-        action:
-          - Install
-        installationType:
-          - Uninstall and reinstall
-        name:
-          - AmazonCloudWatchAgent
-        version:
-          - latest
-      Targets:
-        - Key: InstanceIds
-          Values:
-            - !Ref InstanceId
-      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-
   AmazonCloudWatchManageAgentAssociation:
     Type: AWS::SSM::Association
     DependsOn:
       - CloudWatchConfigParemeter
-      - AWSConfigureAWSPackageAssociation
     Properties:
       AssociationName: !Sub "${Prefix}-amazon-cloudwatch-manage-agent"
       Name: AmazonCloudWatch-ManageAgent

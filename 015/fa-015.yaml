@@ -9,6 +9,10 @@ Parameters:
     Type: String
     Default: fa-015
 
+  EventBusName:
+    Type: String
+    Default: default
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -24,7 +28,15 @@ Parameters:
   LambdaTimeout:
     Type: Number
     Default: 600
+
+  WaitConditionTimeout:
+    Type: Number
+    Default: 300
     
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    Default: 300
+
 
 Resources:
   S3Stack:
@@ -70,23 +82,41 @@ Resources:
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
         SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
-        
-  SSMStack:
+
+  SSMStack1:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - EC2Stack
     Properties:
-      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm-01.yaml"
+      Parameters:
+        Architecture: !Ref LambdaArchitecture
+        InstanceId: !GetAtt EC2Stack.Outputs.InstanceId
+        EventBusName: !Ref EventBusName
+        Handler: !Ref LambdaHandler
+        Prefix: !Ref Prefix
+        Runtime: !Ref LambdaRuntime
+        SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
+        Timeout: !Ref LambdaTimeout
+        WaitConditionTimeout: !Ref WaitConditionTimeout
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+
+  SSMStack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - SSMStack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm-02.yaml"
       Parameters:
         InstanceId: !GetAtt EC2Stack.Outputs.InstanceId
         Prefix: !Ref Prefix
         SSMLogBucket: !GetAtt S3Stack.Outputs.SSMLogBucket
-        WaitForSuccessTimeoutSeconds: 300
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
 
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      - SSMStack
+      - SSMStack2
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
@@ -94,7 +124,7 @@ Resources:
         BucketName: !GetAtt S3Stack.Outputs.SSMLogBucket
         Handler: !Ref LambdaHandler
         InstanceId: !GetAtt EC2Stack.Outputs.InstanceId
-        LogGroupName: !GetAtt SSMStack.Outputs.LogGroupName
+        LogGroupName: !GetAtt SSMStack2.Outputs.LogGroupName
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
         Timeout: !Ref LambdaTimeout
