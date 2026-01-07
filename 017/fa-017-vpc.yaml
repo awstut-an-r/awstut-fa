@@ -122,9 +122,6 @@ Resources:
 Outputs:
   VPC:
     Value: !Ref VPC
-    
-  PublicSubnet:
-    Value: !Ref PublicSubnet
       
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
