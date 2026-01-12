@@ -90,8 +90,8 @@ Resources:
 
           
 Outputs:
-  VPC:
-    Value: !Ref VPC
+  #VPC:
+  #  Value: !Ref VPC
       
   PublicSubnet1:
     Value: !Ref PublicSubnet1
