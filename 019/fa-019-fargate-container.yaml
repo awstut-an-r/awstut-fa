@@ -45,7 +45,7 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties: 
-      LogGroupName: !Sub ${Prefix}-LogGroup
+      LogGroupName: !Sub "${Prefix}-LogGroup"
 
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
@@ -92,6 +92,7 @@ Resources:
 
   TaskRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -134,6 +135,7 @@ Resources:
       
   ServiceTaskScalingRole:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Statement:
