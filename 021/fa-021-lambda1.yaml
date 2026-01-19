@@ -56,7 +56,7 @@ Resources:
         Variables:
           queue_name: !Ref QueueName
           region_name: !Ref AWS::Region
-      FunctionName: !Sub ${Prefix}-function1
+      FunctionName: !Sub "${Prefix}-function1"
       Handler: !Ref Handler
       MemorySize: !Ref MemorySize
       Runtime: !Ref Runtime
@@ -64,6 +64,7 @@ Resources:
 
   LambdaRole1:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17

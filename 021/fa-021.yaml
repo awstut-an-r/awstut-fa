@@ -3,6 +3,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   TemplateBucketName:
     Type: String
+    #Default: [bucket-name]
     Default: awstut-bucket
     
   Prefix:
@@ -12,6 +13,10 @@ Parameters:
   Handler:
     Type: String
     Default: index.lambda_handler
+
+  MaxNumberOfMessages:
+    Type: Number
+    Default: 10
     
   MemorySize:
     Type: Number
@@ -19,7 +24,7 @@ Parameters:
     
   Runtime:
     Type: String
-    Default: python3.8
+    Default: python3.13
     
   Timeout:
     Type: Number
@@ -54,7 +59,7 @@ Resources:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda2.yaml"
       Parameters:
         Handler: !Ref Handler
-        MaxNumberOfMessages: 10
+        MaxNumberOfMessages: !Ref MaxNumberOfMessages
         MemorySize: !Ref MemorySize
         Prefix: !Ref Prefix
         QueueArn: !GetAtt SQSStack.Outputs.QueueArn

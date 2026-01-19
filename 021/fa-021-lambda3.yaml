@@ -33,7 +33,6 @@ Resources:
       Code:
         ZipFile: |
           import boto3
-          import datetime
           import json
           import os
           
@@ -61,15 +60,16 @@ Resources:
           max_number_of_messages: !Ref MaxNumberOfMessages
           queue_name: !Ref QueueName
           region_name: !Ref AWS::Region
-      FunctionName: !Sub ${Prefix}-function3
+      FunctionName: !Sub "${Prefix}-function3"
       Handler: !Ref Handler
       MemorySize: !Ref MemorySize
       Runtime: !Ref Runtime
-      Role: !GetAtt LambdaRole2.Arn
+      Role: !GetAtt LambdaRole3.Arn
       Timeout: !Ref Timeout
 
-  LambdaRole2:
+  LambdaRole3:
     Type: AWS::IAM::Role
+    DeletionPolicy: Delete
     Properties:
       AssumeRolePolicyDocument:
         Version: 2012-10-17
