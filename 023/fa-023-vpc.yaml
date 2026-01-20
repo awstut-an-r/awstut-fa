@@ -143,18 +143,6 @@ Resources:
           ToPort: !Ref HTTPPort
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           
-  EndpointSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: !Ref HTTPSPort
-          ToPort: !Ref HTTPSPort
-          SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
           
 Outputs:
   VPC:
@@ -180,6 +168,3 @@ Outputs:
   
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-      
-  EndpointSecurityGroup:
-    Value: !Ref EndpointSecurityGroup
